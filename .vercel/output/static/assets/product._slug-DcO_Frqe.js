@@ -1,0 +1,1 @@
+import{s as e,t}from"./link-CWBjDBbq.js";var n=e(),r=()=>(0,n.jsxs)(`div`,{className:`py-32 text-center`,children:[(0,n.jsx)(`h1`,{className:`text-4xl`,children:`This piece is no longer available.`}),(0,n.jsx)(t,{to:`/shop`,className:`label-xs link-underline mt-8 inline-block`,children:`Back to the shop`})]});export{r as notFoundComponent};
