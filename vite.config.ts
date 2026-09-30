@@ -5,7 +5,12 @@ import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  plugins: [tanstackStart(), nitro({ preset: "vercel" }), react(), tailwindcss()],
+  plugins: [
+    tanstackStart(),
+    nitro({ preset: "cloudflare-module", output: { dir: "dist" } }),
+    react(),
+    tailwindcss(),
+  ],
   resolve: {
     tsconfigPaths: true,
   },
