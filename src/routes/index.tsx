@@ -66,7 +66,7 @@ function Home() {
             <Link
               key={c.title}
               to={c.filter === "custom" ? "/custom" : "/shop"}
-              search={c.filter === "custom" ? undefined : { category: c.filter }}
+              search={(c.filter === "custom" ? {} : { category: c.filter }) as never}
               className={`group relative overflow-hidden bg-secondary ${i < 2 ? "md:col-span-3 aspect-4/5 md:aspect-5/6" : "md:col-span-2 aspect-3/4"}`}
             >
               <img src={c.image} alt={c.title} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1400ms] ease-out group-hover:scale-105" />

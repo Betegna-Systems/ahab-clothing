@@ -65,8 +65,8 @@ export function ProductCard({ product, priority }: { product: Product; priority?
         onClick={() =>
           addToCart({
             slug: product.slug,
-            size: product.sizes[0],
-            color: product.colors[0].name,
+            size: product.sizes[0] ?? "",
+            color: product.colors[0]?.name ?? "",
             qty: 1,
           })
         }
