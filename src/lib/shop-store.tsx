@@ -81,7 +81,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       );
       if (i === -1) return [...prev, line];
       const next = [...prev];
-      next[i] = { ...next[i], qty: next[i].qty + line.qty };
+      const cur = next[i]!; next[i] = { ...cur, qty: cur.qty + line.qty };
       return next;
     });
     setCartOpen(true);

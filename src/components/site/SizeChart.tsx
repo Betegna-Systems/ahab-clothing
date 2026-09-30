@@ -13,7 +13,7 @@ export function SizeChart({ compact }: { compact?: boolean }) {
   const [unit, setUnit] = useState<"cm" | "in">("cm");
   const [picked, setPicked] = useState<string | null>(null);
   const f = (n: number) => (unit === "cm" ? n : Math.round(n / 2.54));
-  const fmt = ([a, b]: number[]) => `${f(a)}–${f(b)}`;
+  const fmt = ([a = 0, b = 0]: number[]) => `${f(a)}–${f(b)}`;
 
   return (
     <div>

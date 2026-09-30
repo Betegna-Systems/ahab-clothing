@@ -10,8 +10,8 @@ const CATS: Category[] = ["women", "men", "kids", "traditional", "modern"];
 type Sort = "newest" | "popular" | "price-asc" | "price-desc" | "rated";
 
 export const Route = createFileRoute("/shop")({
-  validateSearch: (s: Record<string, unknown>): { category?: Category } => ({
-    category: CATS.includes(s.category as Category) ? (s.category as Category) : undefined,
+  validateSearch: (s: Record<string, unknown>): { category?: Category | undefined } => ({
+    category: CATS.includes(s["category"] as Category) ? (s["category"] as Category) : undefined,
   }),
   head: () => seo("Shop", "Shop traditional and modern Ethiopian clothing for women, men and kids — handmade in Addis Ababa."),
   component: Shop,
