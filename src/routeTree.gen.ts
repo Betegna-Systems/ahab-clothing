@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AccountRouteImport } from './routes/account'
+import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CustomRouteImport } from './routes/custom'
 import { Route as LookbookRouteImport } from './routes/lookbook'
@@ -37,6 +38,11 @@ const AboutRoute = AboutRouteImport.update({
 const AccountRoute = AccountRouteImport.update({
   id: '/account',
   path: '/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutRoute = CheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/account': typeof AccountRoute
+  '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
   '/custom': typeof CustomRoute
   '/lookbook': typeof LookbookRoute
@@ -115,6 +122,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/account': typeof AccountRoute
+  '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
   '/custom': typeof CustomRoute
   '/lookbook': typeof LookbookRoute
@@ -132,6 +140,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/account': typeof AccountRoute
+  '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
   '/custom': typeof CustomRoute
   '/lookbook': typeof LookbookRoute
@@ -150,6 +159,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/account'
+    | '/checkout'
     | '/contact'
     | '/custom'
     | '/lookbook'
@@ -166,6 +176,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/account'
+    | '/checkout'
     | '/contact'
     | '/custom'
     | '/lookbook'
@@ -182,6 +193,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/account'
+    | '/checkout'
     | '/contact'
     | '/custom'
     | '/lookbook'
@@ -199,6 +211,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   AccountRoute: typeof AccountRoute
+  CheckoutRoute: typeof CheckoutRoute
   ContactRoute: typeof ContactRoute
   CustomRoute: typeof CustomRoute
   LookbookRoute: typeof LookbookRoute
@@ -233,6 +246,13 @@ declare module '@tanstack/react-router' {
       path: '/account'
       fullPath: '/account'
       preLoaderRoute: typeof AccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout': {
+      id: '/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof CheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -319,6 +339,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AccountRoute: AccountRoute,
+  CheckoutRoute: CheckoutRoute,
   ContactRoute: ContactRoute,
   CustomRoute: CustomRoute,
   LookbookRoute: LookbookRoute,
