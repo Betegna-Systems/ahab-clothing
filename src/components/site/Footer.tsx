@@ -7,9 +7,9 @@ const columns = [
   {
     title: "Shop",
     links: [
-      { label: "All pieces", to: "/shop" },
+      { label: "All tops", to: "/shop" },
       { label: "Lookbook", to: "/lookbook" },
-      { label: "Custom designs", to: "/custom" },
+      { label: "Custom tops", to: "/custom" },
       { label: "Wishlist", to: "/wishlist" },
     ],
   },
@@ -43,8 +43,9 @@ export function Footer() {
             <span className="font-serif text-4xl tracking-[0.3em]">AHAB</span>
             <p className="label-xs mt-2 text-gold">Made With Love</p>
             <p className="mt-6 max-w-sm text-sm leading-relaxed text-primary-foreground/70">
-              An independent Ethiopian house designing traditional and modern clothing in Addis
-              Ababa. Woven, cut and finished by hand.
+              An independent house designing and sewing bodycon tops in Addis
+              Ababa. Cut, seamed and finished by hand.
+
             </p>
 
             <form

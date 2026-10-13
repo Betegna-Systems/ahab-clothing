@@ -2,18 +2,18 @@ import { createFileRoute } from "@tanstack/react-router";
 import { seo } from "@/lib/seo";
 import { AhabLink, Eyebrow } from "@/components/site/ui";
 import founder from "@/assets/founder-portrait.jpg";
-import craft from "@/assets/craft-loom.jpg";
+import craftStudio from "@/assets/craft-studio.jpg";
 
 export const Route = createFileRoute("/about")({
-  head: () => seo("About", "The story of AHAB — an independent Ethiopian fashion house in Addis Ababa, made with love."),
+  head: () => seo("About", "The story of AHAB — an independent house in Addis Ababa making fitted bodycon tops by hand."),
   component: About,
 });
 
 const sections = [
-  ["Why AHAB exists", "Because the clothes our grandmothers wore deserve a future. AHAB bridges heritage and the way we live now."],
-  ["Ethiopian inspiration", "Tibeb patterns, the light of Entoto, the stonework of Lalibela — every collection begins at home."],
-  ["The handmade process", "Cotton is spun, woven, cut and finished by hand, with fair pay for every artisan we work with."],
-  ["Our vision", "To make Ethiopian design a quiet, confident presence in wardrobes around the world."],
+  ["Why AHAB exists", "Because a well-cut top can change how a woman carries herself. AHAB makes that top in Addis Ababa, one body at a time."],
+  ["The fit philosophy", "Bodycon should never mean uncomfortable. Every style is drafted to stretch, hold and breathe — fitted on real bodies before it ever ships."],
+  ["How we make them", "Knits are cut, seamed and finished by hand in our atelier, with fair pay for every tailor who stitches a piece."],
+  ["Our vision", "To put an Addis Ababa-made top in wardrobes around the world, quietly and confidently."],
 ];
 
 function About() {
@@ -23,8 +23,8 @@ function About() {
         <img src={founder} alt="AHAB founder in her Addis Ababa atelier" className="aspect-4/5 w-full object-cover" />
         <div className="lg:pl-10">
           <Eyebrow>The Founder</Eyebrow>
-          <h1 className="mt-6 text-5xl leading-[1.02] md:text-7xl">A house built on <em className="italic text-gold">love.</em></h1>
-          <p className="mt-6 max-w-lg leading-relaxed text-muted-foreground">AHAB began at a single sewing table in Addis Ababa, with one belief: that clothing can carry a culture forward without losing its soul. Today our atelier dresses brides, families and everyday dreamers — still one piece at a time.</p>
+          <h1 className="mt-6 text-5xl leading-[1.02] md:text-7xl">A house built on <em className="italic text-gold">fit.</em></h1>
+          <p className="mt-6 max-w-lg leading-relaxed text-muted-foreground">AHAB began at a single sewing table in Addis Ababa with one belief: that a fitted top, cut properly, can carry a whole outfit. Today we sew that top — one style, one body, one stitch at a time.</p>
         </div>
       </section>
       <section className="bg-secondary py-24">
@@ -35,9 +35,9 @@ function About() {
         </div>
       </section>
       <section className="relative">
-        <img src={craft} alt="" loading="lazy" className="h-[60vh] w-full object-cover" />
+        <img src={craftStudio} alt="" loading="lazy" className="h-[60vh] w-full object-cover" />
         <div className="absolute inset-0 grid place-items-center bg-foreground/45 text-center">
-          <div><h2 className="text-5xl text-cream md:text-6xl">Made With Love.</h2><AhabLink to="/shop" variant="gold" className="mt-8">Shop the collection</AhabLink></div>
+          <div><h2 className="text-5xl text-cream md:text-6xl">Made With Love.</h2><AhabLink to="/shop" variant="gold" className="mt-8">Shop the tops</AhabLink></div>
         </div>
       </section>
     </div>
