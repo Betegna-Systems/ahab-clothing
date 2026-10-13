@@ -9,7 +9,7 @@ import { CartDrawer } from "./CartDrawer";
 const nav = [
   { label: "Shop", to: "/shop" },
   { label: "Lookbook", to: "/lookbook" },
-  { label: "Custom Designs", to: "/custom" },
+  { label: "Custom Tops", to: "/custom" },
   { label: "About", to: "/about" },
   { label: "Contact", to: "/contact" },
 ] as const;

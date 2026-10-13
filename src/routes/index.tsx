@@ -3,22 +3,20 @@ import { ArrowRight, Instagram } from "lucide-react";
 import { collections, images, products, testimonials } from "@/lib/products";
 import { ProductCard } from "@/components/site/ProductCard";
 import { AhabLink, Eyebrow, SectionHeading } from "@/components/site/ui";
-import craftLoom from "@/assets/craft-loom.jpg";
-import lookbook1 from "@/assets/lookbook-1.jpg";
-import lookbook2 from "@/assets/lookbook-2.jpg";
+import craftStudio from "@/assets/craft-studio.jpg";
 import founder from "@/assets/founder-portrait.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "AHAB Clothing — Wear Your Story | Ethiopian Luxury Fashion" },
+      { title: "AHAB Clothing — Bodycon Tops Made in Addis Ababa" },
       {
         name: "description",
         content:
-          "Contemporary Ethiopian fashion crafted with love in Addis Ababa. Traditional, modern and custom pieces for women, men and kids.",
+          "Fitted bodycon tops — ribbed, one-shoulder, cowl and cutout styles — designed and sewn by hand in Addis Ababa.",
       },
-      { property: "og:title", content: "AHAB Clothing — Wear Your Story" },
-      { property: "og:description", content: "Contemporary Ethiopian fashion crafted with love." },
+      { property: "og:title", content: "AHAB Clothing — Bodycon Tops Made in Addis Ababa" },
+      { property: "og:description", content: "Fitted bodycon tops, designed and sewn in Addis Ababa." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -28,7 +26,14 @@ export const Route = createFileRoute("/")({
 
 const newArrivals = [...products].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 6);
 const bestSellers = [...products].sort((a, b) => b.popularity - a.popularity).slice(0, 4);
-const gallery = [lookbook1, images.collectionWomen, lookbook2, images.collectionKids, images.productShawl, images.collectionMen];
+const gallery = [
+  images.topOneShoulder,
+  images.topSquareNeck,
+  images.topCutout,
+  images.topMockNeck,
+  images.topWrap,
+  images.topCowl,
+];
 
 function Home() {
   return (
@@ -37,23 +42,23 @@ function Home() {
       <section className="relative h-[calc(100svh-7.5rem)] min-h-[560px] overflow-hidden">
         <img
           src={images.heroCampaign}
-          alt="Model in an ivory AHAB gown with gold tibeb border"
-          width={1600}
-          height={1920}
+          alt="Model wearing the ivory Saba one-shoulder bodycon top"
+          width={1024}
+          height={1440}
           className="fade-in-slow absolute inset-0 h-full w-full object-cover object-[center_25%]"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-foreground/65 via-foreground/10 to-transparent" />
         <div className="relative mx-auto flex h-full max-w-[1500px] flex-col justify-end px-5 pb-16 md:px-10 md:pb-24">
-          <p className="label-xs reveal-up text-cream/85">Autumn Collection · 2026</p>
+          <p className="label-xs reveal-up text-cream/85">The Bodycon Edit · 2026</p>
           <h1 className="reveal-up mt-5 max-w-3xl text-6xl leading-[0.95] text-cream sm:text-7xl md:text-[7.5rem]">
-            Wear Your <em className="italic text-gold">Story.</em>
+            Made to <em className="italic text-gold">Fit.</em>
           </h1>
           <p className="reveal-up mt-6 max-w-md text-base text-cream/85 md:text-lg">
-            Contemporary Ethiopian fashion crafted with love.
+            Bodycon tops, designed and sewn in Addis Ababa.
           </p>
           <div className="reveal-up mt-10 flex flex-col gap-3 sm:flex-row">
-            <AhabLink to="/shop" variant="gold" size="lg">Shop Collection</AhabLink>
-            <AhabLink to="/custom" variant="ghostLight" size="lg">Explore Custom Designs</AhabLink>
+            <AhabLink to="/shop" variant="gold" size="lg">Shop the Tops</AhabLink>
+            <AhabLink to="/custom" variant="ghostLight" size="lg">Order Custom Tops</AhabLink>
           </div>
         </div>
       </section>
@@ -65,8 +70,8 @@ function Home() {
           {collections.map((c, i) => (
             <Link
               key={c.title}
-              to={c.filter === "custom" ? "/custom" : "/shop"}
-              search={(c.filter === "custom" ? {} : { category: c.filter }) as never}
+              to="/shop"
+              search={{ category: c.filter }}
               className={`group relative overflow-hidden bg-secondary ${i < 2 ? "md:col-span-3 aspect-4/5 md:aspect-5/6" : "md:col-span-2 aspect-3/4"}`}
             >
               <img src={c.image} alt={c.title} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1400ms] ease-out group-hover:scale-105" />
@@ -102,7 +107,7 @@ function Home() {
 
       {/* Best sellers */}
       <section className="mx-auto max-w-[1500px] px-5 py-24 md:px-10 md:py-32">
-        <SectionHeading eyebrow="Most Loved" title="The pieces they return for." align="center" />
+        <SectionHeading eyebrow="Most Loved" title="The tops they return for." align="center" />
         <div className="mt-14 grid grid-cols-2 gap-x-4 gap-y-12 lg:grid-cols-4">
           {bestSellers.map((p) => <ProductCard key={p.slug} product={p} />)}
         </div>
@@ -111,21 +116,21 @@ function Home() {
       {/* Craft */}
       <section className="bg-primary text-primary-foreground">
         <div className="mx-auto grid max-w-[1500px] items-center gap-12 px-5 py-24 md:px-10 lg:grid-cols-2 lg:py-32">
-          <img src={craftLoom} alt="Hands weaving gold tibeb on a wooden loom" loading="lazy" className="aspect-4/3 w-full object-cover" />
+          <img src={craftStudio} alt="Seamstress pinning a top pattern in the AHAB atelier" loading="lazy" className="aspect-4/3 w-full object-cover" />
           <div className="lg:pl-12">
             <Eyebrow>The Craft Behind AHAB</Eyebrow>
             <h2 className="mt-5 text-4xl leading-[1.05] sm:text-5xl md:text-6xl">
-              Sixty hours. <em className="italic text-gold">One thread</em> at a time.
+              Every stitch. <em className="italic text-gold">One body</em> at a time.
             </h2>
             <p className="mt-6 max-w-lg leading-relaxed text-primary-foreground/75">
-              Every tibeb border is woven by hand on wooden looms by artisans in and around Addis Ababa — a craft passed between generations, now carried into silhouettes made for today.
+              Every top is cut, seamed and finished by hand in our Addis Ababa atelier — fitted on real bodies, not just the mannequin, so the stretch holds you exactly where it should.
             </p>
             <dl className="mt-12 grid grid-cols-2 gap-8">
               {[
-                ["Handmade", "Woven, cut and finished by hand in our atelier."],
-                ["Ethiopian inspiration", "Patterns drawn from Lalibela, Aksum and Harar."],
-                ["Quality fabrics", "Hand-spun cotton, washed linen and pure silk."],
-                ["Local craftsmanship", "Fair pay for every weaver and tailor we work with."],
+                ["Made in Addis Ababa", "Cut and finished by hand in our own atelier."],
+                ["A fit that holds", "Each style is fitted on the body before it ships."],
+                ["Quality fabrics", "Stretch knits and crepes chosen for recovery and feel."],
+                ["Fair work", "Fair pay for every tailor who stitches a piece."],
               ].map(([t, d]) => (
                 <div key={t}>
                   <dt className="font-serif text-2xl text-gold">{t}</dt>
@@ -144,7 +149,7 @@ function Home() {
         <div className="mt-14 grid gap-6 md:grid-cols-3">
           {testimonials.map((t, i) => (
             <figure key={t.name} className="bg-card p-8 shadow-soft transition-transform duration-500 hover:-translate-y-1 md:p-10">
-              <img src={[founder, images.collectionMen, lookbook1][i]} alt={t.name} loading="lazy" className="h-14 w-14 rounded-full object-cover object-top" />
+              <img src={[founder, images.topMockNeck, images.topCowl][i]} alt={t.name} loading="lazy" className="h-14 w-14 rounded-full object-cover object-top" />
               <blockquote className="mt-6 font-serif text-xl leading-snug">“{t.quote}”</blockquote>
               <figcaption className="label-xs mt-6 text-muted-foreground">{t.name} · {t.city}</figcaption>
             </figure>
@@ -172,11 +177,11 @@ function Home() {
 
       {/* Final CTA */}
       <section className="relative overflow-hidden">
-        <img src={lookbook2} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
+        <img src={images.heroCampaign} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover object-[center_20%]" />
         <div className="absolute inset-0 bg-foreground/55" />
         <div className="relative mx-auto max-w-3xl px-5 py-32 text-center text-cream md:py-44">
           <p className="label-xs text-gold">AHAB · Addis Ababa</p>
-          <h2 className="mt-6 text-6xl leading-none md:text-8xl">Designed With <em className="italic">Love.</em></h2>
+          <h2 className="mt-6 text-6xl leading-none md:text-8xl">Worn Close. <em className="italic">Worn Often.</em></h2>
           <AhabLink to="/shop" variant="gold" size="lg" className="mt-12">Start Shopping</AhabLink>
         </div>
       </section>

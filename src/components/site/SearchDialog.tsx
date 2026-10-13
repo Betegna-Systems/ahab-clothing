@@ -40,7 +40,8 @@ export function SearchDialog() {
             autoFocus={searchOpen}
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search dresses, linen, gold, traditional…"
+            placeholder="Search tops, ribbed, one shoulder…"
+
             className="w-full bg-transparent font-serif text-2xl outline-hidden placeholder:text-muted-foreground/70"
           />
           <button type="button" onClick={() => setSearchOpen(false)} aria-label="Close search">
@@ -50,7 +51,8 @@ export function SearchDialog() {
 
         {q && results.length === 0 ? (
           <p className="pt-8 text-sm text-muted-foreground">
-            Nothing matched. Try “kemis”, “linen” or “gold”.
+            Nothing matched. Try “one shoulder”, “ribbed” or “cutout”.
+
           </p>
         ) : null}
 
@@ -85,7 +87,7 @@ export function SearchDialog() {
           <div className="pt-8">
             <p className="label-xs text-muted-foreground">Popular searches</p>
             <div className="mt-4 flex flex-wrap gap-3">
-              {["Habesha kemis", "Linen suit", "Netela", "Bridal", "Kids"].map((term) => (
+              {["One shoulder", "Ribbed", "Cutout", "Corset", "Basics"].map((term) => (
                 <button
                   key={term}
                   type="button"
