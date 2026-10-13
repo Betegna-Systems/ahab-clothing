@@ -7,7 +7,7 @@ import { defineConfig } from "vite";
 export default defineConfig({
   plugins: [
     tanstackStart(),
-    nitro({ preset: "cloudflare-module", output: { dir: "dist" } }),
+    nitro(), // Nitro auto-detects Vercel when deployed on Vercel
     react(),
     tailwindcss(),
   ],
