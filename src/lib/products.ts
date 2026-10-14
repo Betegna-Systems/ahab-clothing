@@ -58,6 +58,9 @@ export const products: Product[] = [
       { name: "Ivory", hex: "#F8F3EB" },
       { name: "Black", hex: "#1A1714" },
       { name: "Soft Gold", hex: "#B68A4C" },
+      { name: "Chocolate", hex: "#2A0D08" },
+      { name: "Dusty Rose", hex: "#D8A79A" },
+      { name: "Olive", hex: "#6F6B45" },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
     images: [topCrew, heroCampaign],
@@ -80,6 +83,9 @@ export const products: Product[] = [
     colors: [
       { name: "Black", hex: "#1A1714" },
       { name: "Chocolate", hex: "#2A0D08" },
+      { name: "Ivory", hex: "#F8F3EB" },
+      { name: "Sand", hex: "#EFE5D6" },
+      { name: "Crimson", hex: "#8E2A2A" },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
     images: [topSquareNeck],
@@ -102,6 +108,9 @@ export const products: Product[] = [
     colors: [
       { name: "Ivory", hex: "#F3EADB" },
       { name: "Black", hex: "#1A1714" },
+      { name: "Soft Gold", hex: "#B68A4C" },
+      { name: "Burgundy", hex: "#4A1420" },
+      { name: "Olive", hex: "#6F6B45" },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
     images: [topOneShoulder, heroCampaign],
@@ -124,6 +133,9 @@ export const products: Product[] = [
     colors: [
       { name: "Chocolate", hex: "#2A0D08" },
       { name: "Sand", hex: "#EFE5D6" },
+      { name: "Black", hex: "#1A1714" },
+      { name: "Dusty Rose", hex: "#D8A79A" },
+      { name: "Burgundy", hex: "#4A1420" },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
     images: [topCowl],
@@ -145,6 +157,8 @@ export const products: Product[] = [
     colors: [
       { name: "Soft Gold", hex: "#B68A4C" },
       { name: "Black", hex: "#1A1714" },
+      { name: "Ivory", hex: "#F3EADB" },
+      { name: "Burgundy", hex: "#4A1420" },
     ],
     sizes: ["XS", "S", "M", "L"],
     images: [topCorset],
@@ -168,6 +182,8 @@ export const products: Product[] = [
     colors: [
       { name: "Crimson", hex: "#8E2A2A" },
       { name: "Black", hex: "#1A1714" },
+      { name: "Ivory", hex: "#F8F3EB" },
+      { name: "Chocolate", hex: "#2A0D08" },
     ],
     sizes: ["XS", "S", "M", "L"],
     images: [topCutout],
@@ -190,6 +206,9 @@ export const products: Product[] = [
     colors: [
       { name: "Sand", hex: "#EFE5D6" },
       { name: "Chocolate", hex: "#2A0D08" },
+      { name: "Black", hex: "#1A1714" },
+      { name: "Ivory", hex: "#F8F3EB" },
+      { name: "Olive", hex: "#6F6B45" },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
     images: [topMockNeck],
@@ -211,6 +230,9 @@ export const products: Product[] = [
     colors: [
       { name: "Olive", hex: "#6F6B45" },
       { name: "Ivory", hex: "#F3EADB" },
+      { name: "Black", hex: "#1A1714" },
+      { name: "Soft Gold", hex: "#B68A4C" },
+      { name: "Crimson", hex: "#8E2A2A" },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
     images: [topHalter],
@@ -233,6 +255,9 @@ export const products: Product[] = [
     colors: [
       { name: "Dusty Rose", hex: "#D8A79A" },
       { name: "Black", hex: "#1A1714" },
+      { name: "Ivory", hex: "#F3EADB" },
+      { name: "Chocolate", hex: "#2A0D08" },
+      { name: "Burgundy", hex: "#4A1420" },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
     images: [topOffShoulder],
@@ -255,6 +280,8 @@ export const products: Product[] = [
     colors: [
       { name: "Burgundy", hex: "#4A1420" },
       { name: "Chocolate", hex: "#2A0D08" },
+      { name: "Black", hex: "#1A1714" },
+      { name: "Soft Gold", hex: "#B68A4C" },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
     images: [topWrap],
