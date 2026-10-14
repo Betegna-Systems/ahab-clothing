@@ -55,7 +55,7 @@ export const Route = createFileRoute("/product/$slug")({
 });
 
 const reviews = [
-  { name: "Meron K.", rating: 5, text: "The weaving is even more beautiful in person. It fit exactly as the size guide said." },
+  { name: "Meron K.", rating: 5, text: "The fabric is even more beautiful in person. It fit exactly as the size guide said." },
   { name: "Liya B.", rating: 5, text: "Arrived beautifully wrapped within two days in Addis. I felt like I'd been given a gift." },
   { name: "Dawit M.", rating: 4, text: "Wonderful quality. I sized up for a more relaxed fit and I'm glad I did." },
 ];
