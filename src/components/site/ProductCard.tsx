@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Heart, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -14,7 +15,9 @@ const badgeLabel: Record<string, string> = {
 export function ProductCard({ product, priority }: { product: Product; priority?: boolean }) {
   const { toggleWishlist, isWished, addToCart } = useShop();
   const wished = isWished(product.slug);
-  const second = product.images[1] ?? product.images[0];
+  const [colorIndex, setColorIndex] = useState(0);
+  const photo = product.images[colorIndex] ?? product.images[0];
+  const color = product.colors[colorIndex] ?? product.colors[0];
 
   return (
     <article className="group relative">
@@ -25,17 +28,11 @@ export function ProductCard({ product, priority }: { product: Product; priority?
       >
         <div className="relative aspect-3/4">
           <img
-            src={product.images[0]}
-            alt={product.name}
+            key={photo}
+            src={photo}
+            alt={`${product.name} in ${color?.name ?? ""}`}
             loading={priority ? "eager" : "lazy"}
-            className="absolute inset-0 h-full w-full object-cover transition-all duration-[1200ms] ease-out group-hover:scale-[1.03] group-hover:opacity-0"
-          />
-          <img
-            src={second}
-            alt=""
-            aria-hidden
-            loading="lazy"
-            className="absolute inset-0 h-full w-full object-cover opacity-0 transition-all duration-[1200ms] ease-out group-hover:scale-[1.03] group-hover:opacity-100"
+            className="fade-in-slow absolute inset-0 h-full w-full object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.03]"
           />
         </div>
       </Link>
@@ -66,7 +63,7 @@ export function ProductCard({ product, priority }: { product: Product; priority?
           addToCart({
             slug: product.slug,
             size: product.sizes[0] ?? "",
-            color: product.colors[0]?.name ?? "",
+            color: color?.name ?? "",
             qty: 1,
           })
         }
@@ -94,6 +91,25 @@ export function ProductCard({ product, priority }: { product: Product; priority?
             </p>
           ) : null}
         </div>
+      </div>
+
+      <div className="mt-3 flex items-center gap-2.5" role="group" aria-label="Available colours">
+        {product.colors.map((c, i) => (
+          <button
+            key={c.name}
+            type="button"
+            onClick={() => setColorIndex(i)}
+            title={c.name}
+            aria-label={`Show ${product.name} in ${c.name}`}
+            aria-pressed={colorIndex === i}
+            className={cn(
+              "h-5 w-5 rounded-full border-2 transition-all",
+              colorIndex === i ? "scale-110 border-gold" : "border-border hover:border-gold/60",
+            )}
+            style={{ backgroundColor: c.hex }}
+          />
+        ))}
+        <span className="label-xs ml-1 text-muted-foreground">{color?.name}</span>
       </div>
     </article>
   );
