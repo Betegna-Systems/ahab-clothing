@@ -65,7 +65,8 @@ function ProductPage() {
   const { addToCart, toggleWishlist, isWished, markViewed, recentlyViewed, setCartOpen } = useShop();
   const [active, setActive] = useState(0);
   const [size, setSize] = useState<string | null>(product.sizes.length === 1 ? product.sizes[0]! : null);
-  const [color, setColor] = useState(product.colors[0]!.name);
+  const [colorIndex, setColorIndex] = useState(0);
+  const color = product.colors[colorIndex]?.name ?? product.colors[0]!.name;
   const [zoom, setZoom] = useState<{ x: number; y: number } | null>(null);
   const [spinning, setSpinning] = useState(false);
 
@@ -73,7 +74,7 @@ function ProductPage() {
     markViewed(product.slug);
     setActive(0);
     setSize(product.sizes.length === 1 ? product.sizes[0]! : null);
-    setColor(product.colors[0]!.name);
+    setColorIndex(0);
   }, [product.slug]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
