@@ -106,16 +106,16 @@ function ProductPage() {
         <div className="flex flex-col-reverse gap-4 md:flex-row">
           <div className="flex gap-3 md:flex-col">
             {product.images.map((src, i) => (
-              <button key={i} type="button" onClick={() => { setSpinning(false); setActive(i); }}
+              <button key={i} type="button" onClick={() => { setSpinning(false); setActive(i); setColorIndex(i); }}
                 className={cn("w-16 overflow-hidden border md:w-20", active === i ? "border-primary" : "border-transparent opacity-60 hover:opacity-100")}>
-                <img src={src} alt="" loading="lazy" className="aspect-3/4 w-full object-cover" />
+                 <img src={src} alt={`${product.name} in ${product.colors[i]?.name ?? ""}`} loading="lazy" className="aspect-3/4 w-full object-cover" />
               </button>
             ))}
           </div>
           <div className="relative flex-1 cursor-zoom-in overflow-hidden bg-secondary"
             onMouseMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); setZoom({ x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 }); }}
             onMouseLeave={() => setZoom(null)}>
-            <img key={active} src={product.images[active]} alt={product.name}
+            <img key={active} src={product.images[active]} alt={`${product.name} in ${color}`}
               className="fade-in-slow aspect-3/4 w-full object-cover transition-transform duration-300"
               style={zoom ? { transform: "scale(1.8)", transformOrigin: `${zoom.x}% ${zoom.y}%` } : undefined} />
             {product.images.length > 1 ? (
@@ -144,9 +144,9 @@ function ProductPage() {
           <div className="mt-8">
             <p className="label-xs">Colour — <span className="text-muted-foreground">{color}</span></p>
             <div className="mt-3 flex gap-3">
-              {product.colors.map((c) => (
-                <button key={c.name} type="button" onClick={() => setColor(c.name)} aria-label={c.name}
-                  className={cn("h-9 w-9 rounded-full border-2", color === c.name ? "border-gold" : "border-border")} style={{ backgroundColor: c.hex }} />
+              {product.colors.map((c, i) => (
+                <button key={c.name} type="button" onClick={() => { setColorIndex(i); setSpinning(false); setActive(i); }} aria-label={c.name}
+                  className={cn("h-9 w-9 rounded-full border-2", colorIndex === i ? "border-gold" : "border-border")} style={{ backgroundColor: c.hex }} />
               ))}
             </div>
           </div>
