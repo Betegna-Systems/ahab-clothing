@@ -1,14 +1,34 @@
 import heroCampaign from "@/assets/hero-campaign-tops.jpg";
 import topSquareNeck from "@/assets/top-square-neck.jpg";
+import topSquareNeckCrimson from "@/assets/top-square-neck-crimson.jpg";
+import topSquareNeckIvory from "@/assets/top-square-neck-ivory.jpg";
 import topOneShoulder from "@/assets/top-one-shoulder.jpg";
+import topOneShoulderBlack from "@/assets/top-one-shoulder-black.jpg";
+import topOneShoulderBurgundy from "@/assets/top-one-shoulder-burgundy.jpg";
 import topCowl from "@/assets/top-cowl.jpg";
+import topCowlSand from "@/assets/top-cowl-sand.jpg";
+import topCowlBlack from "@/assets/top-cowl-black.jpg";
 import topCorset from "@/assets/top-corset.jpg";
+import topCorsetIvory from "@/assets/top-corset-ivory.jpg";
+import topCorsetBurgundy from "@/assets/top-corset-burgundy.jpg";
 import topCutout from "@/assets/top-cutout.jpg";
+import topCutoutBlack from "@/assets/top-cutout-black.jpg";
+import topCutoutIvory from "@/assets/top-cutout-ivory.jpg";
 import topMockNeck from "@/assets/top-mock-neck.jpg";
+import topMockNeckChocolate from "@/assets/top-mock-neck-chocolate.jpg";
+import topMockNeckBlack from "@/assets/top-mock-neck-black.jpg";
 import topHalter from "@/assets/top-halter.jpg";
+import topHalterIvory from "@/assets/top-halter-ivory.jpg";
+import topHalterBlack from "@/assets/top-halter-black.jpg";
 import topOffShoulder from "@/assets/top-off-shoulder.jpg";
+import topOffShoulderBlack from "@/assets/top-off-shoulder-black.jpg";
+import topOffShoulderIvory from "@/assets/top-off-shoulder-ivory.jpg";
 import topCrew from "@/assets/top-crew.jpg";
+import topCrewBlack from "@/assets/top-crew-black.jpg";
+import topCrewRose from "@/assets/top-crew-rose.jpg";
 import topWrap from "@/assets/top-wrap.jpg";
+import topWrapChocolate from "@/assets/top-wrap-chocolate.jpg";
+import topWrapBlack from "@/assets/top-wrap-black.jpg";
 import craftStudio from "@/assets/craft-studio.jpg";
 
 export const images = {
@@ -36,6 +56,7 @@ export type Product = {
   categories: Category[];
   colors: { name: string; hex: string }[];
   sizes: string[];
+  /** One photo per color, in the same order as `colors`. */
   images: string[];
   description: string;
   fabric: string;
@@ -57,13 +78,10 @@ export const products: Product[] = [
     colors: [
       { name: "Ivory", hex: "#F8F3EB" },
       { name: "Black", hex: "#1A1714" },
-      { name: "Soft Gold", hex: "#B68A4C" },
-      { name: "Chocolate", hex: "#2A0D08" },
       { name: "Dusty Rose", hex: "#D8A79A" },
-      { name: "Olive", hex: "#6F6B45" },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
-    images: [topCrew, heroCampaign],
+    images: [topCrew, topCrewBlack, topCrewRose],
     description:
       "The top our customers buy in every colour. A seamless crew with a second-skin fit that disappears under a blazer and holds its own on its own.",
     fabric: "Seamless stretch jersey, bonded edges",
@@ -82,13 +100,11 @@ export const products: Product[] = [
     categories: ["sleeveless", "basics"],
     colors: [
       { name: "Black", hex: "#1A1714" },
-      { name: "Chocolate", hex: "#2A0D08" },
-      { name: "Ivory", hex: "#F8F3EB" },
-      { name: "Sand", hex: "#EFE5D6" },
       { name: "Crimson", hex: "#8E2A2A" },
+      { name: "Ivory", hex: "#F8F3EB" },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
-    images: [topSquareNeck],
+    images: [topSquareNeck, topSquareNeckCrimson, topSquareNeckIvory],
     description:
       "A clean square neck and soft ribbing that follows every line. Cut to skim the body without clinging, from desk to dinner without a change.",
     fabric: "Ribbed stretch knit, viscose-spandex blend",
@@ -108,12 +124,10 @@ export const products: Product[] = [
     colors: [
       { name: "Ivory", hex: "#F3EADB" },
       { name: "Black", hex: "#1A1714" },
-      { name: "Soft Gold", hex: "#B68A4C" },
       { name: "Burgundy", hex: "#4A1420" },
-      { name: "Olive", hex: "#6F6B45" },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
-    images: [topOneShoulder, heroCampaign],
+    images: [topOneShoulder, topOneShoulderBlack, topOneShoulderBurgundy],
     description:
       "One shoulder, full presence. The diagonal neckline does the talking while bonded seams keep the line absolutely clean underneath.",
     fabric: "Premium stretch knit with bonded seams",
@@ -134,11 +148,9 @@ export const products: Product[] = [
       { name: "Chocolate", hex: "#2A0D08" },
       { name: "Sand", hex: "#EFE5D6" },
       { name: "Black", hex: "#1A1714" },
-      { name: "Dusty Rose", hex: "#D8A79A" },
-      { name: "Burgundy", hex: "#4A1420" },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
-    images: [topCowl],
+    images: [topCowl, topCowlSand, topCowlBlack],
     description:
       "A bodycon cut with a softer face. The draped cowl falls exactly where it should, and the brushed rib keeps warm evenings warm.",
     fabric: "Brushed rib knit with fluid drape",
@@ -156,12 +168,11 @@ export const products: Product[] = [
     categories: ["sleeveless"],
     colors: [
       { name: "Soft Gold", hex: "#B68A4C" },
-      { name: "Black", hex: "#1A1714" },
       { name: "Ivory", hex: "#F3EADB" },
       { name: "Burgundy", hex: "#4A1420" },
     ],
     sizes: ["XS", "S", "M", "L"],
-    images: [topCorset],
+    images: [topCorset, topCorsetIvory, topCorsetBurgundy],
     description:
       "Our most sculpting piece. Internal boning and structured seaming hold the silhouette, while the stretch crepe keeps it comfortable all evening.",
     fabric: "Bonded stretch crepe with internal boning",
@@ -183,10 +194,9 @@ export const products: Product[] = [
       { name: "Crimson", hex: "#8E2A2A" },
       { name: "Black", hex: "#1A1714" },
       { name: "Ivory", hex: "#F8F3EB" },
-      { name: "Chocolate", hex: "#2A0D08" },
     ],
     sizes: ["XS", "S", "M", "L"],
-    images: [topCutout],
+    images: [topCutout, topCutoutBlack, topCutoutIvory],
     description:
       "A single cutout at the waist, placed to catch the light and the eye. Sculpting jersey holds everything else exactly in place.",
     fabric: "Sculpting stretch jersey",
@@ -207,11 +217,9 @@ export const products: Product[] = [
       { name: "Sand", hex: "#EFE5D6" },
       { name: "Chocolate", hex: "#2A0D08" },
       { name: "Black", hex: "#1A1714" },
-      { name: "Ivory", hex: "#F8F3EB" },
-      { name: "Olive", hex: "#6F6B45" },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
-    images: [topMockNeck],
+    images: [topMockNeck, topMockNeckChocolate, topMockNeckBlack],
     description:
       "The quiet one. A slim mock neck and second-skin rib that layers under everything and looks deliberate standing alone.",
     fabric: "Second-skin rib knit",
@@ -231,11 +239,9 @@ export const products: Product[] = [
       { name: "Olive", hex: "#6F6B45" },
       { name: "Ivory", hex: "#F3EADB" },
       { name: "Black", hex: "#1A1714" },
-      { name: "Soft Gold", hex: "#B68A4C" },
-      { name: "Crimson", hex: "#8E2A2A" },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
-    images: [topHalter],
+    images: [topHalter, topHalterIvory, topHalterBlack],
     description:
       "A halter that frames the shoulders and a tie you can knot your way. Cut close through the ribs, easy through the attitude.",
     fabric: "Stretch jersey with self-tie neck",
@@ -256,11 +262,9 @@ export const products: Product[] = [
       { name: "Dusty Rose", hex: "#D8A79A" },
       { name: "Black", hex: "#1A1714" },
       { name: "Ivory", hex: "#F3EADB" },
-      { name: "Chocolate", hex: "#2A0D08" },
-      { name: "Burgundy", hex: "#4A1420" },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
-    images: [topOffShoulder],
+    images: [topOffShoulder, topOffShoulderBlack, topOffShoulderIvory],
     description:
       "Sits off the shoulder and stays there. A soft elastic band keeps the neckline honest without pinching, hour after hour.",
     fabric: "Ribbed stretch knit with soft elastic neckline",
@@ -281,10 +285,9 @@ export const products: Product[] = [
       { name: "Burgundy", hex: "#4A1420" },
       { name: "Chocolate", hex: "#2A0D08" },
       { name: "Black", hex: "#1A1714" },
-      { name: "Soft Gold", hex: "#B68A4C" },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
-    images: [topWrap],
+    images: [topWrap, topWrapChocolate, topWrapBlack],
     description:
       "A wrap front drawn across the body like a brushstroke, in our deepest burgundy. The piece for the nights that deserve an entrance.",
     fabric: "Sculpting ponte with wrap front",
