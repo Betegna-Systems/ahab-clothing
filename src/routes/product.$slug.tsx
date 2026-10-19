@@ -2,7 +2,7 @@ import { ChatOrderButtons } from "@/components/site/ChatOrderButtons";
 import { buildOrderMessage } from "@/lib/order-channels";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Heart, MessageCircle, RotateCw, Star } from "lucide-react";
+import { Heart, RotateCw, Star } from "lucide-react";
 import { toast } from "sonner";
 import { formatPrice, getProduct, products } from "@/lib/products";
 import { useShop } from "@/lib/shop-store";
