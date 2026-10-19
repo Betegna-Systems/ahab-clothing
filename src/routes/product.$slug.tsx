@@ -1,3 +1,5 @@
+import { ChatOrderButtons } from "@/components/site/ChatOrderButtons";
+import { buildOrderMessage } from "@/lib/order-channels";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Heart, MessageCircle, RotateCw, Star } from "lucide-react";
@@ -93,7 +95,7 @@ function ProductPage() {
   const related = products.filter((p) => p.slug !== product.slug && p.categories.some((c) => product.categories.includes(c))).slice(0, 4);
   const viewed = recentlyViewed.filter((s) => s !== product.slug).map((s) => products.find((p) => p.slug === s)).filter(Boolean).slice(0, 4);
   const wished = isWished(product.slug);
-  const whatsapp = `https://wa.me/251911000000?text=${encodeURIComponent(`Hello AHAB, I'd like to order the ${product.name} (size ${size ?? "?"}, ${color}).`)}`;
+  const chatMessage = buildOrderMessage([{ name: product.name, color, size: size ?? "?", qty: 1, price: product.price }]);
 
   return (
     <div className="mx-auto max-w-[1500px] px-5 py-10 md:px-10 md:py-16">
@@ -172,9 +174,8 @@ function ProductPage() {
               </button>
             </div>
             <AhabButton size="lg" variant="gold" onClick={() => { if (add(false)) window.location.assign("/checkout"); }}>Buy Now</AhabButton>
-            <a href={whatsapp} target="_blank" rel="noreferrer" className="label-xs flex h-14 items-center justify-center gap-2 border border-primary/40 transition-colors hover:bg-secondary">
-              <MessageCircle className="h-4 w-4" strokeWidth={1.25} /> Order via WhatsApp
-            </a>
+            <p className="label-xs mt-2 text-center text-muted-foreground">Or order by chat</p>
+            <ChatOrderButtons message={chatMessage} onBeforeOpen={() => { if (!size) { toast.error("Please choose a size"); return false; } return true; }} />
           </div>
 
           <Accordion type="single" collapsible className="mt-10 border-t border-border">
