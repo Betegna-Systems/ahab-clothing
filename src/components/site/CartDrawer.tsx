@@ -1,3 +1,5 @@
+import { ChatOrderButtons } from "@/components/site/ChatOrderButtons";
+import { buildOrderMessage } from "@/lib/order-channels";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Minus, Plus, X } from "lucide-react";
@@ -172,6 +174,10 @@ export function CartDrawer() {
               >
                 Checkout
               </AhabLink>
+              <p className="label-xs mt-4 mb-2 text-center text-muted-foreground">Or order by chat</p>
+              <ChatOrderButtons
+                message={buildOrderMessage(lineItems.map(({ line, product }) => ({ name: product.name, color: line.color, size: line.size, qty: line.qty, price: product.price })))}
+              />
             </div>
           </>
         )}

@@ -4,6 +4,15 @@ import { seo } from "@/lib/seo";
 import { formatPrice } from "@/lib/products";
 import { useShop } from "@/lib/shop-store";
 import { AhabButton, AhabLink } from "@/components/site/ui";
+import { ChatOrderButtons } from "@/components/site/ChatOrderButtons";
+import { buildOrderMessage, submitOrder, type OrderLine } from "@/lib/order-channels";
+import { toast } from "sonner";
+
+const PAYMENTS = [
+  { id: "cod", label: "Cash on delivery", note: "Pay when your top arrives in Addis Ababa." },
+  { id: "telebirr", label: "Telebirr", note: "We send payment details when we confirm your order." },
+  { id: "cbe", label: "CBE bank transfer", note: "Account details are shared on confirmation." },
+];
 
 export const Route = createFileRoute("/checkout")({
   head: () => seo("Checkout", "Complete your AHAB order — delivery details and order summary."),
@@ -14,13 +23,31 @@ const field = "h-12 w-full border border-border bg-transparent px-4 text-sm outl
 
 function CheckoutPage() {
   const { lineItems, subtotal, clearCart } = useShop();
-  const [placed, setPlaced] = useState(false);
+  const [placed, setPlaced] = useState<{ number: string; message: string } | null>(null);
+  const [payment, setPayment] = useState("cod");
+  const [sending, setSending] = useState(false);
   const shipping = subtotal === 0 || subtotal >= 5000 ? 0 : 250;
 
-  const submit = (e: FormEvent) => {
+  const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    const g = (k: string) => String(f.get(k) ?? "").trim();
+    const items: OrderLine[] = lineItems.map(({ line, product }) => ({ name: product.name, color: line.color, size: line.size, qty: line.qty, price: product.price }));
+    const number = `AHAB-${Date.now().toString(36).toUpperCase().slice(-6)}`;
+    const name = `${g("first")} ${g("last")}`;
+    const paymentLabel = PAYMENTS.find((p) => p.id === payment)!.label;
+    setSending(true);
+    const ok = await submitOrder({
+      orderNumber: number,
+      createdAt: new Date().toISOString(),
+      customer: { name, email: g("email"), phone: g("phone"), address: g("address"), subCity: g("subCity"), city: g("city") },
+      items, subtotal, shipping, total: subtotal + shipping, paymentMethod: paymentLabel, notes: g("notes"),
+    });
+    setSending(false);
+    if (!ok) { toast.error("We couldn't send your order. Please try again or order by chat."); return; }
+    const message = buildOrderMessage(items, `Order ${number}\nName: ${name}\nPhone: ${g("phone")}\nArea: ${g("subCity")}\nPayment: ${paymentLabel}`);
     clearCart();
-    setPlaced(true);
+    setPlaced({ number, message });
   };
 
   if (placed) {
@@ -28,7 +55,9 @@ function CheckoutPage() {
       <div className="mx-auto max-w-xl px-5 py-28 text-center">
         <p className="label-xs text-gold">Thank you</p>
         <h1 className="mt-5 text-5xl">Your order is placed.</h1>
-        <p className="mt-6 text-muted-foreground">We'll be in touch shortly to confirm delivery and payment.</p>
+        <p className="mt-4 label-xs text-gold">Order {placed.number}</p>
+        <p className="mt-6 text-muted-foreground">We'll call you shortly to confirm delivery and payment. For a faster reply, send us your order on chat:</p>
+        <div className="mt-6"><ChatOrderButtons message={placed.message} /></div>
         <div className="mt-10"><AhabLink to="/shop">Continue shopping</AhabLink></div>
       </div>
     );
@@ -49,18 +78,27 @@ function CheckoutPage() {
         <p className="label-xs text-gold">Checkout</p>
         <h1 className="text-5xl">Delivery details</h1>
         <div className="grid gap-4 sm:grid-cols-2">
-          <input required placeholder="First name" className={field} />
-          <input required placeholder="Last name" className={field} />
+          <input required name="first" placeholder="First name" className={field} />
+          <input required name="last" placeholder="Last name" className={field} />
         </div>
-        <input required type="email" placeholder="Email" className={field} />
-        <input required type="tel" placeholder="Phone" className={field} />
-        <input required placeholder="Address" className={field} />
+        <input required name="phone" type="tel" placeholder="Phone (e.g. 0911 223344)" className={field} />
+        <input name="email" type="email" placeholder="Email (optional)" className={field} />
         <div className="grid gap-4 sm:grid-cols-2">
-          <input required placeholder="City" className={field} defaultValue="Addis Ababa" />
-          <input required placeholder="Country" className={field} defaultValue="Ethiopia" />
+          <input required name="subCity" placeholder="Sub-city (e.g. Bole)" className={field} />
+          <input required name="city" placeholder="City" className={field} defaultValue="Addis Ababa" />
         </div>
-        <p className="text-sm text-muted-foreground">Payment is arranged on confirmation — cash on delivery, Telebirr or bank transfer.</p>
-        <AhabButton type="submit" size="lg" className="w-full">Place order</AhabButton>
+        <input required name="address" placeholder="Street, building or landmark" className={field} />
+        <textarea name="notes" placeholder="Notes for delivery (optional)" className="min-h-24 w-full border border-border bg-transparent p-4 text-sm outline-none focus:border-primary" />
+        <fieldset className="space-y-3 pt-2">
+          <legend className="label-xs mb-3 text-gold">Payment</legend>
+          {PAYMENTS.map((p) => (
+            <label key={p.id} className={`flex cursor-pointer gap-3 border p-4 text-sm ${payment === p.id ? "border-primary" : "border-border"}`}>
+              <input type="radio" name="payment" checked={payment === p.id} onChange={() => setPayment(p.id)} className="mt-1 accent-primary" />
+              <span><span className="block font-medium">{p.label}</span><span className="text-muted-foreground">{p.note}</span></span>
+            </label>
+          ))}
+        </fieldset>
+        <AhabButton type="submit" size="lg" className="w-full" disabled={sending}>{sending ? "Sending…" : "Place order"}</AhabButton>
       </form>
 
       <aside className="h-fit bg-secondary p-8">
