@@ -6,8 +6,8 @@ import { formatPrice } from "@/lib/products";
  * ORDER_WEBHOOK_URL: optional. Any endpoint (your own API, Make/n8n, Google Apps Script)
  * that accepts a JSON POST. Leave empty to skip.
  */
-export const TELEGRAM_USERNAME = "ahab_clothing";
-export const WHATSAPP_NUMBER = "251911000000";
+export const TELEGRAM_USERNAME = "Daniel_Obrein";
+export const WHATSAPP_NUMBER = "251941219026";
 export const ORDER_WEBHOOK_URL = (import.meta.env['VITE_ORDER_WEBHOOK_URL'] as string | undefined) ?? "";
 
 export type OrderLine = { name: string; color: string; size: string; qty: number; price: number };
