@@ -8,7 +8,7 @@ import { formatPrice } from "@/lib/products";
  */
 export const TELEGRAM_USERNAME = "ahab_clothing";
 export const WHATSAPP_NUMBER = "251911000000";
-export const ORDER_WEBHOOK_URL = (import.meta.env.VITE_ORDER_WEBHOOK_URL as string | undefined) ?? "";
+export const ORDER_WEBHOOK_URL = (import.meta.env['VITE_ORDER_WEBHOOK_URL'] as string | undefined) ?? "";
 
 export type OrderLine = { name: string; color: string; size: string; qty: number; price: number };
 
