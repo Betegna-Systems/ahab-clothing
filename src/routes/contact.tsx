@@ -32,9 +32,9 @@ function Contact() {
         <div className="space-y-8">
           <dl className="grid grid-cols-2 gap-8 text-sm">
             {[
-              ["Phone", "+251 911 000 000", "tel:+251911000000"],
+              ["Phone", "+251 941 219 026", "tel:+251941219026"],
               ["Email", "hello@ahabclothing.com", "mailto:hello@ahabclothing.com"],
-              ["WhatsApp", "Chat with us", "https://wa.me/251911000000"],
+              ["WhatsApp", "Chat with us", "https://wa.me/251941219026"],
               ["Instagram", "@ahabclothing", "https://instagram.com"],
               ["TikTok", "@ahabclothing", "https://tiktok.com"],
               ["Facebook", "AHAB Clothing", "https://facebook.com"],

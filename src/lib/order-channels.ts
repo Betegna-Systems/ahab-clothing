@@ -3,12 +3,9 @@ import { formatPrice } from "@/lib/products";
 /**
  * AHAB order channels — replace these with your real contact details.
  * TELEGRAM_USERNAME: without "@". WHATSAPP_NUMBER: international format, digits only.
- * ORDER_WEBHOOK_URL: optional. Any endpoint (your own API, Make/n8n, Google Apps Script)
- * that accepts a JSON POST. Leave empty to skip.
  */
 export const TELEGRAM_USERNAME = "Daniel_Obrein";
 export const WHATSAPP_NUMBER = "251941219026";
-export const ORDER_WEBHOOK_URL = (import.meta.env['VITE_ORDER_WEBHOOK_URL'] as string | undefined) ?? "";
 
 export type OrderLine = { name: string; color: string; size: string; qty: number; price: number };
 
@@ -36,16 +33,12 @@ export type OrderPayload = {
   notes: string;
 };
 
-/** Sends the order to your own backend/webhook. Returns true if delivered (or no webhook set). */
+/** Sends the order to the AHAB orders Google Sheet. */
 export async function submitOrder(order: OrderPayload): Promise<boolean> {
-  if (!ORDER_WEBHOOK_URL) return true;
   try {
-    const res = await fetch(ORDER_WEBHOOK_URL, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(order),
-    });
-    return res.ok || res.type === "opaque";
+    const { placeOrder } = await import("@/lib/orders.functions");
+    const res = await placeOrder({ data: order });
+    return res.ok;
   } catch {
     return false;
   }
