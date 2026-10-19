@@ -1,3 +1,4 @@
+import { placeOrder } from "@/lib/orders.functions";
 import { formatPrice } from "@/lib/products";
 
 /**
@@ -36,7 +37,6 @@ export type OrderPayload = {
 /** Sends the order to the AHAB orders Google Sheet. */
 export async function submitOrder(order: OrderPayload): Promise<boolean> {
   try {
-    const { placeOrder } = await import("@/lib/orders.functions");
     const res = await placeOrder({ data: order });
     return res.ok;
   } catch {

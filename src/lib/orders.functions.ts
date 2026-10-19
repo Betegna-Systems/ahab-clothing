@@ -35,8 +35,8 @@ const orderSchema = z.object({
 export const placeOrder = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => orderSchema.parse(d))
   .handler(async ({ data }) => {
-    const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
-    const SHEETS_KEY = process.env.GOOGLE_SHEETS_API_KEY;
+    const LOVABLE_API_KEY = process.env['LOVABLE_API_KEY'];
+    const SHEETS_KEY = process.env['GOOGLE_SHEETS_API_KEY'];
     if (!LOVABLE_API_KEY || !SHEETS_KEY || !SPREADSHEET_ID) {
       console.error("Order sheet not configured");
       return { ok: false as const };
