@@ -36,7 +36,7 @@ const field = "h-12 w-full border border-border bg-transparent px-4 text-sm outl
 
 function CheckoutPage() {
   const { lineItems, subtotal, clearCart } = useShop();
-  const [placed, setPlaced] = useState<{ number: string; message: string } | null>(null);
+  const [placed, setPlaced] = useState<{ number: string; message: string; payment: string } | null>(null);
   const [payment, setPayment] = useState("cod");
   const [sending, setSending] = useState(false);
   const shipping = subtotal === 0 || subtotal >= 5000 ? 0 : 250;
@@ -60,7 +60,7 @@ function CheckoutPage() {
     if (!ok) { toast.error("We couldn't send your order. Please try again or order by chat."); return; }
     const message = buildOrderMessage(items, `Order ${number}\nName: ${name}\nPhone: ${g("phone")}\nArea: ${g("subCity")}\nPayment: ${paymentLabel}`);
     clearCart();
-    setPlaced({ number, message });
+    setPlaced({ number, message, payment });
   };
 
   if (placed) {
@@ -70,6 +70,13 @@ function CheckoutPage() {
         <h1 className="mt-5 text-5xl">Your order is placed.</h1>
         <p className="mt-4 label-xs text-gold">Order {placed.number}</p>
         <p className="mt-6 text-muted-foreground">We'll call you shortly to confirm delivery and payment. For a faster reply, send us your order on chat:</p>
+        {placed.payment !== "cod" && (
+          <div className="mt-6 border border-border p-5 text-sm">
+            <p>Please pay via {PAYMENTS.find((p) => p.id === placed.payment)!.label}:</p>
+            <div className="flex justify-center"><CopyAccount value={PAYMENTS.find((p) => p.id === placed.payment)!.account} /></div>
+            <p className="mt-3 text-muted-foreground">Then send your payment screenshot with order {placed.number} to us on Telegram (@Daniel_Obrein).</p>
+          </div>
+        )}
         <div className="mt-6"><ChatOrderButtons message={placed.message} /></div>
         <div className="mt-10"><AhabLink to="/shop">Continue shopping</AhabLink></div>
       </div>
@@ -107,7 +114,7 @@ function CheckoutPage() {
           {PAYMENTS.map((p) => (
             <label key={p.id} className={`flex cursor-pointer gap-3 border p-4 text-sm ${payment === p.id ? "border-primary" : "border-border"}`}>
               <input type="radio" name="payment" checked={payment === p.id} onChange={() => setPayment(p.id)} className="mt-1 accent-primary" />
-              <span><span className="block font-medium">{p.label}</span><span className="text-muted-foreground">{p.note}</span></span>
+              <span><span className="block font-medium">{p.label}</span><span className="text-muted-foreground">{p.note}</span>{p.account && payment === p.id && <CopyAccount value={p.account} />}</span>
             </label>
           ))}
         </fieldset>
