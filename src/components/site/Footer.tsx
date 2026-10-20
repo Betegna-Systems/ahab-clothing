@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Facebook, Instagram, Music2 } from "lucide-react";
+import { Instagram, Music2 } from "lucide-react";
 import { toast } from "sonner";
+import { INSTAGRAM_URL, TIKTOK_URL } from "@/lib/social";
 
 const columns = [
   {

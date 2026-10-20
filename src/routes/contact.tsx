@@ -35,9 +35,8 @@ function Contact() {
               ["Phone", "+251 941 219 026", "tel:+251941219026"],
               ["Email", "hello@ahabclothing.com", "mailto:hello@ahabclothing.com"],
               ["WhatsApp", "Chat with us", "https://wa.me/251941219026"],
-              ["Instagram", "@ahabclothing", "https://instagram.com"],
-              ["TikTok", "@ahabclothing", "https://tiktok.com"],
-              ["Facebook", "AHAB Clothing", "https://facebook.com"],
+              ["Instagram", INSTAGRAM_HANDLE, INSTAGRAM_URL],
+              ["TikTok", TIKTOK_HANDLE, TIKTOK_URL],
             ].map(([k, v, href]) => (
               <div key={k}><dt className="label-xs text-muted-foreground">{k}</dt><dd className="mt-2"><a href={href} className="link-underline">{v}</a></dd></div>
             ))}

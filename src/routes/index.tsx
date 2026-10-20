@@ -160,7 +160,7 @@ function Home() {
       {/* Instagram */}
       <section className="pb-24 md:pb-32">
         <div className="mx-auto max-w-[1500px] px-5 text-center md:px-10">
-          <Eyebrow>@ahabclothing</Eyebrow>
+          <Eyebrow>{INSTAGRAM_HANDLE}</Eyebrow>
           <h2 className="mt-5 text-4xl md:text-5xl">Follow Our Journey</h2>
         </div>
         <div className="mt-12 grid grid-cols-3 gap-1 md:grid-cols-6">
