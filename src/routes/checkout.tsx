@@ -9,10 +9,23 @@ import { buildOrderMessage, submitOrder, type OrderLine } from "@/lib/order-chan
 import { toast } from "sonner";
 
 const PAYMENTS = [
-  { id: "cod", label: "Cash on delivery", note: "Pay when your top arrives in Addis Ababa." },
-  { id: "telebirr", label: "Telebirr", note: "We send payment details when we confirm your order." },
-  { id: "cbe", label: "CBE bank transfer", note: "Account details are shared on confirmation." },
+  { id: "cod", label: "Cash on delivery", note: "Pay when your top arrives in Addis Ababa.", account: "" },
+  { id: "telebirr", label: "Telebirr", note: "Send the total to our Telebirr number:", account: "+251941219026" },
+  { id: "cbe", label: "CBE bank transfer", note: "Transfer the total to our CBE account:", account: "1000259462774" },
 ];
+
+function CopyAccount({ value }: { value: string }) {
+  return (
+    <span className="mt-2 flex items-center gap-3">
+      <span className="font-mono text-base text-foreground">{value}</span>
+      <button
+        type="button"
+        onClick={(e) => { e.preventDefault(); navigator.clipboard.writeText(value); toast.success("Copied"); }}
+        className="label-xs border border-border px-2 py-1 hover:border-primary"
+      >Copy</button>
+    </span>
+  );
+}
 
 export const Route = createFileRoute("/checkout")({
   head: () => seo("Checkout", "Complete your AHAB order — delivery details and order summary."),
