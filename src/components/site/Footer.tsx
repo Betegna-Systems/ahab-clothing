@@ -108,14 +108,11 @@ export function Footer() {
             © {new Date().getFullYear()} AHAB Clothing · Addis Ababa, Ethiopia
           </p>
           <div className="flex items-center gap-5">
-            <a href="https://instagram.com" aria-label="Instagram" className="hover:text-gold">
+            <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer" aria-label="AHAB on Instagram" className="hover:text-gold">
               <Instagram className="h-4 w-4" strokeWidth={1.25} />
             </a>
-            <a href="https://tiktok.com" aria-label="TikTok" className="hover:text-gold">
+            <a href={TIKTOK_URL} target="_blank" rel="noreferrer" aria-label="AHAB on TikTok" className="hover:text-gold">
               <Music2 className="h-4 w-4" strokeWidth={1.25} />
-            </a>
-            <a href="https://facebook.com" aria-label="Facebook" className="hover:text-gold">
-              <Facebook className="h-4 w-4" strokeWidth={1.25} />
             </a>
           </div>
         </div>

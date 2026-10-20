@@ -3,6 +3,7 @@ import { ArrowRight, Instagram } from "lucide-react";
 import { collections, images, products, testimonials } from "@/lib/products";
 import { ProductCard } from "@/components/site/ProductCard";
 import { AhabLink, Eyebrow, SectionHeading } from "@/components/site/ui";
+import { INSTAGRAM_HANDLE, INSTAGRAM_URL } from "@/lib/social";
 import craftStudio from "@/assets/craft-studio.jpg";
 import founder from "@/assets/founder-portrait.jpg";
 
@@ -165,7 +166,7 @@ function Home() {
         </div>
         <div className="mt-12 grid grid-cols-3 gap-1 md:grid-cols-6">
           {gallery.map((src, i) => (
-            <a key={i} href="https://instagram.com" target="_blank" rel="noreferrer" className="group relative aspect-square overflow-hidden">
+            <a key={i} href={INSTAGRAM_URL} target="_blank" rel="noreferrer" className="group relative aspect-square overflow-hidden">
               <img src={src} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110" />
               <span className="absolute inset-0 grid place-items-center bg-foreground/0 transition-colors group-hover:bg-foreground/35">
                 <Instagram className="h-5 w-5 text-cream opacity-0 transition-opacity group-hover:opacity-100" strokeWidth={1.25} />

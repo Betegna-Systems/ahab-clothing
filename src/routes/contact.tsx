@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { toast } from "sonner";
 import { seo } from "@/lib/seo";
 import { AhabButton } from "@/components/site/ui";
+import { INSTAGRAM_HANDLE, INSTAGRAM_URL, TIKTOK_HANDLE, TIKTOK_URL } from "@/lib/social";
 
 export const Route = createFileRoute("/contact")({
   head: () => seo("Contact", "Reach AHAB Clothing in Addis Ababa by phone, email, WhatsApp or social media."),
