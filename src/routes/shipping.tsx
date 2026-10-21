@@ -3,7 +3,10 @@ import { seo } from "@/lib/seo";
 import { InfoPage } from "@/components/site/InfoPage";
 
 export const Route = createFileRoute("/shipping")({
-  head: () => seo("Shipping & Delivery", "AHAB delivery times and costs across Addis Ababa, Ethiopia and worldwide."),
+  head: () =>
+    seo("Shipping & Delivery", "AHAB delivery times and costs across Addis Ababa, Ethiopia and worldwide.", {
+      path: "/shipping",
+    }),
   component: () => (
     <InfoPage eyebrow="Customer care" title="Shipping & delivery">
       <p>Every AHAB piece is packed by hand in our Addis Ababa atelier and wrapped in a cotton dust bag.</p>

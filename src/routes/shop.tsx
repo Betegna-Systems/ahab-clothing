@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
 import { products, type Category } from "@/lib/products";
 import { ProductCard } from "@/components/site/ProductCard";
-import { seo } from "@/lib/seo";
+import { collectionJsonLd, seo } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
 const CATS: Category[] = ["sleeveless", "long-sleeve", "one-shoulder", "off-shoulder", "cutout", "basics"];
@@ -22,7 +22,11 @@ export const Route = createFileRoute("/shop")({
   validateSearch: (s: Record<string, unknown>): { category?: Category | undefined } => ({
     category: CATS.includes(s["category"] as Category) ? (s["category"] as Category) : undefined,
   }),
-  head: () => seo("Shop", "Shop AHAB bodycon tops — ribbed, cowl, one-shoulder and cutout styles, sewn in Addis Ababa."),
+  head: () =>
+    seo("Shop", "Shop AHAB bodycon tops — ribbed, cowl, one-shoulder and cutout styles, sewn in Addis Ababa.", {
+      path: "/shop",
+      jsonLd: collectionJsonLd(),
+    }),
   component: Shop,
 });
 

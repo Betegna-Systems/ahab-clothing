@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Heart, RotateCw, Star } from "lucide-react";
 import { toast } from "sonner";
 import { formatPrice, getProduct, products } from "@/lib/products";
+import { breadcrumbJsonLd, productJsonLd, seo } from "@/lib/seo";
 import { useShop } from "@/lib/shop-store";
 import { ProductCard } from "@/components/site/ProductCard";
 import { AhabButton } from "@/components/site/ui";
@@ -21,31 +22,19 @@ export const Route = createFileRoute("/product/$slug")({
   head: ({ loaderData }) => {
     const p = loaderData?.product;
     if (!p) return {};
-    const title = `${p.name} — AHAB Clothing`;
-    return {
-      meta: [
-        { title },
-        { name: "description", content: p.description.slice(0, 155) },
-        { property: "og:title", content: title },
-        { property: "og:description", content: p.description.slice(0, 155) },
-        { property: "og:type", content: "product" },
-        { name: "twitter:card", content: "summary_large_image" },
+    return seo(p.name, p.description.slice(0, 155), {
+      path: `/product/${p.slug}`,
+      image: p.images[0],
+      type: "product",
+      jsonLd: [
+        productJsonLd(p),
+        breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "Shop", path: "/shop" },
+          { name: p.name, path: `/product/${p.slug}` },
+        ]),
       ],
-      scripts: [
-        {
-          type: "application/ld+json",
-          children: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Product",
-            name: p.name,
-            description: p.description,
-            brand: { "@type": "Brand", name: "AHAB Clothing" },
-            aggregateRating: { "@type": "AggregateRating", ratingValue: p.rating, reviewCount: p.reviews },
-            offers: { "@type": "Offer", priceCurrency: "ETB", price: p.price, availability: p.inStock ? "https://schema.org/InStock" : "https://schema.org/PreOrder" },
-          }),
-        },
-      ],
-    };
+    });
   },
   notFoundComponent: () => (
     <div className="py-32 text-center">

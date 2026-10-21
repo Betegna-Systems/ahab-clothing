@@ -3,7 +3,8 @@ import { seo } from "@/lib/seo";
 import { InfoPage } from "@/components/site/InfoPage";
 
 export const Route = createFileRoute("/returns")({
-  head: () => seo("Returns & Exchanges", "How to return or exchange an AHAB piece within 14 days."),
+  head: () =>
+    seo("Returns & Exchanges", "How to return or exchange an AHAB piece within 14 days.", { path: "/returns" }),
   component: () => (
     <InfoPage eyebrow="Customer care" title="Returns & exchanges">
       <p>If something isn't quite right, we'll make it right.</p>

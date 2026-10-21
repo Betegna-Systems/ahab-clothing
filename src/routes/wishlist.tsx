@@ -6,7 +6,7 @@ import { ProductCard } from "@/components/site/ProductCard";
 import { AhabLink } from "@/components/site/ui";
 
 export const Route = createFileRoute("/wishlist")({
-  head: () => seo("Wishlist", "Your saved AHAB pieces."),
+  head: () => seo("Wishlist", "Your saved AHAB pieces.", { path: "/wishlist", index: false }),
   component: Wishlist,
 });
 

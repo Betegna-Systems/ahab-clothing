@@ -41,7 +41,10 @@ function Table({ head, rows }: { head: string[]; rows: string[][] }) {
 }
 
 export const Route = createFileRoute("/size-guide")({
-  head: () => seo("Size Guide", "Find your AHAB size — bust, waist and hip measurements for women, men and kids."),
+  head: () =>
+    seo("Size Guide", "Find your AHAB size — bust, waist and hip measurements for women, men and kids.", {
+      path: "/size-guide",
+    }),
   component: () => (
     <InfoPage eyebrow="Customer care" title="Size guide">
       <p>All measurements are in centimetres. Between sizes? Choose the larger, or contact us for a tailored fit.</p>

@@ -3,7 +3,7 @@ import { seo } from "@/lib/seo";
 import { InfoPage } from "@/components/site/InfoPage";
 
 export const Route = createFileRoute("/terms")({
-  head: () => seo("Terms of Service", "The terms that apply when you shop with AHAB Clothing."),
+  head: () => seo("Terms of Service", "The terms that apply when you shop with AHAB Clothing.", { path: "/terms" }),
   component: () => (
     <InfoPage eyebrow="Legal" title="Terms of service">
       <p>By placing an order with AHAB Clothing you agree to these terms.</p>

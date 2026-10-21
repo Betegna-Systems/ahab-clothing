@@ -1,11 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { seo } from "@/lib/seo";
+import { SITE_URL, seo } from "@/lib/seo";
 import { AhabLink, Eyebrow } from "@/components/site/ui";
 import founder from "@/assets/founder-portrait.jpg";
 import craftStudio from "@/assets/craft-studio.jpg";
 
 export const Route = createFileRoute("/about")({
-  head: () => seo("About", "The story of AHAB — an independent house in Addis Ababa making fitted bodycon tops by hand."),
+  head: () =>
+    seo("About", "The story of AHAB — an independent house in Addis Ababa making fitted bodycon tops by hand.", {
+      path: "/about",
+      image: founder,
+      jsonLd: {
+        "@context": "https://schema.org",
+        "@type": "AboutPage",
+        name: "About AHAB Clothing",
+        url: `${SITE_URL}/about`,
+        description: "The story of AHAB — an independent house in Addis Ababa making fitted bodycon tops by hand.",
+      },
+    }),
   component: About,
 });
 

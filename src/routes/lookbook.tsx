@@ -5,7 +5,10 @@ import { AhabLink } from "@/components/site/ui";
 import craftStudio from "@/assets/craft-studio.jpg";
 
 export const Route = createFileRoute("/lookbook")({
-  head: () => seo("Lookbook — Autumn 2026", "The AHAB bodycon tops of Autumn 2026, photographed in our Addis Ababa studio."),
+  head: () =>
+    seo("Lookbook — Autumn 2026", "The AHAB bodycon tops of Autumn 2026, photographed in our Addis Ababa studio.", {
+      path: "/lookbook",
+    }),
   component: Lookbook,
 });
 

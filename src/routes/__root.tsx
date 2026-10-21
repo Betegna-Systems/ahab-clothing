@@ -15,6 +15,7 @@ import { ShopProvider } from "@/lib/shop-store";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { Toaster } from "@/components/ui/sonner";
+import { DEFAULT_DESCRIPTION, DEFAULT_TITLE, jsonLdScript, siteGraphJsonLd } from "@/lib/seo";
 
 function NotFoundComponent() {
   return (
@@ -56,13 +57,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "AHAB Clothing — Made With Love in Addis Ababa" },
-      { name: "description", content: "Contemporary Ethiopian fashion crafted with love." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
+      { title: DEFAULT_TITLE },
+      { name: "description", content: DEFAULT_DESCRIPTION },
+      { name: "theme-color", content: "#2A0D08" },
+      { name: "application-name", content: "AHAB Clothing" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "icon", href: "/favicon.ico" },
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
@@ -71,6 +73,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap",
       },
     ],
+    scripts: [jsonLdScript(siteGraphJsonLd())],
   }),
   shellComponent: RootShell,
   component: RootComponent,

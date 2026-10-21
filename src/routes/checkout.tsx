@@ -28,7 +28,11 @@ function CopyAccount({ value }: { value: string }) {
 }
 
 export const Route = createFileRoute("/checkout")({
-  head: () => seo("Checkout", "Complete your AHAB order — delivery details and order summary."),
+  head: () =>
+    seo("Checkout", "Complete your AHAB order — delivery details and order summary.", {
+      path: "/checkout",
+      index: false,
+    }),
   component: CheckoutPage,
 });
 

@@ -6,7 +6,10 @@ import { seo } from "@/lib/seo";
 import { AhabButton, AhabLink, Eyebrow } from "@/components/site/ui";
 
 export const Route = createFileRoute("/custom")({
-  head: () => seo("Custom Tops", "Commission a made-to-measure AHAB bodycon top — your neckline, your colour, sewn in Addis Ababa."),
+  head: () =>
+    seo("Custom Tops", "Commission a made-to-measure AHAB bodycon top — your neckline, your colour, sewn in Addis Ababa.", {
+      path: "/custom",
+    }),
   component: Custom,
 });
 

@@ -3,7 +3,10 @@ import { seo } from "@/lib/seo";
 import { InfoPage } from "@/components/site/InfoPage";
 
 export const Route = createFileRoute("/privacy")({
-  head: () => seo("Privacy Policy", "How AHAB Clothing collects, uses and protects your personal information."),
+  head: () =>
+    seo("Privacy Policy", "How AHAB Clothing collects, uses and protects your personal information.", {
+      path: "/privacy",
+    }),
   component: () => (
     <InfoPage eyebrow="Legal" title="Privacy policy">
       <p>We collect only what we need to make, send and care for your order.</p>

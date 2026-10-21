@@ -6,22 +6,14 @@ import { AhabLink, Eyebrow, SectionHeading } from "@/components/site/ui";
 import { INSTAGRAM_HANDLE, INSTAGRAM_URL } from "@/lib/social";
 import craftStudio from "@/assets/craft-studio.jpg";
 import founder from "@/assets/founder-portrait.jpg";
+import { DEFAULT_DESCRIPTION, DEFAULT_TITLE, seo } from "@/lib/seo";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "AHAB Clothing — Bodycon Tops Made in Addis Ababa" },
-      {
-        name: "description",
-        content:
-          "Fitted bodycon tops — ribbed, one-shoulder, cowl and cutout styles — designed and sewn by hand in Addis Ababa.",
-      },
-      { property: "og:title", content: "AHAB Clothing — Bodycon Tops Made in Addis Ababa" },
-      { property: "og:description", content: "Fitted bodycon tops, designed and sewn in Addis Ababa." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  head: () =>
+    seo(DEFAULT_TITLE, DEFAULT_DESCRIPTION, {
+      path: "/",
+      titleTemplate: false,
+    }),
   component: Home,
 });
 
