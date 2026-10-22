@@ -1,11 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { MAX_CART_QUANTITY } from "@/lib/order-limits";
 
 const line = z.object({
   name: z.string().max(200),
   color: z.string().max(100),
   size: z.string().max(20),
-  qty: z.number().int().min(1).max(50),
+  qty: z.number().int().min(1).max(MAX_CART_QUANTITY),
   price: z.number().min(0).max(1_000_000),
 });
 

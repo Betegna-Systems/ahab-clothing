@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Instagram, Music2 } from "lucide-react";
 import { toast } from "sonner";
 import { INSTAGRAM_URL, TIKTOK_URL } from "@/lib/social";
+import { supportEmailLink } from "@/lib/contact";
 
 const columns = [
   {
@@ -62,10 +63,11 @@ export function Footer() {
                   toast.error("Please enter a valid email address");
                   return;
                 }
-                toast.success("Welcome to AHAB", {
-                  description: "Look out for first access to new collections.",
-                });
-                setEmail("");
+                window.location.href = supportEmailLink(
+                  "AHAB newsletter signup",
+                  `Please add ${email} to the AHAB newsletter.`,
+                );
+                toast.info("Your email draft is ready. Send it to request newsletter updates.");
               }}
             >
               <label className="label-xs text-primary-foreground/60" htmlFor="newsletter">
@@ -75,6 +77,8 @@ export function Footer() {
                 <input
                   id="newsletter"
                   type="email"
+                  required
+                  required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Your email"

@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
-import { Check, Upload } from "lucide-react";
+import { Upload } from "lucide-react";
 import { images } from "@/lib/products";
 import { seo } from "@/lib/seo";
-import { AhabButton, AhabLink, Eyebrow } from "@/components/site/ui";
+import { AhabButton, Eyebrow } from "@/components/site/ui";
+import { supportEmailLink } from "@/lib/contact";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/custom")({
   head: () =>
@@ -17,27 +19,24 @@ const field = "h-12 w-full border-b border-border bg-transparent text-base outli
 const label = "label-xs text-muted-foreground";
 
 function Custom() {
-  const [done, setDone] = useState<string | null>(null);
   const [files, setFiles] = useState<File[]>([]);
 
   const submit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
-    // Future: send to backend / email notification service
-    setDone(String(data.get("name") || "").split(" ")[0] || "there");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  if (done) {
-    return (
-      <div className="mx-auto max-w-2xl px-5 py-32 text-center">
-        <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-gold text-gold-foreground"><Check className="h-6 w-6" strokeWidth={1.25} /></div>
-        <h1 className="mt-8 text-5xl">Thank you, {done}.</h1>
-        <p className="mt-6 text-muted-foreground">Your request is with our atelier. A designer will contact you within two working days to talk through fabrics, colours and timing.</p>
-        <AhabLink to="/shop" className="mt-10">Continue browsing</AhabLink>
-      </div>
+    const body = Array.from(data.entries())
+      .filter(([, value]) => typeof value === "string" && value.trim())
+      .map(([key, value]) => `${key}: ${String(value).trim()}`)
+      .join("\n");
+    const attachmentNote = files.length
+      ? `\n\nPlease attach these inspiration images before sending:\n${files.map((file) => `- ${file.name}`).join("\n")}`
+      : "";
+    window.location.href = supportEmailLink(
+      "AHAB custom top commission",
+      `${body}${attachmentNote}`,
     );
-  }
+    toast.info("Your email draft is ready. Send it from your mail app to submit your request.");
+  };
 
   return (
     <div>

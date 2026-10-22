@@ -39,11 +39,13 @@ export const Route = createFileRoute("/checkout")({
 const field = "h-12 w-full border border-border bg-transparent px-4 text-sm outline-none focus:border-primary";
 
 function CheckoutPage() {
-  const { lineItems, subtotal, clearCart } = useShop();
+  const { lineItems, subtotal, discount, promoCode, clearCart } = useShop();
   const [placed, setPlaced] = useState<{ number: string; message: string; payment: string } | null>(null);
   const [payment, setPayment] = useState("cod");
   const [sending, setSending] = useState(false);
   const shipping = subtotal === 0 || subtotal >= 5000 ? 0 : 250;
+  const discountAmount = Math.round(subtotal * discount);
+  const total = subtotal - discountAmount + shipping;
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -63,12 +65,27 @@ function CheckoutPage() {
     const ok = await submitOrder({
       orderNumber: number,
       createdAt: new Date().toISOString(),
-      customer: { name, email: g("email"), phone: g("phone"), address: g("address"), subCity: g("subCity"), city: g("city") },
-      items, subtotal, shipping, total: subtotal + shipping, paymentMethod: paymentLabel, notes: g("notes"),
+      customer: {
+        name,
+        email: g("email"),
+        phone: g("phone"),
+        address: g("address"),
+        subCity: g("subCity"),
+        city: g("city"),
+      },
+      items,
+      subtotal,
+      shipping,
+      total,
+      paymentMethod: paymentLabel,
+      notes: g("notes"),
     });
     setSending(false);
     if (!ok) { toast.error("We couldn't send your order. Please try again or order by chat."); return; }
-    const message = buildOrderMessage(items, `Order ${number}\nName: ${name}\nPhone: ${g("phone")}\nArea: ${g("subCity")}\nPayment: ${paymentLabel}`);
+    const message = buildOrderMessage(
+      items,
+      `Order ${number}\nName: ${name}\nPhone: ${g("phone")}\nArea: ${g("subCity")}\nPayment: ${paymentLabel}${promoCode ? `\nPromo code: ${promoCode} (-${formatPrice(discountAmount)})` : ""}\nAmount due: ${formatPrice(total)}`,
+    );
     clearCart();
     setPlaced({ number, message, payment });
   };
@@ -153,8 +170,14 @@ function CheckoutPage() {
         </ul>
         <dl className="mt-6 space-y-2 border-t border-border pt-6 text-sm">
           <div className="flex justify-between"><dt>Subtotal</dt><dd>{formatPrice(subtotal)}</dd></div>
+          {discountAmount > 0 ? (
+            <div className="flex justify-between text-gold">
+              <dt>Promo discount {promoCode}</dt>
+              <dd>-{formatPrice(discountAmount)}</dd>
+            </div>
+          ) : null}
           <div className="flex justify-between"><dt>Delivery</dt><dd>{shipping ? formatPrice(shipping) : "Free"}</dd></div>
-          <div className="flex justify-between font-serif text-xl"><dt>Total</dt><dd>{formatPrice(subtotal + shipping)}</dd></div>
+          <div className="flex justify-between font-serif text-xl"><dt>Total</dt><dd>{formatPrice(total)}</dd></div>
         </dl>
       </aside>
     </div>

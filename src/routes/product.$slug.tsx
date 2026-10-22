@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Heart, RotateCw, Star } from "lucide-react";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/products";
-import { getAllProductsCached, getProductCached, fetchProductBySlug } from "@/lib/firestore-products";
+import { getProductCached, fetchProductBySlug } from "@/lib/firestore-products";
 import { breadcrumbJsonLd, productJsonLd, seo } from "@/lib/seo";
 import { useShop } from "@/lib/shop-store";
 import { ProductCard } from "@/components/site/ProductCard";
@@ -58,7 +58,15 @@ const reviews = [
 function ProductPage() {
   const { product } = Route.useLoaderData();
   const navigate = useNavigate();
-  const { addToCart, toggleWishlist, isWished, markViewed, recentlyViewed, setCartOpen } = useShop();
+  const {
+    products: allProducts,
+    addToCart,
+    toggleWishlist,
+    isWished,
+    markViewed,
+    recentlyViewed,
+    setCartOpen,
+  } = useShop();
   const [active, setActive] = useState(0);
   const [size, setSize] = useState<string | null>(product.sizes.length === 1 ? product.sizes[0]! : null);
   const [colorIndex, setColorIndex] = useState(0);
@@ -86,7 +94,6 @@ function ProductPage() {
     return true;
   };
 
-  const allProducts = getAllProductsCached();
   const related = allProducts.filter((p) => p.slug !== product.slug && p.categories.some((c) => product.categories.includes(c))).slice(0, 4);
   const viewed = recentlyViewed.filter((s) => s !== product.slug).map((s) => allProducts.find((p) => p.slug === s)).filter(Boolean).slice(0, 4);
   const wished = isWished(product.slug);

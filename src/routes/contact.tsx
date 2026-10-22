@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { toast } from "sonner";
 import { SITE_URL, seo } from "@/lib/seo";
 import { AhabButton } from "@/components/site/ui";
+import { SUPPORT_EMAIL, supportEmailLink } from "@/lib/contact";
 import { INSTAGRAM_HANDLE, INSTAGRAM_URL, TIKTOK_HANDLE, TIKTOK_URL } from "@/lib/social";
 
 export const Route = createFileRoute("/contact")({
@@ -25,8 +26,16 @@ const field = "h-12 w-full border-b border-border bg-transparent outline-hidden 
 function Contact() {
   const submit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    toast.success("Message sent", { description: "We'll reply within one working day." });
-    e.currentTarget.reset();
+    const form = new FormData(e.currentTarget);
+    const body = [
+      `Name: ${String(form.get("name") ?? "").trim()}`,
+      `Email: ${String(form.get("email") ?? "").trim()}`,
+      `Phone: ${String(form.get("phone") ?? "").trim() || "Not provided"}`,
+      "",
+      String(form.get("message") ?? "").trim(),
+    ].join("\n");
+    window.location.href = supportEmailLink("AHAB website enquiry", body);
+    toast.info("Your email draft is ready. Send it from your mail app to complete your message.");
   };
   return (
     <div className="mx-auto max-w-[1500px] px-5 py-20 md:px-10">
@@ -34,17 +43,17 @@ function Contact() {
       <h1 className="mt-5 text-5xl md:text-7xl">We'd love to hear from you.</h1>
       <div className="mt-16 grid gap-16 lg:grid-cols-2">
         <form onSubmit={submit} className="grid gap-8">
-          <input required placeholder="Name" className={field} />
-          <input required type="email" placeholder="Email" className={field} />
-          <input type="tel" placeholder="Phone" className={field} />
-          <textarea required rows={5} placeholder="Your message" className="border-b border-border bg-transparent py-2 outline-hidden focus:border-gold" />
+          <input required name="name" placeholder="Name" className={field} />
+          <input required name="email" type="email" placeholder="Email" className={field} />
+          <input name="phone" type="tel" placeholder="Phone" className={field} />
+          <textarea required name="message" rows={5} placeholder="Your message" className="border-b border-border bg-transparent py-2 outline-hidden focus:border-gold" />
           <AhabButton type="submit" size="lg">Send message</AhabButton>
         </form>
         <div className="space-y-8">
           <dl className="grid grid-cols-2 gap-8 text-sm">
             {[
               ["Phone", "+251 941 219 026", "tel:+251941219026"],
-              ["Email", "hello@ahabclothing.com", "mailto:hello@ahabclothing.com"],
+              ["Email", SUPPORT_EMAIL, `mailto:${SUPPORT_EMAIL}`],
               ["WhatsApp", "Chat with us", "https://wa.me/251941219026"],
               ["Instagram", INSTAGRAM_HANDLE, INSTAGRAM_URL],
               ["TikTok", TIKTOK_HANDLE, TIKTOK_URL],

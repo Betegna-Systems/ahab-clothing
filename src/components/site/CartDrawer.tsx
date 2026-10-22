@@ -5,27 +5,36 @@ import { useState } from "react";
 import { Minus, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/products";
+import { MAX_CART_QUANTITY } from "@/lib/order-limits";
 import { useShop } from "@/lib/shop-store";
 import { cn } from "@/lib/utils";
 import { AhabLink } from "./ui";
 
 const FREE_SHIPPING = 5000;
-const PROMOS: Record<string, number> = { AHAB10: 0.1, MADEWITHLOVE: 0.15 };
 
 export function CartDrawer() {
-  const { cartOpen, setCartOpen, lineItems, removeLine, setQty, subtotal } = useShop();
+  const {
+    cartOpen,
+    setCartOpen,
+    lineItems,
+    removeLine,
+    setQty,
+    subtotal,
+    promoCode,
+    discount,
+    applyPromoCode,
+  } = useShop();
   const [promo, setPromo] = useState("");
-  const [discount, setDiscount] = useState(0);
 
   const shipping = subtotal === 0 || subtotal >= FREE_SHIPPING ? 0 : 250;
-  const total = Math.round(subtotal * (1 - discount)) + shipping;
+  const discountAmount = Math.round(subtotal * discount);
+  const total = subtotal - discountAmount + shipping;
 
   const applyPromo = () => {
-    const code = promo.trim().toUpperCase();
-    if (code in PROMOS) {
-      setDiscount(PROMOS[code]!);
+    const rate = applyPromoCode(promo);
+    if (rate !== null) {
       toast.success("Promo applied", {
-        description: `${Math.round(PROMOS[code]! * 100)}% off your order.`,
+        description: `${Math.round(rate * 100)}% off your order.`,
       });
     } else {
       toast.error("Invalid promo code");
@@ -39,7 +48,16 @@ export function CartDrawer() {
     qty: line.qty,
     price: product.price,
   }));
-  const chatMessage = buildOrderMessage(orderLines);
+  const chatMessage = buildOrderMessage(
+    orderLines,
+    [
+      promoCode ? `Promo code ${promoCode}: -${formatPrice(discountAmount)}` : "",
+      `Shipping: ${shipping ? formatPrice(shipping) : "Free"}`,
+      `Amount due: ${formatPrice(total)}`,
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  );
 
   return (
     <div
@@ -136,7 +154,8 @@ export function CartDrawer() {
                             type="button"
                             onClick={() => setQty(i, line.qty + 1)}
                             aria-label="Increase quantity"
-                            className="grid h-8 w-8 place-items-center border border-border"
+                            disabled={line.qty >= MAX_CART_QUANTITY}
+                            className="grid h-8 w-8 place-items-center border border-border disabled:cursor-not-allowed disabled:opacity-40"
                           >
                             <Plus className="h-3 w-3" strokeWidth={1.5} />
                           </button>
@@ -173,8 +192,8 @@ export function CartDrawer() {
                 </div>
                 {discount > 0 ? (
                   <div className="flex justify-between text-gold">
-                    <span>Promo discount</span>
-                    <span>-{formatPrice(Math.round(subtotal * discount))}</span>
+                    <span>Promo discount {promoCode}</span>
+                    <span>-{formatPrice(discountAmount)}</span>
                   </div>
                 ) : null}
                 <div className="flex justify-between">

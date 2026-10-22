@@ -142,7 +142,7 @@ export function getProductCached(slug: string): Product | undefined {
  * Client hook: fetches products on mount, polls periodically, and blends with static catalog
  */
 export function useAllProducts() {
-  const [dynamicProducts, setDynamicProducts] = useState<Product[]>(_cachedFirestoreProducts);
+  const [dynamicProducts, setDynamicProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
