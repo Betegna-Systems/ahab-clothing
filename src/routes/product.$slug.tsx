@@ -1,6 +1,6 @@
 import { ChatOrderButtons } from "@/components/site/ChatOrderButtons";
 import { buildOrderMessage } from "@/lib/order-channels";
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Heart, RotateCw, Star } from "lucide-react";
 import { toast } from "sonner";
@@ -57,6 +57,7 @@ const reviews = [
 
 function ProductPage() {
   const { product } = Route.useLoaderData();
+  const navigate = useNavigate();
   const { addToCart, toggleWishlist, isWished, markViewed, recentlyViewed, setCartOpen } = useShop();
   const [active, setActive] = useState(0);
   const [size, setSize] = useState<string | null>(product.sizes.length === 1 ? product.sizes[0]! : null);
@@ -167,7 +168,17 @@ function ProductPage() {
                 <Heart className={cn("h-5 w-5", wished && "fill-gold text-gold")} strokeWidth={1.25} />
               </button>
             </div>
-            <AhabButton size="lg" variant="gold" onClick={() => { if (add(false)) window.location.assign("/checkout"); }}>Buy Now</AhabButton>
+            <AhabButton
+              size="lg"
+              variant="gold"
+              onClick={() => {
+                if (add(false)) {
+                  navigate({ to: "/checkout" });
+                }
+              }}
+            >
+              Buy Now
+            </AhabButton>
             <p className="label-xs mt-2 text-center text-muted-foreground">Or order by chat</p>
             <ChatOrderButtons message={chatMessage} onBeforeOpen={() => { if (!size) { toast.error("Please choose a size"); return false; } return true; }} />
           </div>

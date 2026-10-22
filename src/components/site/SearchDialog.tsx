@@ -1,12 +1,14 @@
 import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Search, X } from "lucide-react";
-import { formatPrice, products } from "@/lib/products";
+import { formatPrice } from "@/lib/products";
+import { useAllProducts } from "@/lib/firestore-products";
 import { useShop } from "@/lib/shop-store";
 import { cn } from "@/lib/utils";
 
 export function SearchDialog() {
   const { searchOpen, setSearchOpen } = useShop();
+  const { products } = useAllProducts();
   const [q, setQ] = useState("");
 
   const results = useMemo(() => {
@@ -20,7 +22,7 @@ export function SearchDialog() {
           .includes(term),
       )
       .slice(0, 6);
-  }, [q]);
+  }, [q, products]);
 
   return (
     <div
@@ -41,7 +43,6 @@ export function SearchDialog() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search tops, ribbed, one shoulder…"
-
             className="w-full bg-transparent font-serif text-2xl outline-hidden placeholder:text-muted-foreground/70"
           />
           <button type="button" onClick={() => setSearchOpen(false)} aria-label="Close search">
@@ -49,56 +50,35 @@ export function SearchDialog() {
           </button>
         </div>
 
-        {q && results.length === 0 ? (
-          <p className="pt-8 text-sm text-muted-foreground">
-            Nothing matched. Try “one shoulder”, “ribbed” or “cutout”.
-
-          </p>
-        ) : null}
-
-        <ul className="divide-y divide-border">
-          {results.map((p) => (
-            <li key={p.slug}>
+        {results.length > 0 ? (
+          <div className="mt-6 grid divide-y divide-border">
+            {results.map((p) => (
               <Link
+                key={p.slug}
                 to="/product/$slug"
                 params={{ slug: p.slug }}
                 onClick={() => setSearchOpen(false)}
-                className="flex items-center gap-5 py-4"
+                className="flex items-center gap-4 py-3 transition-colors hover:bg-secondary/40"
               >
                 <img
                   src={p.images[0]}
-                  alt=""
-                  loading="lazy"
-                  className="h-20 w-16 object-cover"
+                  alt={p.name}
+                  className="h-16 w-12 object-cover"
                 />
-                <span className="flex-1">
-                  <span className="block font-serif text-lg">{p.name}</span>
-                  <span className="label-xs text-muted-foreground">
+                <div className="flex-1">
+                  <h4 className="font-serif text-lg">{p.name}</h4>
+                  <p className="label-xs text-muted-foreground">
                     {p.categories.join(" · ")}
-                  </span>
-                </span>
-                <span className="text-sm">{formatPrice(p.price)}</span>
+                  </p>
+                </div>
+                <p className="label-xs">{formatPrice(p.price)}</p>
               </Link>
-            </li>
-          ))}
-        </ul>
-
-        {!q ? (
-          <div className="pt-8">
-            <p className="label-xs text-muted-foreground">Popular searches</p>
-            <div className="mt-4 flex flex-wrap gap-3">
-              {["One shoulder", "Ribbed", "Cutout", "Corset", "Basics"].map((term) => (
-                <button
-                  key={term}
-                  type="button"
-                  onClick={() => setQ(term)}
-                  className="label-xs border border-border px-4 py-2 transition-colors hover:border-gold hover:text-gold"
-                >
-                  {term}
-                </button>
-              ))}
-            </div>
+            ))}
           </div>
+        ) : q.trim() ? (
+          <p className="py-12 text-center text-sm text-muted-foreground">
+            No pieces found matching “{q}”.
+          </p>
         ) : null}
       </div>
     </div>

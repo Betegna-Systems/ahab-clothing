@@ -20,6 +20,27 @@ export function CartDrawer() {
   const shipping = subtotal === 0 || subtotal >= FREE_SHIPPING ? 0 : 250;
   const total = Math.round(subtotal * (1 - discount)) + shipping;
 
+  const applyPromo = () => {
+    const code = promo.trim().toUpperCase();
+    if (code in PROMOS) {
+      setDiscount(PROMOS[code]!);
+      toast.success("Promo applied", {
+        description: `${Math.round(PROMOS[code]! * 100)}% off your order.`,
+      });
+    } else {
+      toast.error("Invalid promo code");
+    }
+  };
+
+  const orderLines = lineItems.map(({ line, product }) => ({
+    name: product.name,
+    color: line.color,
+    size: line.size,
+    qty: line.qty,
+    price: product.price,
+  }));
+  const chatMessage = buildOrderMessage(orderLines);
+
   return (
     <div
       className={cn(
@@ -63,121 +84,119 @@ export function CartDrawer() {
                 </p>
               ) : null}
               <ul className="divide-y divide-border">
-                {lineItems.map(({ line, product }, i) => (
-                  <li key={`${line.slug}-${line.size}-${line.color}`} className="flex gap-4 py-5">
-                    <img
-                      src={product.images[0]}
-                      alt={product.name}
-                      loading="lazy"
-                      className="h-28 w-22 object-cover"
-                    />
-                    <div className="flex flex-1 flex-col">
-                      <div className="flex justify-between gap-3">
-                        <Link
-                          to="/product/$slug"
-                          params={{ slug: product.slug }}
-                          onClick={() => setCartOpen(false)}
-                          className="font-serif text-lg leading-tight"
-                        >
-                          {product.name}
-                        </Link>
-                        <button
-                          type="button"
-                          onClick={() => removeLine(i)}
-                          aria-label="Remove item"
-                        >
-                          <X className="h-4 w-4 text-muted-foreground" strokeWidth={1.25} />
-                        </button>
-                      </div>
-                      <p className="label-xs mt-1 text-muted-foreground">
-                        {line.size} · {line.color}
-                      </p>
-                      <div className="mt-auto flex items-center justify-between">
-                        <div className="flex items-center border border-border">
+                {lineItems.map(({ line, product }, i) => {
+                  const colorIdx = product.colors.findIndex(
+                    (c) => c.name.toLowerCase() === line.color.toLowerCase(),
+                  );
+                  const itemImage = product.images[colorIdx >= 0 ? colorIdx : 0] ?? product.images[0];
+                  return (
+                    <li key={`${line.slug}-${line.size}-${line.color}`} className="flex gap-4 py-5">
+                      <img
+                        src={itemImage}
+                        alt={product.name}
+                        loading="lazy"
+                        className="h-28 w-22 object-cover"
+                      />
+                      <div className="flex flex-1 flex-col">
+                        <div className="flex justify-between gap-3">
+                          <Link
+                            to="/product/$slug"
+                            params={{ slug: product.slug }}
+                            onClick={() => setCartOpen(false)}
+                            className="font-serif text-lg leading-tight"
+                          >
+                            {product.name}
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => removeLine(i)}
+                            aria-label="Remove item"
+                          >
+                            <X className="h-4 w-4 text-muted-foreground" strokeWidth={1.25} />
+                          </button>
+                        </div>
+                        <p className="label-xs mt-1 text-muted-foreground">
+                          {line.color} · {line.size}
+                        </p>
+                        <p className="label-xs mt-2 text-foreground">
+                          {formatPrice(product.price)}
+                        </p>
+                        <div className="mt-auto flex items-center gap-2 pt-3">
                           <button
                             type="button"
                             onClick={() => setQty(i, line.qty - 1)}
+                            disabled={line.qty <= 1}
                             aria-label="Decrease quantity"
-                            className="grid h-9 w-9 place-items-center"
+                            className="grid h-8 w-8 place-items-center border border-border disabled:opacity-40"
                           >
                             <Minus className="h-3 w-3" strokeWidth={1.5} />
                           </button>
-                          <span className="w-8 text-center text-sm">{line.qty}</span>
+                          <span className="w-8 text-center text-sm font-medium">{line.qty}</span>
                           <button
                             type="button"
                             onClick={() => setQty(i, line.qty + 1)}
                             aria-label="Increase quantity"
-                            className="grid h-9 w-9 place-items-center"
+                            className="grid h-8 w-8 place-items-center border border-border"
                           >
                             <Plus className="h-3 w-3" strokeWidth={1.5} />
                           </button>
                         </div>
-                        <span className="text-sm">{formatPrice(product.price * line.qty)}</span>
                       </div>
-                    </div>
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
 
-            <div className="border-t border-border px-6 py-5">
-              <div className="flex gap-2">
+            <div className="border-t border-border bg-cream p-6">
+              <div className="mb-4 flex gap-2">
                 <input
+                  type="text"
+                  placeholder="Promo code (AHAB10)"
                   value={promo}
                   onChange={(e) => setPromo(e.target.value)}
-                  placeholder="Promo code"
-                  className="label-xs h-11 flex-1 border border-border bg-transparent px-4 outline-hidden focus:border-gold"
+                  className="h-10 flex-1 border border-border bg-transparent px-3 text-xs tracking-wider uppercase outline-none focus:border-primary"
                 />
                 <button
                   type="button"
-                  onClick={() => {
-                    const rate = PROMOS[promo.trim().toUpperCase()];
-                    if (rate) {
-                      setDiscount(rate);
-                      toast.success(`${rate * 100}% applied`);
-                    } else {
-                      toast.error("That code isn't recognised");
-                    }
-                  }}
-                  className="label-xs h-11 border border-primary px-5 transition-colors hover:bg-primary hover:text-primary-foreground"
+                  onClick={applyPromo}
+                  className="label-xs border border-primary px-4 hover:bg-primary hover:text-primary-foreground"
                 >
                   Apply
                 </button>
               </div>
 
-              <dl className="mt-5 space-y-2 text-sm">
+              <div className="space-y-1.5 text-xs text-muted-foreground">
                 <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Subtotal</dt>
-                  <dd>{formatPrice(subtotal)}</dd>
+                  <span>Subtotal</span>
+                  <span className="text-foreground">{formatPrice(subtotal)}</span>
                 </div>
                 {discount > 0 ? (
                   <div className="flex justify-between text-gold">
-                    <dt>Discount</dt>
-                    <dd>−{formatPrice(Math.round(subtotal * discount))}</dd>
+                    <span>Promo discount</span>
+                    <span>-{formatPrice(Math.round(subtotal * discount))}</span>
                   </div>
                 ) : null}
                 <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Estimated delivery</dt>
-                  <dd>{shipping === 0 ? "Free" : formatPrice(shipping)}</dd>
+                  <span>Delivery</span>
+                  <span>{shipping === 0 ? "Free" : formatPrice(shipping)}</span>
                 </div>
-                <div className="flex justify-between border-t border-border pt-3 font-serif text-lg">
-                  <dt>Total</dt>
-                  <dd>{formatPrice(total)}</dd>
+                <div className="flex justify-between pt-2 text-base font-serif text-foreground">
+                  <span>Total</span>
+                  <span>{formatPrice(total)}</span>
                 </div>
-              </dl>
+              </div>
 
-              <AhabLink
-                to="/checkout"
-                onClick={() => setCartOpen(false)}
-                className="mt-5 w-full"
-                size="lg"
-              >
-                Checkout
-              </AhabLink>
-              <p className="label-xs mt-4 mb-2 text-center text-muted-foreground">Or order by chat</p>
-              <ChatOrderButtons
-                message={buildOrderMessage(lineItems.map(({ line, product }) => ({ name: product.name, color: line.color, size: line.size, qty: line.qty, price: product.price })))}
-              />
+              <div className="mt-5 grid gap-2.5">
+                <Link
+                  to="/checkout"
+                  onClick={() => setCartOpen(false)}
+                  className="label-xs grid h-13 w-full place-items-center bg-primary text-primary-foreground"
+                >
+                  Proceed to Checkout
+                </Link>
+                <ChatOrderButtons message={chatMessage} />
+              </div>
             </div>
           </>
         )}

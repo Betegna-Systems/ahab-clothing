@@ -49,7 +49,13 @@ function CheckoutPage() {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     const g = (k: string) => String(f.get(k) ?? "").trim();
-    const items: OrderLine[] = lineItems.map(({ line, product }) => ({ name: product.name, color: line.color, size: line.size, qty: line.qty, price: product.price }));
+    const items: OrderLine[] = lineItems.map(({ line, product }) => ({
+      name: product.name,
+      color: line.color,
+      size: line.size,
+      qty: line.qty,
+      price: product.price,
+    }));
     const number = `AHAB-${Date.now().toString(36).toUpperCase().slice(-6)}`;
     const name = `${g("first")} ${g("last")}`;
     const paymentLabel = PAYMENTS.find((p) => p.id === payment)!.label;
@@ -128,16 +134,22 @@ function CheckoutPage() {
       <aside className="h-fit bg-secondary p-8">
         <h2 className="font-serif text-2xl">Order summary</h2>
         <ul className="mt-6 space-y-4">
-          {lineItems.map(({ line, product }, i) => (
-            <li key={i} className="flex gap-4">
-              <img src={product.images[0]} alt={product.name} className="h-20 w-16 object-cover" />
-              <div className="flex-1 text-sm">
-                <Link to="/product/$slug" params={{ slug: product.slug }} className="font-serif text-base">{product.name}</Link>
-                <p className="text-muted-foreground">{line.color} · {line.size} · ×{line.qty}</p>
-              </div>
-              <span className="text-sm">{formatPrice(product.price * line.qty)}</span>
-            </li>
-          ))}
+          {lineItems.map(({ line, product }, i) => {
+            const colorIdx = product.colors.findIndex(
+              (c) => c.name.toLowerCase() === line.color.toLowerCase(),
+            );
+            const itemImage = product.images[colorIdx >= 0 ? colorIdx : 0] ?? product.images[0];
+            return (
+              <li key={i} className="flex gap-4">
+                <img src={itemImage} alt={product.name} className="h-20 w-16 object-cover" />
+                <div className="flex-1 text-sm">
+                  <Link to="/product/$slug" params={{ slug: product.slug }} className="font-serif text-base">{product.name}</Link>
+                  <p className="text-muted-foreground">{line.color} · {line.size} · ×{line.qty}</p>
+                </div>
+                <span className="text-sm">{formatPrice(product.price * line.qty)}</span>
+              </li>
+            );
+          })}
         </ul>
         <dl className="mt-6 space-y-2 border-t border-border pt-6 text-sm">
           <div className="flex justify-between"><dt>Subtotal</dt><dd>{formatPrice(subtotal)}</dd></div>

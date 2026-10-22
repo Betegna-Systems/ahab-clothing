@@ -7,7 +7,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { products, type Product } from "@/lib/products";
+import { type Product } from "@/lib/products";
+import { useAllProducts, getProductCached } from "@/lib/firestore-products";
 
 export type CartLine = {
   slug: string;
@@ -52,6 +53,7 @@ function read<T>(key: string, fallback: T): T {
 }
 
 export function ShopProvider({ children }: { children: ReactNode }) {
+  const { products: allProducts } = useAllProducts();
   const [cart, setCart] = useState<CartLine[]>([]);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [recentlyViewed, setRecentlyViewed] = useState<string[]>([]);
@@ -81,7 +83,8 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       );
       if (i === -1) return [...prev, line];
       const next = [...prev];
-      const cur = next[i]!; next[i] = { ...cur, qty: cur.qty + line.qty };
+      const cur = next[i]!;
+      next[i] = { ...cur, qty: cur.qty + line.qty };
       return next;
     });
     setCartOpen(true);
@@ -111,11 +114,13 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     () =>
       cart
         .map((line) => {
-          const product = products.find((p) => p.slug === line.slug);
+          const product =
+            allProducts.find((p) => p.slug === line.slug) ??
+            getProductCached(line.slug);
           return product ? { line, product } : null;
         })
         .filter((v): v is { line: CartLine; product: Product } => v !== null),
-    [cart],
+    [cart, allProducts],
   );
 
   const value: ShopState = {
