@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SITE_URL, seo } from "@/lib/seo";
 import { AhabLink, Eyebrow } from "@/components/site/ui";
-import founder from "@/assets/founder-portrait.jpg";
-import craftStudio from "@/assets/craft-studio.jpg";
+import { cloudinaryAssets } from "@/lib/cloudinary";
+const founder = cloudinaryAssets.founderPortrait.optimizedUrl;
+const craftStudio = cloudinaryAssets.craftStudio.optimizedUrl;
 
 export const Route = createFileRoute("/about")({
   head: () =>

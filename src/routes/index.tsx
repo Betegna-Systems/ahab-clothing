@@ -1,11 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Instagram } from "lucide-react";
-import { collections, images, products, testimonials } from "@/lib/products";
+import { collections, images, testimonials } from "@/lib/products";
+import { useAllProducts } from "@/lib/firestore-products";
 import { ProductCard } from "@/components/site/ProductCard";
 import { AhabLink, Eyebrow, SectionHeading } from "@/components/site/ui";
 import { INSTAGRAM_HANDLE, INSTAGRAM_URL } from "@/lib/social";
-import craftStudio from "@/assets/craft-studio.jpg";
-import founder from "@/assets/founder-portrait.jpg";
+import { cloudinaryAssets } from "@/lib/cloudinary";
+const craftStudio = images.craftStudio;
+const founder = cloudinaryAssets.founderPortrait.optimizedUrl;
 import { DEFAULT_DESCRIPTION, DEFAULT_TITLE, seo } from "@/lib/seo";
 
 export const Route = createFileRoute("/")({
@@ -17,8 +19,6 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-const newArrivals = [...products].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 6);
-const bestSellers = [...products].sort((a, b) => b.popularity - a.popularity).slice(0, 4);
 const gallery = [
   images.topOneShoulder,
   images.topSquareNeck,
@@ -29,6 +29,10 @@ const gallery = [
 ];
 
 function Home() {
+  const { products } = useAllProducts();
+  const newArrivals = [...products].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 6);
+  const bestSellers = [...products].sort((a, b) => b.popularity - a.popularity).slice(0, 4);
+
   return (
     <>
       {/* Hero */}
@@ -42,7 +46,7 @@ function Home() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-foreground/65 via-foreground/10 to-transparent" />
         <div className="relative mx-auto flex h-full max-w-[1500px] flex-col justify-end px-5 pb-16 md:px-10 md:pb-24">
-          <p className="label-xs reveal-up text-cream/85">The Bodycon Edit · 2026</p>
+          <p className="label-xs reveal-up text-cream/85">The Bodycon Edit &middot; 2026</p>
           <h1 className="reveal-up mt-5 max-w-3xl text-6xl leading-[0.95] text-cream sm:text-7xl md:text-[7.5rem]">
             Made to <em className="italic text-gold">Fit.</em>
           </h1>
@@ -143,8 +147,8 @@ function Home() {
           {testimonials.map((t, i) => (
             <figure key={t.name} className="bg-card p-8 shadow-soft transition-transform duration-500 hover:-translate-y-1 md:p-10">
               <img src={[founder, images.topMockNeck, images.topCowl][i]} alt={t.name} loading="lazy" className="h-14 w-14 rounded-full object-cover object-top" />
-              <blockquote className="mt-6 font-serif text-xl leading-snug">“{t.quote}”</blockquote>
-              <figcaption className="label-xs mt-6 text-muted-foreground">{t.name} · {t.city}</figcaption>
+              <blockquote className="mt-6 font-serif text-xl leading-snug">&ldquo;{t.quote}&rdquo;</blockquote>
+              <figcaption className="label-xs mt-6 text-muted-foreground">{t.name} &middot; {t.city}</figcaption>
             </figure>
           ))}
         </div>
@@ -173,7 +177,7 @@ function Home() {
         <img src={images.heroCampaign} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover object-[center_20%]" />
         <div className="absolute inset-0 bg-foreground/55" />
         <div className="relative mx-auto max-w-3xl px-5 py-32 text-center text-cream md:py-44">
-          <p className="label-xs text-gold">AHAB · Addis Ababa</p>
+          <p className="label-xs text-gold">AHAB &middot; Addis Ababa</p>
           <h2 className="mt-6 text-6xl leading-none md:text-8xl">Worn Close. <em className="italic">Worn Often.</em></h2>
           <AhabLink to="/shop" variant="gold" size="lg" className="mt-12">Start Shopping</AhabLink>
         </div>

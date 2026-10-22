@@ -4,7 +4,8 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Heart, RotateCw, Star } from "lucide-react";
 import { toast } from "sonner";
-import { formatPrice, getProduct, products } from "@/lib/products";
+import { formatPrice } from "@/lib/products";
+import { getAllProductsCached, getProductCached, fetchProductBySlug } from "@/lib/firestore-products";
 import { breadcrumbJsonLd, productJsonLd, seo } from "@/lib/seo";
 import { useShop } from "@/lib/shop-store";
 import { ProductCard } from "@/components/site/ProductCard";
@@ -14,8 +15,11 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/product/$slug")({
-  loader: ({ params }) => {
-    const product = getProduct(params.slug);
+  loader: async ({ params }) => {
+    let product = getProductCached(params.slug);
+    if (!product) {
+      product = await fetchProductBySlug(params.slug);
+    }
     if (!product) throw notFound();
     return { product };
   },
@@ -81,8 +85,9 @@ function ProductPage() {
     return true;
   };
 
-  const related = products.filter((p) => p.slug !== product.slug && p.categories.some((c) => product.categories.includes(c))).slice(0, 4);
-  const viewed = recentlyViewed.filter((s) => s !== product.slug).map((s) => products.find((p) => p.slug === s)).filter(Boolean).slice(0, 4);
+  const allProducts = getAllProductsCached();
+  const related = allProducts.filter((p) => p.slug !== product.slug && p.categories.some((c) => product.categories.includes(c))).slice(0, 4);
+  const viewed = recentlyViewed.filter((s) => s !== product.slug).map((s) => allProducts.find((p) => p.slug === s)).filter(Boolean).slice(0, 4);
   const wished = isWished(product.slug);
   const chatMessage = buildOrderMessage([{ name: product.name, color, size: size ?? "?", qty: 1, price: product.price }]);
 
@@ -187,8 +192,8 @@ function ProductPage() {
           {reviews.map((r) => (
             <div key={r.name} className="border-t border-border pt-6">
               <span className="flex">{Array.from({ length: 5 }).map((_, i) => <Star key={i} className={cn("h-3.5 w-3.5", i < r.rating ? "fill-gold text-gold" : "text-border")} />)}</span>
-              <p className="mt-4 font-serif text-xl leading-snug">“{r.text}”</p>
-              <p className="label-xs mt-4 text-muted-foreground">{r.name} · Verified buyer</p>
+              <p className="mt-4 font-serif text-xl leading-snug">&ldquo;{r.text}&rdquo;</p>
+              <p className="label-xs mt-4 text-muted-foreground">{r.name} &middot; Verified buyer</p>
             </div>
           ))}
         </div>

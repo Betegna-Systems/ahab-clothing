@@ -1,49 +1,25 @@
-import heroCampaign from "@/assets/hero-campaign-tops.jpg";
-import topSquareNeck from "@/assets/top-square-neck.jpg";
-import topSquareNeckCrimson from "@/assets/top-square-neck-crimson.jpg";
-import topSquareNeckIvory from "@/assets/top-square-neck-ivory.jpg";
-import topOneShoulder from "@/assets/top-one-shoulder.jpg";
-import topOneShoulderBlack from "@/assets/top-one-shoulder-black.jpg";
-import topOneShoulderBurgundy from "@/assets/top-one-shoulder-burgundy.jpg";
-import topCowl from "@/assets/top-cowl.jpg";
-import topCowlSand from "@/assets/top-cowl-sand.jpg";
-import topCowlBlack from "@/assets/top-cowl-black.jpg";
-import topCorset from "@/assets/top-corset.jpg";
-import topCorsetIvory from "@/assets/top-corset-ivory.jpg";
-import topCorsetBurgundy from "@/assets/top-corset-burgundy.jpg";
-import topCutout from "@/assets/top-cutout.jpg";
-import topCutoutBlack from "@/assets/top-cutout-black.jpg";
-import topCutoutIvory from "@/assets/top-cutout-ivory.jpg";
-import topMockNeck from "@/assets/top-mock-neck.jpg";
-import topMockNeckChocolate from "@/assets/top-mock-neck-chocolate.jpg";
-import topMockNeckBlack from "@/assets/top-mock-neck-black.jpg";
-import topHalter from "@/assets/top-halter.jpg";
-import topHalterIvory from "@/assets/top-halter-ivory.jpg";
-import topHalterBlack from "@/assets/top-halter-black.jpg";
-import topOffShoulder from "@/assets/top-off-shoulder.jpg";
-import topOffShoulderBlack from "@/assets/top-off-shoulder-black.jpg";
-import topOffShoulderIvory from "@/assets/top-off-shoulder-ivory.jpg";
-import topCrew from "@/assets/top-crew.jpg";
-import topCrewBlack from "@/assets/top-crew-black.jpg";
-import topCrewRose from "@/assets/top-crew-rose.jpg";
-import topWrap from "@/assets/top-wrap.jpg";
-import topWrapChocolate from "@/assets/top-wrap-chocolate.jpg";
-import topWrapBlack from "@/assets/top-wrap-black.jpg";
-import craftStudio from "@/assets/craft-studio.jpg";
+import {
+  cloudinaryAssets,
+  getCloudinaryAsset,
+  buildCloudinaryUrl,
+  type CloudinaryAsset,
+} from "@/lib/cloudinary";
+
+export { cloudinaryAssets, getCloudinaryAsset, buildCloudinaryUrl, type CloudinaryAsset };
 
 export const images = {
-  heroCampaign,
-  topSquareNeck,
-  topOneShoulder,
-  topCowl,
-  topCorset,
-  topCutout,
-  topMockNeck,
-  topHalter,
-  topOffShoulder,
-  topCrew,
-  topWrap,
-  craftStudio,
+  heroCampaign: cloudinaryAssets.heroCampaign.optimizedUrl,
+  topSquareNeck: cloudinaryAssets.topSquareNeck.optimizedUrl,
+  topOneShoulder: cloudinaryAssets.topOneShoulder.optimizedUrl,
+  topCowl: cloudinaryAssets.topCowl.optimizedUrl,
+  topCorset: cloudinaryAssets.topCorset.optimizedUrl,
+  topCutout: cloudinaryAssets.topCutout.optimizedUrl,
+  topMockNeck: cloudinaryAssets.topMockNeck.optimizedUrl,
+  topHalter: cloudinaryAssets.topHalter.optimizedUrl,
+  topOffShoulder: cloudinaryAssets.topOffShoulder.optimizedUrl,
+  topCrew: cloudinaryAssets.topCrew.optimizedUrl,
+  topWrap: cloudinaryAssets.topWrap.optimizedUrl,
+  craftStudio: cloudinaryAssets.craftStudio.optimizedUrl,
 };
 
 export type Category = "sleeveless" | "long-sleeve" | "one-shoulder" | "off-shoulder" | "cutout" | "basics";
@@ -58,6 +34,8 @@ export type Product = {
   sizes: string[];
   /** One photo per color, in the same order as `colors`. */
   images: string[];
+  /** Full Cloudinary image metadata and details for each image */
+  imageDetails?: CloudinaryAsset[];
   description: string;
   fabric: string;
   care: string;
@@ -81,7 +59,16 @@ export const products: Product[] = [
       { name: "Dusty Rose", hex: "#D8A79A" },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
-    images: [topCrew, topCrewBlack, topCrewRose],
+    images: [
+      cloudinaryAssets.topCrew.optimizedUrl,
+      cloudinaryAssets.topCrewBlack.optimizedUrl,
+      cloudinaryAssets.topCrewRose.optimizedUrl,
+    ],
+    imageDetails: [
+      cloudinaryAssets.topCrew,
+      cloudinaryAssets.topCrewBlack,
+      cloudinaryAssets.topCrewRose,
+    ],
     description:
       "The top our customers buy in every colour. A seamless crew with a second-skin fit that disappears under a blazer and holds its own on its own.",
     fabric: "Seamless stretch jersey, bonded edges",
@@ -104,7 +91,16 @@ export const products: Product[] = [
       { name: "Ivory", hex: "#F8F3EB" },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
-    images: [topSquareNeck, topSquareNeckCrimson, topSquareNeckIvory],
+    images: [
+      cloudinaryAssets.topSquareNeck.optimizedUrl,
+      cloudinaryAssets.topSquareNeckCrimson.optimizedUrl,
+      cloudinaryAssets.topSquareNeckIvory.optimizedUrl,
+    ],
+    imageDetails: [
+      cloudinaryAssets.topSquareNeck,
+      cloudinaryAssets.topSquareNeckCrimson,
+      cloudinaryAssets.topSquareNeckIvory,
+    ],
     description:
       "A clean square neck and soft ribbing that follows every line. Cut to skim the body without clinging, from desk to dinner without a change.",
     fabric: "Ribbed stretch knit, viscose-spandex blend",
@@ -127,7 +123,16 @@ export const products: Product[] = [
       { name: "Burgundy", hex: "#4A1420" },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
-    images: [topOneShoulder, topOneShoulderBlack, topOneShoulderBurgundy],
+    images: [
+      cloudinaryAssets.topOneShoulder.optimizedUrl,
+      cloudinaryAssets.topOneShoulderBlack.optimizedUrl,
+      cloudinaryAssets.topOneShoulderBurgundy.optimizedUrl,
+    ],
+    imageDetails: [
+      cloudinaryAssets.topOneShoulder,
+      cloudinaryAssets.topOneShoulderBlack,
+      cloudinaryAssets.topOneShoulderBurgundy,
+    ],
     description:
       "One shoulder, full presence. The diagonal neckline does the talking while bonded seams keep the line absolutely clean underneath.",
     fabric: "Premium stretch knit with bonded seams",
@@ -150,7 +155,16 @@ export const products: Product[] = [
       { name: "Black", hex: "#1A1714" },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
-    images: [topCowl, topCowlSand, topCowlBlack],
+    images: [
+      cloudinaryAssets.topCowl.optimizedUrl,
+      cloudinaryAssets.topCowlSand.optimizedUrl,
+      cloudinaryAssets.topCowlBlack.optimizedUrl,
+    ],
+    imageDetails: [
+      cloudinaryAssets.topCowl,
+      cloudinaryAssets.topCowlSand,
+      cloudinaryAssets.topCowlBlack,
+    ],
     description:
       "A bodycon cut with a softer face. The draped cowl falls exactly where it should, and the brushed rib keeps warm evenings warm.",
     fabric: "Brushed rib knit with fluid drape",
@@ -172,7 +186,16 @@ export const products: Product[] = [
       { name: "Burgundy", hex: "#4A1420" },
     ],
     sizes: ["XS", "S", "M", "L"],
-    images: [topCorset, topCorsetIvory, topCorsetBurgundy],
+    images: [
+      cloudinaryAssets.topCorset.optimizedUrl,
+      cloudinaryAssets.topCorsetIvory.optimizedUrl,
+      cloudinaryAssets.topCorsetBurgundy.optimizedUrl,
+    ],
+    imageDetails: [
+      cloudinaryAssets.topCorset,
+      cloudinaryAssets.topCorsetIvory,
+      cloudinaryAssets.topCorsetBurgundy,
+    ],
     description:
       "Our most sculpting piece. Internal boning and structured seaming hold the silhouette, while the stretch crepe keeps it comfortable all evening.",
     fabric: "Bonded stretch crepe with internal boning",
@@ -196,7 +219,16 @@ export const products: Product[] = [
       { name: "Ivory", hex: "#F8F3EB" },
     ],
     sizes: ["XS", "S", "M", "L"],
-    images: [topCutout, topCutoutBlack, topCutoutIvory],
+    images: [
+      cloudinaryAssets.topCutout.optimizedUrl,
+      cloudinaryAssets.topCutoutBlack.optimizedUrl,
+      cloudinaryAssets.topCutoutIvory.optimizedUrl,
+    ],
+    imageDetails: [
+      cloudinaryAssets.topCutout,
+      cloudinaryAssets.topCutoutBlack,
+      cloudinaryAssets.topCutoutIvory,
+    ],
     description:
       "A single cutout at the waist, placed to catch the light and the eye. Sculpting jersey holds everything else exactly in place.",
     fabric: "Sculpting stretch jersey",
@@ -219,7 +251,16 @@ export const products: Product[] = [
       { name: "Black", hex: "#1A1714" },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
-    images: [topMockNeck, topMockNeckChocolate, topMockNeckBlack],
+    images: [
+      cloudinaryAssets.topMockNeck.optimizedUrl,
+      cloudinaryAssets.topMockNeckChocolate.optimizedUrl,
+      cloudinaryAssets.topMockNeckBlack.optimizedUrl,
+    ],
+    imageDetails: [
+      cloudinaryAssets.topMockNeck,
+      cloudinaryAssets.topMockNeckChocolate,
+      cloudinaryAssets.topMockNeckBlack,
+    ],
     description:
       "The quiet one. A slim mock neck and second-skin rib that layers under everything and looks deliberate standing alone.",
     fabric: "Second-skin rib knit",
@@ -241,7 +282,16 @@ export const products: Product[] = [
       { name: "Black", hex: "#1A1714" },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
-    images: [topHalter, topHalterIvory, topHalterBlack],
+    images: [
+      cloudinaryAssets.topHalter.optimizedUrl,
+      cloudinaryAssets.topHalterIvory.optimizedUrl,
+      cloudinaryAssets.topHalterBlack.optimizedUrl,
+    ],
+    imageDetails: [
+      cloudinaryAssets.topHalter,
+      cloudinaryAssets.topHalterIvory,
+      cloudinaryAssets.topHalterBlack,
+    ],
     description:
       "A halter that frames the shoulders and a tie you can knot your way. Cut close through the ribs, easy through the attitude.",
     fabric: "Stretch jersey with self-tie neck",
@@ -264,7 +314,16 @@ export const products: Product[] = [
       { name: "Ivory", hex: "#F3EADB" },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
-    images: [topOffShoulder, topOffShoulderBlack, topOffShoulderIvory],
+    images: [
+      cloudinaryAssets.topOffShoulder.optimizedUrl,
+      cloudinaryAssets.topOffShoulderBlack.optimizedUrl,
+      cloudinaryAssets.topOffShoulderIvory.optimizedUrl,
+    ],
+    imageDetails: [
+      cloudinaryAssets.topOffShoulder,
+      cloudinaryAssets.topOffShoulderBlack,
+      cloudinaryAssets.topOffShoulderIvory,
+    ],
     description:
       "Sits off the shoulder and stays there. A soft elastic band keeps the neckline honest without pinching, hour after hour.",
     fabric: "Ribbed stretch knit with soft elastic neckline",
@@ -287,7 +346,16 @@ export const products: Product[] = [
       { name: "Black", hex: "#1A1714" },
     ],
     sizes: ["XS", "S", "M", "L", "XL"],
-    images: [topWrap, topWrapChocolate, topWrapBlack],
+    images: [
+      cloudinaryAssets.topWrap.optimizedUrl,
+      cloudinaryAssets.topWrapChocolate.optimizedUrl,
+      cloudinaryAssets.topWrapBlack.optimizedUrl,
+    ],
+    imageDetails: [
+      cloudinaryAssets.topWrap,
+      cloudinaryAssets.topWrapChocolate,
+      cloudinaryAssets.topWrapBlack,
+    ],
     description:
       "A wrap front drawn across the body like a brushstroke, in our deepest burgundy. The piece for the nights that deserve an entrance.",
     fabric: "Sculpting ponte with wrap front",
@@ -307,35 +375,40 @@ export const collections = [
     copy: "Square necks, halters and corsets for warm evenings.",
     href: "/shop",
     filter: "sleeveless",
-    image: topSquareNeck,
+    image: cloudinaryAssets.topSquareNeck.optimizedUrl,
+    imageDetails: cloudinaryAssets.topSquareNeck,
   },
   {
     title: "One Shoulder",
     copy: "Diagonal necklines that do the talking.",
     href: "/shop",
     filter: "one-shoulder",
-    image: topOneShoulder,
+    image: cloudinaryAssets.topOneShoulder.optimizedUrl,
+    imageDetails: cloudinaryAssets.topOneShoulder,
   },
   {
     title: "Long Sleeve",
     copy: "Cowl, mock neck and rib, cut close to the body.",
     href: "/shop",
     filter: "long-sleeve",
-    image: topCowl,
+    image: cloudinaryAssets.topCowl.optimizedUrl,
+    imageDetails: cloudinaryAssets.topCowl,
   },
   {
     title: "Cutouts",
     copy: "A single opening, placed to catch the eye.",
     href: "/shop",
     filter: "cutout",
-    image: topCutout,
+    image: cloudinaryAssets.topCutout.optimizedUrl,
+    imageDetails: cloudinaryAssets.topCutout,
   },
   {
     title: "Everyday Basics",
     copy: "The pieces you will buy in a second colour.",
     href: "/shop",
     filter: "basics",
-    image: topCrew,
+    image: cloudinaryAssets.topCrew.optimizedUrl,
+    imageDetails: cloudinaryAssets.topCrew,
   },
 ] as const;
 

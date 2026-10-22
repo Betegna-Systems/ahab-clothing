@@ -10,7 +10,7 @@ export const DEFAULT_OG_IMAGE = "/og-image.jpg";
 const FALLBACK_ORIGIN = "https://ahabclothing.com";
 
 export function getSiteOrigin(request?: Request) {
-  const fromEnv = import.meta.env.VITE_SITE_URL;
+  const fromEnv = import.meta.env["VITE_SITE_URL"];
   if (typeof fromEnv === "string" && fromEnv.trim()) {
     return fromEnv.replace(/\/$/, "");
   }
@@ -28,7 +28,7 @@ export function absoluteUrl(path = "/", origin = SITE_URL) {
 
 export type SeoOptions = {
   path?: string;
-  image?: string;
+  image?: string | undefined;
   type?: "website" | "product" | "article";
   index?: boolean;
   jsonLd?: unknown | unknown[];

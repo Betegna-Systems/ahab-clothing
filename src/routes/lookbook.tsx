@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { images } from "@/lib/products";
 import { seo } from "@/lib/seo";
 import { AhabLink } from "@/components/site/ui";
-import craftStudio from "@/assets/craft-studio.jpg";
+const craftStudio = images.craftStudio;
 
 export const Route = createFileRoute("/lookbook")({
   head: () =>

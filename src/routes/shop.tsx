@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
-import { products, type Category } from "@/lib/products";
+import { type Category } from "@/lib/products";
+import { useAllProducts } from "@/lib/firestore-products";
 import { ProductCard } from "@/components/site/ProductCard";
 import { collectionJsonLd, seo } from "@/lib/seo";
 import { cn } from "@/lib/utils";
@@ -30,10 +31,11 @@ export const Route = createFileRoute("/shop")({
   component: Shop,
 });
 
-const allSizes = Array.from(new Set(products.flatMap((p) => p.sizes)));
-const allColors = Array.from(new Map(products.flatMap((p) => p.colors).map((c) => [c.name, c])).values());
+const allSizes = ["XS", "S", "M", "L", "XL"];
 
 function Shop() {
+  const { products } = useAllProducts();
+  const allColors = Array.from(new Map(products.flatMap((p) => p.colors).map((c) => [c.name, c])).values());
   const { category } = Route.useSearch();
   const navigate = useNavigate({ from: "/shop" });
   const [sizes, setSizes] = useState<string[]>([]);
@@ -58,7 +60,7 @@ function Shop() {
       rated: (a, b) => b.rating - a.rating || b.reviews - a.reviews,
     };
     return [...r].sort(sorters[sort]);
-  }, [category, sizes, colors, maxPrice, sort]);
+  }, [products, category, sizes, colors, maxPrice, sort]);
 
   const toggle = (arr: string[], set: (v: string[]) => void, v: string) =>
     set(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
