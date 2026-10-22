@@ -41,8 +41,13 @@ export function Footer() {
       <div className="mx-auto max-w-[1500px] px-5 py-20 md:px-10">
         <div className="grid gap-14 lg:grid-cols-[1.4fr_2fr]">
           <div>
-            <span className="font-serif text-4xl tracking-[0.3em]">AHAB</span>
-            <p className="label-xs mt-2 text-gold">Made With Love</p>
+            <div className="flex items-center gap-3">
+              <img src="/ahab-logo.png" alt="AHAB" className="h-12 w-12 rounded-full object-contain bg-cream/15 p-1" />
+              <div>
+                <span className="font-serif text-3xl tracking-[0.25em]">AHAB</span>
+                <p className="label-xs text-gold">Made With Love</p>
+              </div>
+            </div>
             <p className="mt-6 max-w-sm text-sm leading-relaxed text-primary-foreground/70">
               An independent house designing and sewing bodycon tops in Addis
               Ababa. Cut, seamed and finished by hand.

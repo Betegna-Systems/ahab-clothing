@@ -63,11 +63,12 @@ export function Header() {
             ))}
           </nav>
 
-          <Link to="/" className="absolute left-1/2 -translate-x-1/2 text-center">
-            <span className="font-serif text-3xl tracking-[0.3em] md:text-[2rem]">AHAB</span>
-            <span className="label-xs block text-[0.55rem] tracking-[0.42em] text-gold">
-              Made With Love
-            </span>
+          <Link to="/" className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3 text-center">
+            <img src="/ahab-logo.png" alt="AHAB Clothing" className="h-10 w-10 rounded-full object-contain" />
+            <div className="flex flex-col items-start leading-none">
+              <span className="font-serif text-2xl tracking-[0.25em] md:text-[1.85rem]">AHAB</span>
+              <span className="label-xs block text-[0.52rem] tracking-[0.38em] text-gold">Made With Love</span>
+            </div>
           </Link>
 
           <div className="flex items-center gap-5">
