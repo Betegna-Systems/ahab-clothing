@@ -56,7 +56,7 @@ function Contact() {
               ["Email", SUPPORT_EMAIL, `mailto:${SUPPORT_EMAIL}`],
               ["WhatsApp", "Chat with us", "https://wa.me/251925105950"],
               ["Instagram", INSTAGRAM_HANDLE, INSTAGRAM_URL],
-              ["TikTok", TIKTOK_HANDLE, TIKTOK_URL],
+              ["TikTok", TIKTOK_HANDLE, TIKTOK_URL], 
             ].map(([k, v, href]) => (
               <div key={k}><dt className="label-xs text-muted-foreground">{k}</dt><dd className="mt-2"><a href={href} className="link-underline">{v}</a></dd></div>
             ))}
