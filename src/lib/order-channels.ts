@@ -8,7 +8,14 @@ import { formatPrice } from "@/lib/products";
 export const TELEGRAM_USERNAME = "Daniel_Obrein";
 export const WHATSAPP_NUMBER = "251941219026";
 
-export type OrderLine = { name: string; color: string; size: string; qty: number; price: number };
+export type OrderLine = {
+  name: string;
+  color: string;
+  size: string;
+  qty: number;
+  price: number;
+  image: string;
+};
 
 export function buildOrderMessage(lines: OrderLine[], extra?: string) {
   const items = lines
@@ -24,6 +31,7 @@ export const telegramLink = (text: string) =>
 
 export type OrderPayload = {
   orderNumber: string;
+  paymentAccessToken?: string;
   createdAt: string;
   customer: { name: string; email: string; phone: string; address: string; subCity: string; city: string };
   items: OrderLine[];
@@ -34,7 +42,7 @@ export type OrderPayload = {
   notes: string;
 };
 
-/** Sends the order to the AHAB orders Google Sheet. */
+/** Saves the order in the Supabase `orders` table. */
 export async function submitOrder(order: OrderPayload): Promise<boolean> {
   try {
     const res = await placeOrder({ data: order });

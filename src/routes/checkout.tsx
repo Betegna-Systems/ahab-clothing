@@ -6,13 +6,8 @@ import { useShop } from "@/lib/shop-store";
 import { AhabButton, AhabLink } from "@/components/site/ui";
 import { ChatOrderButtons } from "@/components/site/ChatOrderButtons";
 import { buildOrderMessage, submitOrder, type OrderLine } from "@/lib/order-channels";
+import { PAYMENT_METHODS, getPaymentMethod } from "@/lib/payment-methods";
 import { toast } from "sonner";
-
-const PAYMENTS = [
-  { id: "cod", label: "Cash on delivery", note: "Pay when your top arrives in Addis Ababa.", account: "" },
-  { id: "telebirr", label: "Telebirr", note: "Send the total to our Telebirr number:", account: "+251941219026" },
-  { id: "cbe", label: "CBE bank transfer", note: "Transfer the total to our CBE account:", account: "1000259462774" },
-];
 
 function CopyAccount({ value }: { value: string }) {
   return (
@@ -20,9 +15,17 @@ function CopyAccount({ value }: { value: string }) {
       <span className="font-mono text-base text-foreground">{value}</span>
       <button
         type="button"
-        onClick={(e) => { e.preventDefault(); navigator.clipboard.writeText(value); toast.success("Copied"); }}
+        onClick={(e) => {
+          e.preventDefault();
+          navigator.clipboard.writeText(value).then(
+            () => toast.success("Copied"),
+            () => toast.error("Copy is unavailable in this browser."),
+          );
+        }}
         className="label-xs border border-border px-2 py-1 hover:border-primary"
-      >Copy</button>
+      >
+        Copy
+      </button>
     </span>
   );
 }
@@ -40,7 +43,7 @@ const field = "h-12 w-full border border-border bg-transparent px-4 text-sm outl
 
 function CheckoutPage() {
   const { lineItems, subtotal, discount, promoCode, clearCart } = useShop();
-  const [placed, setPlaced] = useState<{ number: string; message: string; payment: string } | null>(null);
+  const [placed, setPlaced] = useState<{ number: string; message: string } | null>(null);
   const [payment, setPayment] = useState("cod");
   const [sending, setSending] = useState(false);
   const shipping = subtotal === 0 || subtotal >= 5000 ? 0 : 250;
@@ -51,16 +54,24 @@ function CheckoutPage() {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     const g = (k: string) => String(f.get(k) ?? "").trim();
-    const items: OrderLine[] = lineItems.map(({ line, product }) => ({
-      name: product.name,
-      color: line.color,
-      size: line.size,
-      qty: line.qty,
-      price: product.price,
-    }));
+    const items: OrderLine[] = lineItems.map(({ line, product }) => {
+      const colorIdx = product.colors.findIndex(
+        (c) => c.name.toLowerCase() === line.color.toLowerCase(),
+      );
+      return {
+        name: product.name,
+        color: line.color,
+        size: line.size,
+        qty: line.qty,
+        price: product.price,
+        image: product.images[colorIdx >= 0 ? colorIdx : 0] ?? product.images[0] ?? "",
+      };
+    });
     const number = `AHAB-${Date.now().toString(36).toUpperCase().slice(-6)}`;
     const name = `${g("first")} ${g("last")}`;
-    const paymentLabel = PAYMENTS.find((p) => p.id === payment)!.label;
+    const selectedPayment = getPaymentMethod(payment)!;
+    const paymentLabel = selectedPayment.label;
+    const paymentAccessToken = payment === "cod" ? undefined : crypto.randomUUID();
     setSending(true);
     const ok = await submitOrder({
       orderNumber: number,
@@ -78,6 +89,7 @@ function CheckoutPage() {
       shipping,
       total,
       paymentMethod: paymentLabel,
+      ...(paymentAccessToken ? { paymentAccessToken } : {}),
       notes: g("notes"),
     });
     setSending(false);
@@ -87,7 +99,13 @@ function CheckoutPage() {
       `Order ${number}\nName: ${name}\nPhone: ${g("phone")}\nArea: ${g("subCity")}\nPayment: ${paymentLabel}${promoCode ? `\nPromo code: ${promoCode} (-${formatPrice(discountAmount)})` : ""}\nAmount due: ${formatPrice(total)}`,
     );
     clearCart();
-    setPlaced({ number, message, payment });
+    if (paymentAccessToken) {
+      window.location.assign(
+        `/payment/${encodeURIComponent(number)}?token=${encodeURIComponent(paymentAccessToken)}`,
+      );
+      return;
+    }
+    setPlaced({ number, message });
   };
 
   if (placed) {
@@ -97,13 +115,6 @@ function CheckoutPage() {
         <h1 className="mt-5 text-5xl">Your order is placed.</h1>
         <p className="mt-4 label-xs text-gold">Order {placed.number}</p>
         <p className="mt-6 text-muted-foreground">We'll call you shortly to confirm delivery and payment. For a faster reply, send us your order on chat:</p>
-        {placed.payment !== "cod" && (
-          <div className="mt-6 border border-border p-5 text-sm">
-            <p>Please pay via {PAYMENTS.find((p) => p.id === placed.payment)!.label}:</p>
-            <div className="flex justify-center"><CopyAccount value={PAYMENTS.find((p) => p.id === placed.payment)!.account} /></div>
-            <p className="mt-3 text-muted-foreground">Then send your payment screenshot with order {placed.number} to us on Telegram (@Daniel_Obrein).</p>
-          </div>
-        )}
         <div className="mt-6"><ChatOrderButtons message={placed.message} /></div>
         <div className="mt-10"><AhabLink to="/shop">Continue shopping</AhabLink></div>
       </div>
@@ -138,7 +149,7 @@ function CheckoutPage() {
         <textarea name="notes" placeholder="Notes for delivery (optional)" className="min-h-24 w-full border border-border bg-transparent p-4 text-sm outline-none focus:border-primary" />
         <fieldset className="space-y-3 pt-2">
           <legend className="label-xs mb-3 text-gold">Payment</legend>
-          {PAYMENTS.map((p) => (
+          {PAYMENT_METHODS.map((p) => (
             <label key={p.id} className={`flex cursor-pointer gap-3 border p-4 text-sm ${payment === p.id ? "border-primary" : "border-border"}`}>
               <input type="radio" name="payment" checked={payment === p.id} onChange={() => setPayment(p.id)} className="mt-1 accent-primary" />
               <span><span className="block font-medium">{p.label}</span><span className="text-muted-foreground">{p.note}</span>{p.account && payment === p.id && <CopyAccount value={p.account} />}</span>

@@ -52,9 +52,9 @@ function Contact() {
         <div className="space-y-8">
           <dl className="grid grid-cols-2 gap-8 text-sm">
             {[
-              ["Phone", "+251 941 219 026", "tel:+251941219026"],
+              ["Phone", "+251 925 105 950", "tel:+251925105950"],
               ["Email", SUPPORT_EMAIL, `mailto:${SUPPORT_EMAIL}`],
-              ["WhatsApp", "Chat with us", "https://wa.me/251941219026"],
+              ["WhatsApp", "Chat with us", "https://wa.me/251925105950"],
               ["Instagram", INSTAGRAM_HANDLE, INSTAGRAM_URL],
               ["TikTok", TIKTOK_HANDLE, TIKTOK_URL],
             ].map(([k, v, href]) => (

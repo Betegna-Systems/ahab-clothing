@@ -15,6 +15,19 @@ function record(error: unknown) {
 const CAUSE_DEPTH_LIMIT = 5;
 const DESCRIPTION_LENGTH_LIMIT = 8_000;
 
+export function isClientAbort(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  if (error.name === "AbortError") return true;
+  if (error.message === "aborted" || error.message === "AbortError") return true;
+  const code = (error as NodeJS.ErrnoException).code;
+  return (
+    code === "ECONNRESET" ||
+    code === "EPIPE" ||
+    code === "ERR_STREAM_PREMATURE_CLOSE" ||
+    code === "ABORT_ERR"
+  );
+}
+
 export function describeError(error: unknown): string {
   const parts: string[] = [];
   let current: unknown = error;
@@ -54,6 +67,7 @@ function isErrorLike(value: unknown): value is Error {
 // recorded for consumeLastCapturedError and expanded before serialization.
 const originalConsoleError = console.error.bind(console);
 console.error = (...args: unknown[]) => {
+  if (args.some(isClientAbort)) return;
   const expanded = args.map((arg) => {
     if (!isErrorLike(arg)) return arg;
     record(arg);

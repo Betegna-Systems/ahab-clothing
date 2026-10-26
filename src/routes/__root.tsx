@@ -16,10 +16,6 @@ import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { Toaster } from "@/components/ui/sonner";
 import { DEFAULT_DESCRIPTION, DEFAULT_TITLE, jsonLdScript, siteGraphJsonLd } from "@/lib/seo";
-import { fetchAllFirestoreProducts } from "@/lib/firestore-products";
-
-// Pre-fetch dynamic Firestore products into memory cache
-fetchAllFirestoreProducts().catch(() => {});
 
 function NotFoundComponent() {
   return (

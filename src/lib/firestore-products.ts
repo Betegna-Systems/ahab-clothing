@@ -3,6 +3,13 @@ import { type Product, type Category, products as staticProducts } from "@/lib/p
 
 const PROJECT_ID = "ahab-clothing-9baef";
 const REST_BASE_URL = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/products`;
+const FETCH_TIMEOUT_MS = 4000;
+const POLL_INTERVAL_MS = 60_000;
+
+async function fetchJson(url: string) {
+  const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+  return res;
+}
 
 function parseFirestoreValue(val: unknown): unknown {
   if (!val || typeof val !== "object") return val;
@@ -90,7 +97,7 @@ export async function fetchProductBySlug(slug: string): Promise<Product | undefi
   if (cached) return cached;
 
   try {
-    const res = await fetch(`${REST_BASE_URL}/${slug}`);
+    const res = await fetchJson(`${REST_BASE_URL}/${slug}`);
     if (res.ok) {
       const doc = await res.json();
       const product = firestoreRawToProduct(slug, doc.fields ?? {});
@@ -109,7 +116,7 @@ export async function fetchProductBySlug(slug: string): Promise<Product | undefi
  */
 export async function fetchAllFirestoreProducts(): Promise<Product[]> {
   try {
-    const res = await fetch(REST_BASE_URL);
+    const res = await fetchJson(REST_BASE_URL);
     if (!res.ok) return [];
     const data = await res.json();
     const docs = (data.documents as Array<{ name: string; fields: Record<string, unknown> }>) ?? [];
@@ -158,8 +165,7 @@ export function useAllProducts() {
 
     load();
 
-    // Re-check Firestore every 10 seconds so newly uploaded items from mobile appear automatically
-    const interval = setInterval(load, 10000);
+    const interval = setInterval(load, POLL_INTERVAL_MS);
 
     return () => {
       mounted = false;

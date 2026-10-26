@@ -25,6 +25,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SizeGuideRouteImport } from './routes/size-guide'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as WishlistRouteImport } from './routes/wishlist'
+import { Route as PaymentOrderNumberRouteImport } from './routes/payment.$orderNumber'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
 
 const IndexRoute = IndexRouteImport.update({
@@ -107,6 +108,11 @@ const WishlistRoute = WishlistRouteImport.update({
   path: '/wishlist',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PaymentOrderNumberRoute = PaymentOrderNumberRouteImport.update({
+  id: '/payment/$orderNumber',
+  path: '/payment/$orderNumber',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductSlugRoute = ProductSlugRouteImport.update({
   id: '/product/$slug',
   path: '/product/$slug',
@@ -130,6 +136,7 @@ export interface FileRoutesByFullPath {
   '/size-guide': typeof SizeGuideRoute
   '/terms': typeof TermsRoute
   '/wishlist': typeof WishlistRoute
+  '/payment/$orderNumber': typeof PaymentOrderNumberRoute
   '/product/$slug': typeof ProductSlugRoute
 }
 export interface FileRoutesByTo {
@@ -149,6 +156,7 @@ export interface FileRoutesByTo {
   '/size-guide': typeof SizeGuideRoute
   '/terms': typeof TermsRoute
   '/wishlist': typeof WishlistRoute
+  '/payment/$orderNumber': typeof PaymentOrderNumberRoute
   '/product/$slug': typeof ProductSlugRoute
 }
 export interface FileRoutesById {
@@ -169,6 +177,7 @@ export interface FileRoutesById {
   '/size-guide': typeof SizeGuideRoute
   '/terms': typeof TermsRoute
   '/wishlist': typeof WishlistRoute
+  '/payment/$orderNumber': typeof PaymentOrderNumberRoute
   '/product/$slug': typeof ProductSlugRoute
 }
 export interface FileRouteTypes {
@@ -190,6 +199,7 @@ export interface FileRouteTypes {
     | '/size-guide'
     | '/terms'
     | '/wishlist'
+    | '/payment/$orderNumber'
     | '/product/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -209,6 +219,7 @@ export interface FileRouteTypes {
     | '/size-guide'
     | '/terms'
     | '/wishlist'
+    | '/payment/$orderNumber'
     | '/product/$slug'
   id:
     | '__root__'
@@ -228,6 +239,7 @@ export interface FileRouteTypes {
     | '/size-guide'
     | '/terms'
     | '/wishlist'
+    | '/payment/$orderNumber'
     | '/product/$slug'
   fileRoutesById: FileRoutesById
 }
@@ -248,6 +260,7 @@ export interface RootRouteChildren {
   SizeGuideRoute: typeof SizeGuideRoute
   TermsRoute: typeof TermsRoute
   WishlistRoute: typeof WishlistRoute
+  PaymentOrderNumberRoute: typeof PaymentOrderNumberRoute
   ProductSlugRoute: typeof ProductSlugRoute
 }
 
@@ -365,6 +378,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WishlistRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/payment/$orderNumber': {
+      id: '/payment/$orderNumber'
+      path: '/payment/$orderNumber'
+      fullPath: '/payment/$orderNumber'
+      preLoaderRoute: typeof PaymentOrderNumberRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/product/$slug': {
       id: '/product/$slug'
       path: '/product/$slug'
@@ -392,6 +412,7 @@ const rootRouteChildren: RootRouteChildren = {
   SizeGuideRoute: SizeGuideRoute,
   TermsRoute: TermsRoute,
   WishlistRoute: WishlistRoute,
+  PaymentOrderNumberRoute: PaymentOrderNumberRoute,
   ProductSlugRoute: ProductSlugRoute,
 }
 export const routeTree = rootRouteImport
