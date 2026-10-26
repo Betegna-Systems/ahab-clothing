@@ -66,6 +66,10 @@ export const placeOrder = createServerFn({ method: "POST" })
       console.error("Order insert failed:", error.message);
       return { ok: false as const };
     }
+
+    const { notifyAdminsOfNewOrder } = await import("@/lib/admin-notifications.server");
+    await notifyAdminsOfNewOrder({ orderNumber: data.orderNumber, total: data.total });
+
     return { ok: true as const };
   });
 
