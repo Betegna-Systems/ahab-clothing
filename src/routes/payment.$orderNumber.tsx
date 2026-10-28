@@ -38,6 +38,60 @@ function readImageAsBase64(file: File) {
   });
 }
 
+async function prepareReceiptImage(file: File) {
+  if (file.size > 20 * 1024 * 1024) {
+    throw new Error("Choose a photo smaller than 20 MB.");
+  }
+
+  const imageUrl = URL.createObjectURL(file);
+  const image = new Image();
+  try {
+    await new Promise<void>((resolve, reject) => {
+      image.onload = () => resolve();
+      image.onerror = () =>
+        reject(new Error("This photo format can't be read. Choose a JPG, PNG, or WebP image."));
+      image.src = imageUrl;
+    });
+  } catch (error) {
+    URL.revokeObjectURL(imageUrl);
+    throw error;
+  }
+
+  try {
+    let width = image.naturalWidth;
+    let height = image.naturalHeight;
+    const maxDimension = 1800;
+    const scale = Math.min(1, maxDimension / Math.max(width, height));
+    width = Math.round(width * scale);
+    height = Math.round(height * scale);
+
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("This photo can't be prepared on your device.");
+      context.drawImage(image, 0, 0, width, height);
+
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, "image/jpeg", 0.82),
+      );
+      if (!blob) throw new Error("This photo can't be prepared on your device.");
+      if (blob.size <= 3 * 1024 * 1024) {
+        const name = file.name.replace(/\.[^.]+$/, "") || "receipt";
+        return new File([blob], `${name}.jpg`, { type: "image/jpeg" });
+      }
+
+      width = Math.round(width * 0.8);
+      height = Math.round(height * 0.8);
+    }
+
+    throw new Error("This photo is too large to prepare. Choose a smaller image.");
+  } finally {
+    URL.revokeObjectURL(imageUrl);
+  }
+}
+
 function PaymentPage() {
   const { orderNumber } = Route.useParams();
   const { token } = Route.useSearch();
@@ -45,6 +99,7 @@ function PaymentPage() {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [sending, setSending] = useState(false);
+  const [preparing, setPreparing] = useState(false);
 
   if (!order) {
     return (
@@ -69,25 +124,22 @@ function PaymentPage() {
   const chatMessage = `Hello AHAB, I paid for order ${orderNumber} via ${payment.label}. Amount: ${formatPrice(order.total)}. I will attach my payment screenshot here.`;
   const receiptSubmitted = order.paymentStatus !== "pending";
 
-  const onFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const onFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const selected = event.target.files?.[0] ?? null;
     if (!selected) {
       setFile(null);
       return;
     }
-    if (!["image/jpeg", "image/png", "image/webp"].includes(selected.type)) {
-      toast.error("Choose a JPG, PNG, or WebP screenshot.");
+    setFile(null);
+    setPreparing(true);
+    try {
+      setFile(await prepareReceiptImage(selected));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "We couldn't prepare this photo.");
       event.target.value = "";
-      setFile(null);
-      return;
+    } finally {
+      setPreparing(false);
     }
-    if (selected.size > 5 * 1024 * 1024) {
-      toast.error("The screenshot must be 5 MB or smaller.");
-      event.target.value = "";
-      setFile(null);
-      return;
-    }
-    setFile(selected);
   };
 
   const submitReceipt = async (event: FormEvent<HTMLFormElement>) => {
@@ -100,7 +152,7 @@ function PaymentPage() {
     try {
       const imageBase64 = await readImageAsBase64(file);
       const result = await submitPaymentProof({
-        data: { orderNumber, token, mimeType: file.type as "image/jpeg" | "image/png" | "image/webp", imageBase64 },
+        data: { orderNumber, token, mimeType: "image/jpeg", imageBase64 },
       });
       if (!result.ok) {
         toast.error(result.reason === "already_submitted" ? "A screenshot has already been submitted for this order." : "We couldn't submit your screenshot. Please try again or send it by chat.");
@@ -169,14 +221,27 @@ function PaymentPage() {
           <input
             id="payment-screenshot"
             type="file"
-            accept="image/jpeg,image/png,image/webp"
+            accept="image/*"
             onChange={onFileChange}
-            className="block w-full border border-border bg-transparent p-4 text-sm file:mr-4 file:border-0 file:bg-primary file:px-4 file:py-2 file:text-xs file:uppercase file:tracking-wider file:text-primary-foreground"
+            disabled={preparing || sending}
+            className="block w-full border border-border bg-transparent p-4 text-sm file:mr-4 file:border-0 file:bg-primary file:px-4 file:py-2 file:text-xs file:uppercase file:tracking-wider file:text-primary-foreground disabled:opacity-50"
           />
-          <p className="text-xs text-muted-foreground">JPG, PNG, or WebP. Maximum 5 MB. Your receipt is stored privately with this order.</p>
+          <p className="text-xs text-muted-foreground">
+            Choose a photo from your phone or take one now. We’ll convert it to JPG and resize it
+            for upload. Your receipt is stored privately with this order.
+          </p>
           {file ? <p className="text-sm">Selected: {file.name}</p> : null}
-          <button type="submit" disabled={!file || sending} className="label-xs flex h-12 w-full items-center justify-center gap-2 bg-primary text-primary-foreground transition-opacity disabled:cursor-not-allowed disabled:opacity-50">
-            <Upload className="h-4 w-4" /> {sending ? "Sending screenshot…" : "Send payment screenshot"}
+          <button
+            type="submit"
+            disabled={!file || sending || preparing}
+            className="label-xs flex h-12 w-full items-center justify-center gap-2 bg-primary text-primary-foreground transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Upload className="h-4 w-4" />{" "}
+            {preparing
+              ? "Preparing photo…"
+              : sending
+                ? "Sending screenshot…"
+                : "Send payment screenshot"}
           </button>
         </form>
       )}
