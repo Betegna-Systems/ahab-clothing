@@ -3,7 +3,7 @@ import { ArrowRight, Instagram } from "lucide-react";
 import { collections, images, testimonials } from "@/lib/products";
 import { useAllProducts } from "@/lib/firestore-products";
 import { ProductCard } from "@/components/site/ProductCard";
-import { AhabLink, Eyebrow, SectionHeading } from "@/components/site/ui";
+import { AhabLink, ahabButton, Eyebrow, SectionHeading } from "@/components/site/ui";
 import { INSTAGRAM_HANDLE, INSTAGRAM_URL } from "@/lib/social";
 import { cloudinaryAssets } from "@/lib/cloudinary";
 const craftStudio = images.craftStudio;
@@ -54,8 +54,8 @@ function Home() {
             AHAB Suits and bodycon tops, designed and tailored in Addis Ababa.
           </p>
           <div className="reveal-up mt-10 flex flex-col gap-3 sm:flex-row">
-            <AhabLink to="/shop" search={{ category: "suits" as const }} variant="gold" size="lg">Shop AHAB Suits</AhabLink>
-            <AhabLink to="/shop" search={{ category: "basics" as const }} variant="ghostLight" size="lg">Shop the Tops</AhabLink>
+            <Link to="/shop" search={{ category: "suits" }} className={ahabButton({ variant: "gold", size: "lg" })}>Shop AHAB Suits</Link>
+            <Link to="/shop" search={{ category: "basics" }} className={ahabButton({ variant: "ghostLight", size: "lg" })}>Shop the Tops</Link>
           </div>
         </div>
       </section>
