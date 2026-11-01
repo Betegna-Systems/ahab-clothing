@@ -55,7 +55,7 @@ function Home() {
           </p>
           <div className="reveal-up mt-10 flex flex-col gap-3 sm:flex-row">
             <Link to="/shop" search={{ category: "suits" }} className={ahabButton({ variant: "gold", size: "lg" })}>Shop AHAB Suits</Link>
-            <Link to="/shop" search={{ category: "basics" }} className={ahabButton({ variant: "ghostLight", size: "lg" })}>Shop the Tops</Link>
+            <Link to="/shop" search={{ category: "tops" }} className={ahabButton({ variant: "ghostLight", size: "lg" })}>Shop the Tops</Link>
           </div>
         </div>
       </section>

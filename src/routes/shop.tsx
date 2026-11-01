@@ -1,13 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
-import { type Category } from "@/lib/products";
+import { type Category, inCategory } from "@/lib/products";
 import { useAllProducts } from "@/lib/firestore-products";
 import { ProductCard } from "@/components/site/ProductCard";
 import { collectionJsonLd, seo } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
-const CATS: Category[] = ["suits", "sleeveless", "long-sleeve", "one-shoulder", "off-shoulder", "cutout", "basics"];
+const CATS: Category[] = ["suits", "tops", "sleeveless", "long-sleeve", "one-shoulder", "off-shoulder", "cutout", "basics"];
 const LABEL: Record<Category, string> = {
   sleeveless: "Sleeveless",
   "long-sleeve": "Long Sleeve",
@@ -16,6 +16,7 @@ const LABEL: Record<Category, string> = {
   cutout: "Cutouts",
   basics: "Basics",
   suits: "Suits",
+  tops: "Tops",
 };
 type Sort = "newest" | "popular" | "price-asc" | "price-desc" | "rated";
 const MAX_PRICE = 12000;
@@ -48,7 +49,7 @@ function Shop() {
   const list = useMemo(() => {
     const r = products.filter(
       (p) =>
-        (!category || p.categories.includes(category)) &&
+        (!category || inCategory(p, category)) &&
         (sizes.length === 0 || p.sizes.some((s) => sizes.includes(s))) &&
         (colors.length === 0 || p.colors.some((c) => colors.includes(c.name))) &&
         p.price <= maxPrice,
