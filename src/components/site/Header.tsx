@@ -57,7 +57,7 @@ export function Header() {
               <Link
                 key={item.label}
                 to={item.to}
-                search={"search" in item ? item.search : undefined}
+                {...("search" in item ? { search: item.search } : {})}
                 className="label-xs link-underline text-foreground/80 hover:text-foreground"
               >
                 {item.label}
