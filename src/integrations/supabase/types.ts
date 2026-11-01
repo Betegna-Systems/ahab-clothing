@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_push_tokens: {
+        Row: {
+          created_at: string
+          platform: string
+          token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          platform: string
+          token: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          platform?: string
+          token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           address: string | null
@@ -23,10 +47,15 @@ export type Database = {
           delivery: number
           email: string | null
           id: string
+          image_url: string | null
           items: Json
           notes: string | null
           order_number: string
+          payment_access_token_hash: string | null
           payment_method: string
+          payment_proof_path: string | null
+          payment_status: string
+          payment_submitted_at: string | null
           phone: string
           status: string
           sub_city: string | null
@@ -41,10 +70,15 @@ export type Database = {
           delivery: number
           email?: string | null
           id?: string
+          image_url?: string | null
           items: Json
           notes?: string | null
           order_number: string
+          payment_access_token_hash?: string | null
           payment_method: string
+          payment_proof_path?: string | null
+          payment_status?: string
+          payment_submitted_at?: string | null
           phone: string
           status?: string
           sub_city?: string | null
@@ -59,10 +93,15 @@ export type Database = {
           delivery?: number
           email?: string | null
           id?: string
+          image_url?: string | null
           items?: Json
           notes?: string | null
           order_number?: string
+          payment_access_token_hash?: string | null
           payment_method?: string
+          payment_proof_path?: string | null
+          payment_status?: string
+          payment_submitted_at?: string | null
           phone?: string
           status?: string
           sub_city?: string | null
