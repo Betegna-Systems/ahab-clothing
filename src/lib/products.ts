@@ -27,7 +27,13 @@ export const images = {
   craftStudio: cloudinaryAssets.craftStudio.optimizedUrl,
 };
 
-export type Category = "sleeveless" | "long-sleeve" | "one-shoulder" | "off-shoulder" | "cutout" | "basics" | "suits";
+export type Category = "sleeveless" | "long-sleeve" | "one-shoulder" | "off-shoulder" | "cutout" | "basics" | "suits" | "tops";
+
+/** "tops" matches anything not tagged as a suit, so admin can tag either "tops" or a cut. */
+export function inCategory(p: { categories: Category[] }, c: Category): boolean {
+  if (c === "tops") return !p.categories.includes("suits");
+  return p.categories.includes(c);
+}
 
 export type Product = {
   slug: string;
