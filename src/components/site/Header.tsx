@@ -55,8 +55,9 @@ export function Header() {
           <nav className="hidden items-center gap-9 lg:flex">
             {nav.map((item) => (
               <Link
-                key={item.to}
+                key={item.label}
                 to={item.to}
+                search={"search" in item ? item.search : undefined}
                 className="label-xs link-underline text-foreground/80 hover:text-foreground"
               >
                 {item.label}
