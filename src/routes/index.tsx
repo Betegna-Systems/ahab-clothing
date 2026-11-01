@@ -3,7 +3,7 @@ import { ArrowRight, Instagram } from "lucide-react";
 import { collections, images, testimonials } from "@/lib/products";
 import { useAllProducts } from "@/lib/firestore-products";
 import { ProductCard } from "@/components/site/ProductCard";
-import { AhabLink, Eyebrow, SectionHeading } from "@/components/site/ui";
+import { AhabLink, ahabButton, Eyebrow, SectionHeading } from "@/components/site/ui";
 import { INSTAGRAM_HANDLE, INSTAGRAM_URL } from "@/lib/social";
 import { cloudinaryAssets } from "@/lib/cloudinary";
 const craftStudio = images.craftStudio;
@@ -38,31 +38,31 @@ function Home() {
       {/* Hero */}
       <section className="relative h-[calc(100svh-7.5rem)] min-h-[560px] overflow-hidden">
         <img
-          src={images.heroCampaign}
-          alt="Model wearing the ivory Saba one-shoulder bodycon top"
+          src={images.heroSuits}
+          alt="Model wearing the chocolate Taitu double-breasted AHAB suit"
           width={1024}
           height={1440}
           className="fade-in-slow absolute inset-0 h-full w-full object-cover object-[center_25%]"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-foreground/65 via-foreground/10 to-transparent" />
         <div className="relative mx-auto flex h-full max-w-[1500px] flex-col justify-end px-5 pb-16 md:px-10 md:pb-24">
-          <p className="label-xs reveal-up text-cream/85">The Bodycon Edit &middot; 2026</p>
+          <p className="label-xs reveal-up text-cream/85">AHAB Suits &middot; 2026</p>
           <h1 className="reveal-up mt-5 max-w-3xl text-6xl leading-[0.95] text-cream sm:text-7xl md:text-[7.5rem]">
-            Made to <em className="italic text-gold">Fit.</em>
+            Tailored for <em className="italic text-gold">Her.</em>
           </h1>
           <p className="reveal-up mt-6 max-w-md text-base text-cream/85 md:text-lg">
-            Bodycon tops, designed and sewn in Addis Ababa.
+            AHAB Suits and bodycon tops, designed and tailored in Addis Ababa.
           </p>
           <div className="reveal-up mt-10 flex flex-col gap-3 sm:flex-row">
-            <AhabLink to="/shop" variant="gold" size="lg">Shop the Tops</AhabLink>
-            <AhabLink to="/custom" variant="ghostLight" size="lg">Order Custom Tops</AhabLink>
+            <Link to="/shop" search={{ category: "suits" }} className={ahabButton({ variant: "gold", size: "lg" })}>Shop AHAB Suits</Link>
+            <Link to="/shop" search={{ category: "basics" }} className={ahabButton({ variant: "ghostLight", size: "lg" })}>Shop the Tops</Link>
           </div>
         </div>
       </section>
 
       {/* Collections */}
       <section className="mx-auto max-w-[1500px] px-5 py-24 md:px-10 md:py-32">
-        <SectionHeading eyebrow="The Collections" title="Five ways to wear AHAB." />
+        <SectionHeading eyebrow="The Collections" title="Two lines. One signature." />
         <div className="mt-14 grid gap-4 md:grid-cols-6">
           {collections.map((c, i) => (
             <Link

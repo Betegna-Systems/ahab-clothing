@@ -7,9 +7,10 @@ import { SearchDialog } from "./SearchDialog";
 import { CartDrawer } from "./CartDrawer";
 
 const nav = [
+  { label: "Suits", to: "/shop", search: { category: "suits" } },
   { label: "Shop", to: "/shop" },
   { label: "Lookbook", to: "/lookbook" },
-  { label: "Custom Tops", to: "/custom" },
+  { label: "Custom", to: "/custom" },
   { label: "About", to: "/about" },
   { label: "Contact", to: "/contact" },
 ] as const;
@@ -54,8 +55,9 @@ export function Header() {
           <nav className="hidden items-center gap-9 lg:flex">
             {nav.map((item) => (
               <Link
-                key={item.to}
+                key={item.label}
                 to={item.to}
+                {...("search" in item ? { search: item.search } : {})}
                 className="label-xs link-underline text-foreground/80 hover:text-foreground"
               >
                 {item.label}

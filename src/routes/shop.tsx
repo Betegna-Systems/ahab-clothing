@@ -7,7 +7,7 @@ import { ProductCard } from "@/components/site/ProductCard";
 import { collectionJsonLd, seo } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
-const CATS: Category[] = ["sleeveless", "long-sleeve", "one-shoulder", "off-shoulder", "cutout", "basics"];
+const CATS: Category[] = ["suits", "sleeveless", "long-sleeve", "one-shoulder", "off-shoulder", "cutout", "basics"];
 const LABEL: Record<Category, string> = {
   sleeveless: "Sleeveless",
   "long-sleeve": "Long Sleeve",
@@ -15,16 +15,17 @@ const LABEL: Record<Category, string> = {
   "off-shoulder": "Off Shoulder",
   cutout: "Cutouts",
   basics: "Basics",
+  suits: "Suits",
 };
 type Sort = "newest" | "popular" | "price-asc" | "price-desc" | "rated";
-const MAX_PRICE = 5000;
+const MAX_PRICE = 12000;
 
 export const Route = createFileRoute("/shop")({
   validateSearch: (s: Record<string, unknown>): { category?: Category | undefined } => ({
     category: CATS.includes(s["category"] as Category) ? (s["category"] as Category) : undefined,
   }),
   head: () =>
-    seo("Shop", "Shop AHAB bodycon tops — ribbed, cowl, one-shoulder and cutout styles, sewn in Addis Ababa.", {
+    seo("Shop", "Shop AHAB Suits and bodycon tops — tailored women's suits and sculpted tops, made in Addis Ababa.", {
       path: "/shop",
       jsonLd: collectionJsonLd(),
     }),
@@ -102,7 +103,7 @@ function Shop() {
     <div className="mx-auto max-w-[1500px] px-5 py-16 md:px-10 md:py-20">
       <header className="text-center">
         <p className="label-xs text-gold">The Collection</p>
-        <h1 className="mt-4 text-5xl capitalize md:text-7xl">{category ? LABEL[category] : "All tops"}</h1>
+        <h1 className="mt-4 text-5xl capitalize md:text-7xl">{category ? LABEL[category] : "All pieces"}</h1>
       </header>
 
       <nav className="mt-12 flex justify-center gap-6 overflow-x-auto border-b border-border pb-4 md:gap-10">
@@ -118,7 +119,7 @@ function Shop() {
         <button type="button" onClick={() => setFiltersOpen(true)} className="label-xs flex items-center gap-2 lg:hidden">
           <SlidersHorizontal className="h-4 w-4" strokeWidth={1.25} /> Filter
         </button>
-        <p className="label-xs hidden text-muted-foreground lg:block">{list.length} tops</p>
+        <p className="label-xs hidden text-muted-foreground lg:block">{list.length} pieces</p>
         <select value={sort} onChange={(e) => setSort(e.target.value as Sort)} className="label-xs bg-transparent outline-hidden" aria-label="Sort by">
           <option value="newest">Newest</option>
           <option value="popular">Popular</option>
@@ -132,7 +133,7 @@ function Shop() {
         <aside className="hidden lg:block">{Filters}</aside>
         <div className="grid grid-cols-2 gap-x-4 gap-y-12 md:grid-cols-3">
           {list.map((p, i) => <ProductCard key={p.slug} product={p} priority={i < 3} />)}
-          {list.length === 0 ? <p className="col-span-full py-20 text-center font-serif text-2xl text-muted-foreground">No tops match — try clearing a filter.</p> : null}
+          {list.length === 0 ? <p className="col-span-full py-20 text-center font-serif text-2xl text-muted-foreground">No pieces match — try clearing a filter.</p> : null}
         </div>
       </div>
 
@@ -143,7 +144,7 @@ function Shop() {
         </div>
         {Filters}
         <button type="button" onClick={() => setFiltersOpen(false)} className="label-xs mt-12 h-14 w-full bg-primary text-primary-foreground">
-          Show {list.length} tops
+          Show {list.length} pieces
         </button>
       </div>
     </div>

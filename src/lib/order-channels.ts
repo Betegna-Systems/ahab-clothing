@@ -14,7 +14,7 @@ export type OrderLine = {
   size: string;
   qty: number;
   price: number;
-  image: string;
+  image?: string;
 };
 
 export function buildOrderMessage(lines: OrderLine[], extra?: string) {
