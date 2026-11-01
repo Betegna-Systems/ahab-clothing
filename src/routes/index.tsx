@@ -54,8 +54,8 @@ function Home() {
             AHAB Suits and bodycon tops, designed and tailored in Addis Ababa.
           </p>
           <div className="reveal-up mt-10 flex flex-col gap-3 sm:flex-row">
-            <AhabLink to="/shop" search={{ category: "suits" }} variant="gold" size="lg">Shop AHAB Suits</AhabLink>
-            <AhabLink to="/shop" search={{ category: "basics" }} variant="ghostLight" size="lg">Shop the Tops</AhabLink>
+            <AhabLink to="/shop" search={{ category: "suits" as const }} variant="gold" size="lg">Shop AHAB Suits</AhabLink>
+            <AhabLink to="/shop" search={{ category: "basics" as const }} variant="ghostLight" size="lg">Shop the Tops</AhabLink>
           </div>
         </div>
       </section>

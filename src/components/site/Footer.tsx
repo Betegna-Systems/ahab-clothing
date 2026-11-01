@@ -78,7 +78,6 @@ export function Footer() {
                   id="newsletter"
                   type="email"
                   required
-                  required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Your email"

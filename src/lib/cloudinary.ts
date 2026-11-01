@@ -33,7 +33,7 @@ export function buildCloudinaryUrl(
   options: CloudinaryTransformOptions = {}
 ): string {
   // If a manifest key (e.g. "top-square-neck") is passed, look up its full publicId
-  const found = (manifest as Record<string, CloudinaryAsset>)[publicIdOrKey];
+  const found = (manifest as unknown as Record<string, CloudinaryAsset>)[publicIdOrKey];
   const publicId = found ? found.publicId : (publicIdOrKey.startsWith("ahab-clothing/") ? publicIdOrKey : `ahab-clothing/products/${publicIdOrKey}`);
 
   const transforms: string[] = [];
@@ -55,7 +55,7 @@ export function buildCloudinaryUrl(
  * Get full metadata and details for a Cloudinary image asset.
  */
 export function getCloudinaryAsset(key: keyof typeof manifest | string): CloudinaryAsset {
-  const asset = (manifest as Record<string, CloudinaryAsset>)[key];
+  const asset = (manifest as unknown as Record<string, CloudinaryAsset>)[key];
   if (asset) return asset;
 
   // Fallback if not found in manifest
