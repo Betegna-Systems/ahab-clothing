@@ -18,7 +18,7 @@ const LABEL: Record<Category, string> = {
   suits: "Suits",
 };
 type Sort = "newest" | "popular" | "price-asc" | "price-desc" | "rated";
-const MAX_PRICE = 5000;
+const MAX_PRICE = 12000;
 
 export const Route = createFileRoute("/shop")({
   validateSearch: (s: Record<string, unknown>): { category?: Category | undefined } => ({
@@ -119,7 +119,7 @@ function Shop() {
         <button type="button" onClick={() => setFiltersOpen(true)} className="label-xs flex items-center gap-2 lg:hidden">
           <SlidersHorizontal className="h-4 w-4" strokeWidth={1.25} /> Filter
         </button>
-        <p className="label-xs hidden text-muted-foreground lg:block">{list.length} tops</p>
+        <p className="label-xs hidden text-muted-foreground lg:block">{list.length} pieces</p>
         <select value={sort} onChange={(e) => setSort(e.target.value as Sort)} className="label-xs bg-transparent outline-hidden" aria-label="Sort by">
           <option value="newest">Newest</option>
           <option value="popular">Popular</option>
@@ -133,7 +133,7 @@ function Shop() {
         <aside className="hidden lg:block">{Filters}</aside>
         <div className="grid grid-cols-2 gap-x-4 gap-y-12 md:grid-cols-3">
           {list.map((p, i) => <ProductCard key={p.slug} product={p} priority={i < 3} />)}
-          {list.length === 0 ? <p className="col-span-full py-20 text-center font-serif text-2xl text-muted-foreground">No tops match — try clearing a filter.</p> : null}
+          {list.length === 0 ? <p className="col-span-full py-20 text-center font-serif text-2xl text-muted-foreground">No pieces match — try clearing a filter.</p> : null}
         </div>
       </div>
 
