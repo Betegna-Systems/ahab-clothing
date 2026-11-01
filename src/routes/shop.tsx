@@ -7,7 +7,7 @@ import { ProductCard } from "@/components/site/ProductCard";
 import { collectionJsonLd, seo } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
-const CATS: Category[] = ["sleeveless", "long-sleeve", "one-shoulder", "off-shoulder", "cutout", "basics"];
+const CATS: Category[] = ["suits", "sleeveless", "long-sleeve", "one-shoulder", "off-shoulder", "cutout", "basics"];
 const LABEL: Record<Category, string> = {
   sleeveless: "Sleeveless",
   "long-sleeve": "Long Sleeve",
@@ -15,6 +15,7 @@ const LABEL: Record<Category, string> = {
   "off-shoulder": "Off Shoulder",
   cutout: "Cutouts",
   basics: "Basics",
+  suits: "Suits",
 };
 type Sort = "newest" | "popular" | "price-asc" | "price-desc" | "rated";
 const MAX_PRICE = 5000;
@@ -24,7 +25,7 @@ export const Route = createFileRoute("/shop")({
     category: CATS.includes(s["category"] as Category) ? (s["category"] as Category) : undefined,
   }),
   head: () =>
-    seo("Shop", "Shop AHAB bodycon tops — ribbed, cowl, one-shoulder and cutout styles, sewn in Addis Ababa.", {
+    seo("Shop", "Shop AHAB Suits and bodycon tops — tailored women's suits and sculpted tops, made in Addis Ababa.", {
       path: "/shop",
       jsonLd: collectionJsonLd(),
     }),

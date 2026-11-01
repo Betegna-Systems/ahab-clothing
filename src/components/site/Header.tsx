@@ -7,7 +7,8 @@ import { SearchDialog } from "./SearchDialog";
 import { CartDrawer } from "./CartDrawer";
 
 const nav = [
-  { label: "Shop", to: "/shop" },
+  { label: "Suits", to: "/shop", search: { category: "suits" } },
+  { label: "Shop All", to: "/shop" },
   { label: "Lookbook", to: "/lookbook" },
   { label: "Custom Tops", to: "/custom" },
   { label: "About", to: "/about" },

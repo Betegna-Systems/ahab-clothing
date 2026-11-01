@@ -1,3 +1,7 @@
+import heroSuits from "@/assets/hero-suits.jpg";
+import suitIvory from "@/assets/suit-ivory.jpg";
+import suitBlack from "@/assets/suit-black.jpg";
+import suitCamel from "@/assets/suit-camel.jpg";
 import {
   cloudinaryAssets,
   getCloudinaryAsset,
@@ -8,6 +12,7 @@ import {
 export { cloudinaryAssets, getCloudinaryAsset, buildCloudinaryUrl, type CloudinaryAsset };
 
 export const images = {
+  heroSuits,
   heroCampaign: cloudinaryAssets.heroCampaign.optimizedUrl,
   topSquareNeck: cloudinaryAssets.topSquareNeck.optimizedUrl,
   topOneShoulder: cloudinaryAssets.topOneShoulder.optimizedUrl,
@@ -22,7 +27,7 @@ export const images = {
   craftStudio: cloudinaryAssets.craftStudio.optimizedUrl,
 };
 
-export type Category = "sleeveless" | "long-sleeve" | "one-shoulder" | "off-shoulder" | "cutout" | "basics";
+export type Category = "sleeveless" | "long-sleeve" | "one-shoulder" | "off-shoulder" | "cutout" | "basics" | "suits";
 
 export type Product = {
   slug: string;
@@ -48,6 +53,78 @@ export type Product = {
 };
 
 export const products: Product[] = [
+  {
+    slug: "taitu-double-breasted-suit",
+    name: "Taitu Double-Breasted Suit",
+    price: 9800,
+    categories: ["suits"],
+    colors: [{ name: "Chocolate", hex: "#4A2F22" }],
+    sizes: ["XS", "S", "M", "L", "XL"],
+    images: [heroSuits],
+    description: "A sharp-shouldered double-breasted blazer with a nipped waist, paired with high-rise wide-leg trousers. The signature AHAB suit — tailored in Addis Ababa.",
+    fabric: "Two-piece suit · stretch wool-blend suiting, fully lined jacket",
+    care: "Dry clean recommended. Steam to refresh; do not tumble dry.",
+    badge: "new",
+    rating: 5,
+    reviews: 0,
+    inStock: true,
+    createdAt: "2026-11-01",
+    popularity: 99,
+  },
+  {
+    slug: "menen-single-breasted-suit",
+    name: "Menen Single-Breasted Suit",
+    price: 8900,
+    categories: ["suits"],
+    colors: [{ name: "Ivory", hex: "#F3ECDF" }],
+    sizes: ["XS", "S", "M", "L", "XL"],
+    images: [suitIvory],
+    description: "A clean one-button blazer and straight-leg trousers in soft ivory. Made for ceremonies, offices and every occasion in between.",
+    fabric: "Two-piece suit · stretch wool-blend suiting, fully lined jacket",
+    care: "Dry clean recommended. Steam to refresh; do not tumble dry.",
+    badge: "new",
+    rating: 5,
+    reviews: 0,
+    inStock: true,
+    createdAt: "2026-11-01",
+    popularity: 97,
+  },
+  {
+    slug: "zewditu-oversized-suit",
+    name: "Zewditu Oversized Suit",
+    price: 9200,
+    categories: ["suits"],
+    colors: [{ name: "Black", hex: "#1A1714" }],
+    sizes: ["XS", "S", "M", "L", "XL"],
+    images: [suitBlack],
+    description: "A relaxed oversized blazer over fluid wide-leg trousers. Effortless power dressing in classic black.",
+    fabric: "Two-piece suit · stretch wool-blend suiting, fully lined jacket",
+    care: "Dry clean recommended. Steam to refresh; do not tumble dry.",
+    badge: "bestseller",
+    rating: 5,
+    reviews: 0,
+    inStock: true,
+    createdAt: "2026-10-30",
+    popularity: 98,
+  },
+  {
+    slug: "selam-cropped-suit",
+    name: "Selam Cropped Suit",
+    price: 8400,
+    categories: ["suits"],
+    colors: [{ name: "Camel", hex: "#C4A27F" }],
+    sizes: ["XS", "S", "M", "L", "XL"],
+    images: [suitCamel],
+    description: "A cropped blazer with high-waisted pleated trousers that lengthen the leg. Modern, light and easy to style.",
+    fabric: "Two-piece suit · stretch wool-blend suiting, fully lined jacket",
+    care: "Dry clean recommended. Steam to refresh; do not tumble dry.",
+    badge: "new",
+    rating: 5,
+    reviews: 0,
+    inStock: true,
+    createdAt: "2026-10-30",
+    popularity: 96,
+  },
   {
     slug: "bete-seamless-crew",
     name: "Bete Seamless Crew",
@@ -370,6 +447,14 @@ export const products: Product[] = [
 ];
 
 export const collections = [
+  {
+    title: "AHAB Suits",
+    copy: "Tailored two-piece suits for women, cut in Addis Ababa.",
+    href: "/shop",
+    filter: "suits",
+    image: heroSuits,
+    imageDetails: undefined,
+  },
   {
     title: "Sleeveless",
     copy: "Square necks, halters and corsets for warm evenings.",
