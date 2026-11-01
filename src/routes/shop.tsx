@@ -103,7 +103,7 @@ function Shop() {
     <div className="mx-auto max-w-[1500px] px-5 py-16 md:px-10 md:py-20">
       <header className="text-center">
         <p className="label-xs text-gold">The Collection</p>
-        <h1 className="mt-4 text-5xl capitalize md:text-7xl">{category ? LABEL[category] : "All tops"}</h1>
+        <h1 className="mt-4 text-5xl capitalize md:text-7xl">{category ? LABEL[category] : "All pieces"}</h1>
       </header>
 
       <nav className="mt-12 flex justify-center gap-6 overflow-x-auto border-b border-border pb-4 md:gap-10">
@@ -144,7 +144,7 @@ function Shop() {
         </div>
         {Filters}
         <button type="button" onClick={() => setFiltersOpen(false)} className="label-xs mt-12 h-14 w-full bg-primary text-primary-foreground">
-          Show {list.length} tops
+          Show {list.length} pieces
         </button>
       </div>
     </div>
