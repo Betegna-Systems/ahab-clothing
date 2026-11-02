@@ -1,7 +1,3 @@
-import heroSuits from "@/assets/hero-suits.jpg";
-import suitIvory from "@/assets/suit-ivory.jpg";
-import suitBlack from "@/assets/suit-black.jpg";
-import suitCamel from "@/assets/suit-camel.jpg";
 import {
   cloudinaryAssets,
   getCloudinaryAsset,
@@ -12,7 +8,7 @@ import {
 export { cloudinaryAssets, getCloudinaryAsset, buildCloudinaryUrl, type CloudinaryAsset };
 
 export const images = {
-  heroSuits,
+  heroSuits: cloudinaryAssets.suitTaituChocolate.optimizedUrl,
   heroCampaign: cloudinaryAssets.heroCampaign.optimizedUrl,
   topSquareNeck: cloudinaryAssets.topSquareNeck.optimizedUrl,
   topOneShoulder: cloudinaryAssets.topOneShoulder.optimizedUrl,
@@ -27,7 +23,15 @@ export const images = {
   craftStudio: cloudinaryAssets.craftStudio.optimizedUrl,
 };
 
-export type Category = "sleeveless" | "long-sleeve" | "one-shoulder" | "off-shoulder" | "cutout" | "basics" | "suits" | "tops";
+export type Category =
+  | "sleeveless"
+  | "long-sleeve"
+  | "one-shoulder"
+  | "off-shoulder"
+  | "cutout"
+  | "basics"
+  | "suits"
+  | "tops";
 
 /** "tops" matches anything not tagged as a suit, so admin can tag either "tops" or a cut. */
 export function inCategory(p: { categories: Category[] }, c: Category): boolean {
@@ -66,8 +70,9 @@ export const products: Product[] = [
     categories: ["suits"],
     colors: [{ name: "Chocolate", hex: "#4A2F22" }],
     sizes: ["XS", "S", "M", "L", "XL"],
-    images: [heroSuits],
-    description: "A sharp-shouldered double-breasted blazer with a nipped waist, paired with high-rise wide-leg trousers. The signature AHAB suit — tailored in Addis Ababa.",
+    images: [cloudinaryAssets.suitTaituChocolate.optimizedUrl],
+    description:
+      "A sharp-shouldered double-breasted blazer with a nipped waist, paired with high-rise wide-leg trousers. The signature AHAB suit — tailored in Addis Ababa.",
     fabric: "Two-piece suit · stretch wool-blend suiting, fully lined jacket",
     care: "Dry clean recommended. Steam to refresh; do not tumble dry.",
     badge: "new",
@@ -84,8 +89,9 @@ export const products: Product[] = [
     categories: ["suits"],
     colors: [{ name: "Ivory", hex: "#F3ECDF" }],
     sizes: ["XS", "S", "M", "L", "XL"],
-    images: [suitIvory],
-    description: "A clean one-button blazer and straight-leg trousers in soft ivory. Made for ceremonies, offices and every occasion in between.",
+    images: [cloudinaryAssets.suitMenenIvory.optimizedUrl],
+    description:
+      "A clean one-button blazer and straight-leg trousers in soft ivory. Made for ceremonies, offices and every occasion in between.",
     fabric: "Two-piece suit · stretch wool-blend suiting, fully lined jacket",
     care: "Dry clean recommended. Steam to refresh; do not tumble dry.",
     badge: "new",
@@ -102,8 +108,9 @@ export const products: Product[] = [
     categories: ["suits"],
     colors: [{ name: "Black", hex: "#1A1714" }],
     sizes: ["XS", "S", "M", "L", "XL"],
-    images: [suitBlack],
-    description: "A relaxed oversized blazer over fluid wide-leg trousers. Effortless power dressing in classic black.",
+    images: [cloudinaryAssets.suitZewdituBlack.optimizedUrl],
+    description:
+      "A relaxed oversized blazer over fluid wide-leg trousers. Effortless power dressing in classic black.",
     fabric: "Two-piece suit · stretch wool-blend suiting, fully lined jacket",
     care: "Dry clean recommended. Steam to refresh; do not tumble dry.",
     badge: "bestseller",
@@ -120,8 +127,9 @@ export const products: Product[] = [
     categories: ["suits"],
     colors: [{ name: "Camel", hex: "#C4A27F" }],
     sizes: ["XS", "S", "M", "L", "XL"],
-    images: [suitCamel],
-    description: "A cropped blazer with high-waisted pleated trousers that lengthen the leg. Modern, light and easy to style.",
+    images: [cloudinaryAssets.suitSelamCamel.optimizedUrl],
+    description:
+      "A cropped blazer with high-waisted pleated trousers that lengthen the leg. Modern, light and easy to style.",
     fabric: "Two-piece suit · stretch wool-blend suiting, fully lined jacket",
     care: "Dry clean recommended. Steam to refresh; do not tumble dry.",
     badge: "new",
@@ -458,7 +466,7 @@ export const collections = [
     copy: "Tailored two-piece suits for women, cut in Addis Ababa.",
     href: "/shop",
     filter: "suits",
-    image: heroSuits,
+    image: cloudinaryAssets.suitTaituChocolate.optimizedUrl,
     imageDetails: undefined,
   },
   {

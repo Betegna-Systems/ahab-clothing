@@ -1,7 +1,8 @@
 import manifest from "@/data/cloudinary-manifest.json";
 
 export const CLOUDINARY_CLOUD_NAME =
-  (typeof import.meta !== "undefined" && import.meta.env?.["VITE_CLOUDINARY_CLOUD_NAME"]) || "dvyj6ac75";
+  (typeof import.meta !== "undefined" && import.meta.env?.["VITE_CLOUDINARY_CLOUD_NAME"]) ||
+  "dvyj6ac75";
 
 export interface CloudinaryAsset {
   publicId: string;
@@ -30,11 +31,15 @@ export interface CloudinaryTransformOptions {
  */
 export function buildCloudinaryUrl(
   publicIdOrKey: string,
-  options: CloudinaryTransformOptions = {}
+  options: CloudinaryTransformOptions = {},
 ): string {
   // If a manifest key (e.g. "top-square-neck") is passed, look up its full publicId
   const found = (manifest as unknown as Record<string, CloudinaryAsset>)[publicIdOrKey];
-  const publicId = found ? found.publicId : (publicIdOrKey.startsWith("ahab-clothing/") ? publicIdOrKey : `ahab-clothing/products/${publicIdOrKey}`);
+  const publicId = found
+    ? found.publicId
+    : publicIdOrKey.startsWith("ahab-clothing/")
+      ? publicIdOrKey
+      : `ahab-clothing/products/${publicIdOrKey}`;
 
   const transforms: string[] = [];
 
@@ -85,6 +90,12 @@ export const cloudinaryAssets = {
   founderPortrait: getCloudinaryAsset("founder-portrait"),
   heroCampaign: getCloudinaryAsset("hero-campaign-tops"),
   ogImage: getCloudinaryAsset("og-image"),
+
+  // Suits
+  suitTaituChocolate: getCloudinaryAsset("suit-taitu-chocolate"),
+  suitMenenIvory: getCloudinaryAsset("suit-menen-ivory"),
+  suitZewdituBlack: getCloudinaryAsset("suit-zewditu-black"),
+  suitSelamCamel: getCloudinaryAsset("suit-selam-camel"),
 
   // Square Neck Tops
   topSquareNeck: getCloudinaryAsset("top-square-neck"),

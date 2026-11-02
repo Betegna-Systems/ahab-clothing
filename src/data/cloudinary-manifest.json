@@ -372,5 +372,49 @@
     "bytes": 115846,
     "createdAt": "2026-10-22T06:39:04Z",
     "optimizedUrl": "https://res.cloudinary.com/dvyj6ac75/image/upload/f_auto,q_auto/v1/ahab-clothing/brand/og-image?_a=BAMAROWO0"
+  },
+  "suit-taitu-chocolate": {
+    "publicId": "ahab-clothing/products/suit-taitu-chocolate",
+    "secureUrl": "https://res.cloudinary.com/dvyj6ac75/image/upload/v1793541357/ahab-clothing/products/suit-taitu-chocolate.jpg",
+    "url": "http://res.cloudinary.com/dvyj6ac75/image/upload/v1793541357/ahab-clothing/products/suit-taitu-chocolate.jpg",
+    "width": 1024,
+    "height": 1440,
+    "format": "jpg",
+    "bytes": 91861,
+    "createdAt": "2026-11-01T13:55:57Z",
+    "optimizedUrl": "https://res.cloudinary.com/dvyj6ac75/image/upload/f_auto,q_auto/v1/ahab-clothing/products/suit-taitu-chocolate"
+  },
+  "suit-menen-ivory": {
+    "publicId": "ahab-clothing/products/suit-menen-ivory",
+    "secureUrl": "https://res.cloudinary.com/dvyj6ac75/image/upload/v1793541358/ahab-clothing/products/suit-menen-ivory.jpg",
+    "url": "http://res.cloudinary.com/dvyj6ac75/image/upload/v1793541358/ahab-clothing/products/suit-menen-ivory.jpg",
+    "width": 768,
+    "height": 1024,
+    "format": "jpg",
+    "bytes": 56750,
+    "createdAt": "2026-11-01T13:55:58Z",
+    "optimizedUrl": "https://res.cloudinary.com/dvyj6ac75/image/upload/f_auto,q_auto/v1/ahab-clothing/products/suit-menen-ivory"
+  },
+  "suit-zewditu-black": {
+    "publicId": "ahab-clothing/products/suit-zewditu-black",
+    "secureUrl": "https://res.cloudinary.com/dvyj6ac75/image/upload/v1793541359/ahab-clothing/products/suit-zewditu-black.jpg",
+    "url": "http://res.cloudinary.com/dvyj6ac75/image/upload/v1793541359/ahab-clothing/products/suit-zewditu-black.jpg",
+    "width": 768,
+    "height": 1024,
+    "format": "jpg",
+    "bytes": 55814,
+    "createdAt": "2026-11-01T13:55:59Z",
+    "optimizedUrl": "https://res.cloudinary.com/dvyj6ac75/image/upload/f_auto,q_auto/v1/ahab-clothing/products/suit-zewditu-black"
+  },
+  "suit-selam-camel": {
+    "publicId": "ahab-clothing/products/suit-selam-camel",
+    "secureUrl": "https://res.cloudinary.com/dvyj6ac75/image/upload/v1793541360/ahab-clothing/products/suit-selam-camel.jpg",
+    "url": "http://res.cloudinary.com/dvyj6ac75/image/upload/v1793541360/ahab-clothing/products/suit-selam-camel.jpg",
+    "width": 768,
+    "height": 1024,
+    "format": "jpg",
+    "bytes": 58289,
+    "createdAt": "2026-11-01T13:56:00Z",
+    "optimizedUrl": "https://res.cloudinary.com/dvyj6ac75/image/upload/f_auto,q_auto/v1/ahab-clothing/products/suit-selam-camel"
   }
 }
