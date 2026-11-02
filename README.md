@@ -28,8 +28,7 @@ saved delivery addresses. In Supabase Auth settings, configure email verificatio
 storefront's `/account` URL as a redirect destination. Order history is matched to the verified
 account email; existing guest checkout remains available.
 
-For Vercel deployments, configure `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` for the
-Production, Preview, and Development environments as needed. Server-side order, inventory, and
-account-history features also require `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`; keep the
-service-role key server-only and never use a `VITE_` prefix for it. Redeploy after changing
-environment variables.
+For Vercel deployments, configure `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` for the Production,
+Preview, and Development environments as needed. The server returns only these public auth values to
+the browser at runtime; `SUPABASE_SERVICE_ROLE_KEY` remains server-only. The older `VITE_SUPABASE_URL`
+and `VITE_SUPABASE_ANON_KEY` names remain supported. Redeploy after changing environment variables.

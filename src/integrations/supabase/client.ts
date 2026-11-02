@@ -1,20 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
+import { getPublicSupabaseConfig } from "./config.functions";
 import type { Database } from "./types";
 
-export function isSupabaseBrowserConfigured() {
-  return Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
-}
-
-function createBrowserClient() {
-  const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
-
-  if (!url || !anonKey) {
-    throw new Error(
-      "Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY. Add them from your Supabase project settings (API).",
-    );
-  }
-
+function createBrowserClient(url: string, anonKey: string) {
   return createClient<Database>(url, anonKey, {
     auth: {
       persistSession: true,
@@ -25,10 +13,29 @@ function createBrowserClient() {
 }
 
 let client: ReturnType<typeof createBrowserClient> | undefined;
+let clientInitialization: Promise<boolean> | undefined;
+
+export function initializeSupabaseBrowser() {
+  if (!clientInitialization) {
+    clientInitialization = getPublicSupabaseConfig()
+      .then((config) => {
+        if (!config) return false;
+        client = createBrowserClient(config.url, config.anonKey);
+        return true;
+      })
+      .catch((error: unknown) => {
+        clientInitialization = undefined;
+        throw error;
+      });
+  }
+  return clientInitialization;
+}
 
 export const supabase = new Proxy({} as ReturnType<typeof createBrowserClient>, {
   get(_, prop, receiver) {
-    if (!client) client = createBrowserClient();
+    if (!client) {
+      throw new Error("Supabase browser client has not been initialized.");
+    }
     return Reflect.get(client, prop, receiver);
   },
 });

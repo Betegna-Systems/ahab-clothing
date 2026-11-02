@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { AhabButton, AhabLink } from "@/components/site/ui";
-import { isSupabaseBrowserConfigured, supabase } from "@/integrations/supabase/client";
+import { initializeSupabaseBrowser, supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { getAccountOrders } from "@/lib/orders.functions";
 import { formatPrice } from "@/lib/products";
@@ -43,7 +43,7 @@ function AccountPage() {
   const [orders, setOrders] = useState<AccountOrder[]>([]);
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [loadingData, setLoadingData] = useState(false);
-  const browserAuthConfigured = isSupabaseBrowserConfigured();
+  const [browserAuthConfigured, setBrowserAuthConfigured] = useState(false);
 
   const loadAccountData = useCallback(async (activeSession: Session) => {
     setLoadingData(true);
@@ -75,56 +75,70 @@ function AccountPage() {
   }, []);
 
   useEffect(() => {
-    if (!browserAuthConfigured) {
-      setNotice("Account sign-in is not configured for this deployment.");
-      setAuthInitialized(true);
-      return;
-    }
-
     let active = true;
     let authEventVersion = 0;
-    const { data } = supabase.auth.onAuthStateChange((event, nextSession) => {
-      authEventVersion += 1;
-      if (!active) return;
-      setSession(nextSession);
-      setAuthInitialized(true);
-      setPasswordRecovery(event === "PASSWORD_RECOVERY");
-      setNotice("");
-      if (nextSession) {
-        window.setTimeout(() => void loadAccountData(nextSession), 0);
-      } else {
-        setOrders([]);
-        setAddresses([]);
-      }
-    });
+    let unsubscribe: (() => void) | undefined;
 
-    const initialEventVersion = authEventVersion;
-    void supabase.auth
-      .getSession()
-      .then(({ data: sessionData, error }) => {
-        if (!active || authEventVersion !== initialEventVersion) return;
-        if (error) {
-          console.error("Account session lookup failed:", error.message);
-          setNotice("We couldn't check your sign-in. Please refresh and try again.");
+    void initializeSupabaseBrowser()
+      .then((configured) => {
+        if (!active) return;
+        setBrowserAuthConfigured(configured);
+        if (!configured) {
+          setNotice("Account sign-in is not configured for this deployment.");
+          setAuthInitialized(true);
+          return;
         }
-        setSession(sessionData.session);
-        setAuthInitialized(true);
-        if (sessionData.session) {
-          void loadAccountData(sessionData.session);
-        }
+
+        const { data } = supabase.auth.onAuthStateChange((event, nextSession) => {
+          authEventVersion += 1;
+          if (!active) return;
+          setSession(nextSession);
+          setAuthInitialized(true);
+          setPasswordRecovery(event === "PASSWORD_RECOVERY");
+          setNotice("");
+          if (nextSession) {
+            window.setTimeout(() => void loadAccountData(nextSession), 0);
+          } else {
+            setOrders([]);
+            setAddresses([]);
+          }
+        });
+        unsubscribe = () => data.subscription.unsubscribe();
+
+        const initialEventVersion = authEventVersion;
+        void supabase.auth
+          .getSession()
+          .then(({ data: sessionData, error }) => {
+            if (!active || authEventVersion !== initialEventVersion) return;
+            if (error) {
+              console.error("Account session lookup failed:", error.message);
+              setNotice("We couldn't check your sign-in. Please refresh and try again.");
+            }
+            setSession(sessionData.session);
+            setAuthInitialized(true);
+            if (sessionData.session) {
+              void loadAccountData(sessionData.session);
+            }
+          })
+          .catch((error: unknown) => {
+            if (!active || authEventVersion !== initialEventVersion) return;
+            console.error("Account session lookup failed:", error);
+            setNotice("We couldn't check your sign-in. Please refresh and try again.");
+            setAuthInitialized(true);
+          });
       })
       .catch((error: unknown) => {
-        if (!active || authEventVersion !== initialEventVersion) return;
-        console.error("Account session lookup failed:", error);
-        setNotice("We couldn't check your sign-in. Please refresh and try again.");
+        if (!active) return;
+        console.error("Supabase browser configuration lookup failed:", error);
+        setNotice("We couldn't load account sign-in. Please try again later.");
         setAuthInitialized(true);
       });
 
     return () => {
       active = false;
-      data.subscription.unsubscribe();
+      unsubscribe?.();
     };
-  }, [browserAuthConfigured, loadAccountData]);
+  }, [loadAccountData]);
 
   const submitAuth = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

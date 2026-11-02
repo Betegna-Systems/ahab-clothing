@@ -11,7 +11,7 @@ import { type Product } from "@/lib/products";
 import { useAllProducts, getProductCached } from "@/lib/firestore-products";
 import { MAX_CART_QUANTITY } from "@/lib/order-limits";
 import { getVariantAvailability } from "@/lib/inventory.functions";
-import { isSupabaseBrowserConfigured, supabase } from "@/integrations/supabase/client";
+import { initializeSupabaseBrowser, supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export type CartLine = {
@@ -127,19 +127,34 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!isSupabaseBrowserConfigured()) {
-      setAccountWishlistReady(true);
-      return;
-    }
+    let active = true;
+    let subscription: { unsubscribe: () => void } | undefined;
 
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-      const nextUserId = session?.user.id ?? null;
-      setAccountUserId(nextUserId);
-      setAccountWishlistReady(!nextUserId);
-      if (!nextUserId) setWishlist(read<string[]>(WISH_KEY, []));
-    });
+    void initializeSupabaseBrowser()
+      .then((configured) => {
+        if (!active) return;
+        if (!configured) {
+          setAccountWishlistReady(true);
+          return;
+        }
 
-    return () => data.subscription.unsubscribe();
+        const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+          const nextUserId = session?.user.id ?? null;
+          setAccountUserId(nextUserId);
+          setAccountWishlistReady(!nextUserId);
+          if (!nextUserId) setWishlist(read<string[]>(WISH_KEY, []));
+        });
+        subscription = data.subscription;
+      })
+      .catch((error: unknown) => {
+        console.error("Supabase browser configuration lookup failed:", error);
+        if (active) setAccountWishlistReady(true);
+      });
+
+    return () => {
+      active = false;
+      subscription?.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
