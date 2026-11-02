@@ -154,6 +154,69 @@ export type Database = {
           },
         ];
       };
+      custom_commissions: {
+        Row: {
+          budget: string;
+          color: string;
+          commission_type: string;
+          created_at: string;
+          customer_name: string;
+          email: string;
+          fabric: string;
+          fit_preferences: string;
+          id: string;
+          image_paths: string[];
+          measurements: Json;
+          notes: string;
+          occasion: string;
+          phone: string;
+          privacy_consent_at: string;
+          status: string;
+          style: string;
+          updated_at: string;
+        };
+        Insert: {
+          budget: string;
+          color?: string;
+          commission_type: string;
+          created_at?: string;
+          customer_name: string;
+          email: string;
+          fabric?: string;
+          fit_preferences?: string;
+          id?: string;
+          image_paths?: string[];
+          measurements?: Json;
+          notes?: string;
+          occasion: string;
+          phone: string;
+          privacy_consent_at?: string;
+          status?: string;
+          style: string;
+          updated_at?: string;
+        };
+        Update: {
+          budget?: string;
+          color?: string;
+          commission_type?: string;
+          created_at?: string;
+          customer_name?: string;
+          email?: string;
+          fabric?: string;
+          fit_preferences?: string;
+          id?: string;
+          image_paths?: string[];
+          measurements?: Json;
+          notes?: string;
+          occasion?: string;
+          phone?: string;
+          privacy_consent_at?: string;
+          status?: string;
+          style?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       product_variant_inventory: {
         Row: {
           color: string;

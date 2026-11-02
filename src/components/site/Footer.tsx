@@ -11,7 +11,7 @@ const columns = [
     links: [
       { label: "All tops", to: "/shop" },
       { label: "Lookbook", to: "/lookbook" },
-      { label: "Custom tops", to: "/custom" },
+      { label: "Custom commissions", to: "/custom" },
       { label: "Wishlist", to: "/wishlist" },
     ],
   },

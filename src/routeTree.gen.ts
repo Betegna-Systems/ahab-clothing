@@ -25,6 +25,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SizeGuideRouteImport } from './routes/size-guide'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as WishlistRouteImport } from './routes/wishlist'
+import { Route as AdminCustomOrdersRouteImport } from './routes/admin.custom-orders'
 import { Route as PaymentOrderNumberRouteImport } from './routes/payment.$orderNumber'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
 import { Route as TrackingOrderNumberRouteImport } from './routes/tracking.$orderNumber'
@@ -109,6 +110,11 @@ const WishlistRoute = WishlistRouteImport.update({
   path: '/wishlist',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminCustomOrdersRoute = AdminCustomOrdersRouteImport.update({
+  id: '/admin/custom-orders',
+  path: '/admin/custom-orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PaymentOrderNumberRoute = PaymentOrderNumberRouteImport.update({
   id: '/payment/$orderNumber',
   path: '/payment/$orderNumber',
@@ -142,6 +148,7 @@ export interface FileRoutesByFullPath {
   '/size-guide': typeof SizeGuideRoute
   '/terms': typeof TermsRoute
   '/wishlist': typeof WishlistRoute
+  '/admin/custom-orders': typeof AdminCustomOrdersRoute
   '/payment/$orderNumber': typeof PaymentOrderNumberRoute
   '/product/$slug': typeof ProductSlugRoute
   '/tracking/$orderNumber': typeof TrackingOrderNumberRoute
@@ -163,6 +170,7 @@ export interface FileRoutesByTo {
   '/size-guide': typeof SizeGuideRoute
   '/terms': typeof TermsRoute
   '/wishlist': typeof WishlistRoute
+  '/admin/custom-orders': typeof AdminCustomOrdersRoute
   '/payment/$orderNumber': typeof PaymentOrderNumberRoute
   '/product/$slug': typeof ProductSlugRoute
   '/tracking/$orderNumber': typeof TrackingOrderNumberRoute
@@ -185,6 +193,7 @@ export interface FileRoutesById {
   '/size-guide': typeof SizeGuideRoute
   '/terms': typeof TermsRoute
   '/wishlist': typeof WishlistRoute
+  '/admin/custom-orders': typeof AdminCustomOrdersRoute
   '/payment/$orderNumber': typeof PaymentOrderNumberRoute
   '/product/$slug': typeof ProductSlugRoute
   '/tracking/$orderNumber': typeof TrackingOrderNumberRoute
@@ -208,6 +217,7 @@ export interface FileRouteTypes {
     | '/size-guide'
     | '/terms'
     | '/wishlist'
+    | '/admin/custom-orders'
     | '/payment/$orderNumber'
     | '/product/$slug'
     | '/tracking/$orderNumber'
@@ -229,6 +239,7 @@ export interface FileRouteTypes {
     | '/size-guide'
     | '/terms'
     | '/wishlist'
+    | '/admin/custom-orders'
     | '/payment/$orderNumber'
     | '/product/$slug'
     | '/tracking/$orderNumber'
@@ -250,6 +261,7 @@ export interface FileRouteTypes {
     | '/size-guide'
     | '/terms'
     | '/wishlist'
+    | '/admin/custom-orders'
     | '/payment/$orderNumber'
     | '/product/$slug'
     | '/tracking/$orderNumber'
@@ -272,6 +284,7 @@ export interface RootRouteChildren {
   SizeGuideRoute: typeof SizeGuideRoute
   TermsRoute: typeof TermsRoute
   WishlistRoute: typeof WishlistRoute
+  AdminCustomOrdersRoute: typeof AdminCustomOrdersRoute
   PaymentOrderNumberRoute: typeof PaymentOrderNumberRoute
   ProductSlugRoute: typeof ProductSlugRoute
   TrackingOrderNumberRoute: typeof TrackingOrderNumberRoute
@@ -391,6 +404,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WishlistRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/custom-orders': {
+      id: '/admin/custom-orders'
+      path: '/admin/custom-orders'
+      fullPath: '/admin/custom-orders'
+      preLoaderRoute: typeof AdminCustomOrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/payment/$orderNumber': {
       id: '/payment/$orderNumber'
       path: '/payment/$orderNumber'
@@ -432,6 +452,7 @@ const rootRouteChildren: RootRouteChildren = {
   SizeGuideRoute: SizeGuideRoute,
   TermsRoute: TermsRoute,
   WishlistRoute: WishlistRoute,
+  AdminCustomOrdersRoute: AdminCustomOrdersRoute,
   PaymentOrderNumberRoute: PaymentOrderNumberRoute,
   ProductSlugRoute: ProductSlugRoute,
   TrackingOrderNumberRoute: TrackingOrderNumberRoute,

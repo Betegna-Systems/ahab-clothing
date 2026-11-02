@@ -22,6 +22,16 @@ or variant stock controls. Manage stock in `product_variant_inventory` using the
 color name, and size; only positive quantities are available, and missing variants are blocked.
 Enter AHAB's confirmed counts after applying the inventory migration—no quantities are seeded.
 
+Custom commission requests are saved to Supabase by applying
+`supabase/migrations/202611020005_custom_commissions.sql`. This creates the requests table and a
+private inspiration-image bucket. Customers can upload up to three private images per request;
+requests are rate-limited per email. Admins can review and update requests at
+`/admin/custom-orders`. Grant the trusted admin Auth user the `role: admin` app-metadata claim using
+the instructions in `supabase/migrations/202610260002_admin_access.sql`; only that claim grants
+access. Admin access to custom requests and private images also requires an AAL2 session, so set up
+an authenticator factor for each admin user. New requests use the configured Telegram alerts and
+admin push notifications.
+
 Customer accounts use Supabase email/password authentication. Apply
 `supabase/migrations/202611020003_customer_accounts.sql` to enable private, per-account wishlists and
 saved delivery addresses, then apply `supabase/migrations/202611020004_customer_auth_hardening.sql`

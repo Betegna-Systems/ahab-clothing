@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { MAX_CART_QUANTITY } from "@/lib/order-limits";
+import { hasValidImageSignature } from "@/lib/image-validation";
 import type { Json } from "@/integrations/supabase/types";
 
 const line = z.object({
@@ -365,17 +366,6 @@ const proofSchema = paymentAccessSchema.extend({
   mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]),
   imageBase64: z.string().min(1).max(7_000_000),
 });
-
-function hasValidImageSignature(bytes: Uint8Array, mimeType: string) {
-  if (mimeType === "image/jpeg") return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
-  if (mimeType === "image/png") {
-    return [137, 80, 78, 71, 13, 10, 26, 10].every((byte, index) => bytes[index] === byte);
-  }
-  return (
-    String.fromCharCode(...bytes.slice(0, 4)) === "RIFF" &&
-    String.fromCharCode(...bytes.slice(8, 12)) === "WEBP"
-  );
-}
 
 export const submitPaymentProof = createServerFn({ method: "POST" })
   .validator((d: unknown) => proofSchema.parse(d))

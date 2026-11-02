@@ -10,6 +10,13 @@ type OrderAlert = {
   customerPhone: string;
 };
 
+type CustomCommissionAlert = {
+  commissionId: string;
+  commissionType: "top" | "suit";
+  customerName: string;
+  customerPhone: string;
+};
+
 async function sendTelegramAlert(message: string) {
   const botToken = process.env["TELEGRAM_BOT_TOKEN"];
   const chatId = process.env["TELEGRAM_CHAT_ID"];
@@ -82,54 +89,32 @@ export async function notifyAdminsOfNewOrder(order: OrderAlert) {
     "New order",
   );
 
-  try {
-    const { data: devices, error } = await supabaseAdmin.from("admin_push_tokens").select("token");
+  await sendAdminPushNotification(
+    "New AHAB order",
+    `${order.orderNumber} - ETB ${order.total.toLocaleString()}`,
+    { type: "new_order", orderNumber: order.orderNumber },
+    "New order",
+  );
+}
 
-    if (error) throw error;
-    if (!devices?.length) return;
+export async function notifyAdminsOfNewCustomCommission(commission: CustomCommissionAlert) {
+  await safelySendTelegramAlert(
+    [
+      `New AHAB custom ${commission.commissionType} request`,
+      `Request: ${commission.commissionId}`,
+      `Customer: ${commission.customerName}`,
+      `Phone: ${commission.customerPhone}`,
+      "Open /admin/custom-orders to review.",
+    ].join("\n"),
+    "Custom commission",
+  );
 
-    const app = getFirebaseAdminApp();
-    const messaging = getMessaging(app);
-    const tokens = devices.map(({ token }) => token);
-
-    for (let offset = 0; offset < tokens.length; offset += 500) {
-      const batch = tokens.slice(offset, offset + 500);
-      const response = await messaging.sendEachForMulticast({
-        tokens: batch,
-        notification: {
-          title: "New AHAB order",
-          body: `${order.orderNumber} - ETB ${order.total.toLocaleString()}`,
-        },
-        data: {
-          type: "new_order",
-          orderNumber: order.orderNumber,
-        },
-        android: { priority: "high" },
-      });
-
-      const invalidTokens = response.responses.flatMap((result, index) => {
-        const code = result.error?.code;
-        const token = batch[index];
-        return token &&
-          (code === "messaging/registration-token-not-registered" ||
-            code === "messaging/invalid-registration-token")
-          ? [token]
-          : [];
-      });
-
-      if (invalidTokens.length) {
-        const { error: deleteError } = await supabaseAdmin
-          .from("admin_push_tokens")
-          .delete()
-          .in("token", invalidTokens);
-        if (deleteError) {
-          console.error("Could not remove expired admin push tokens:", deleteError.message);
-        }
-      }
-    }
-  } catch (error) {
-    console.error("New order push notification failed:", error);
-  }
+  await sendAdminPushNotification(
+    "New custom commission",
+    `${commission.customerName} - custom ${commission.commissionType}`,
+    { type: "new_custom_commission", commissionId: commission.commissionId },
+    "Custom commission",
+  );
 }
 
 export async function notifyAdminsOfPaymentReceiptSubmission(order: OrderAlert) {
@@ -144,4 +129,53 @@ export async function notifyAdminsOfPaymentReceiptSubmission(order: OrderAlert) 
     ].join("\n"),
     "Payment receipt",
   );
+}
+
+async function sendAdminPushNotification(
+  title: string,
+  body: string,
+  data: Record<string, string>,
+  context: string,
+) {
+  try {
+    const { data: devices, error } = await supabaseAdmin.from("admin_push_tokens").select("token");
+    if (error) throw error;
+    if (!devices?.length) return;
+
+    const messaging = getMessaging(getFirebaseAdminApp());
+    const tokens = devices.map(({ token }) => token);
+    for (let offset = 0; offset < tokens.length; offset += 500) {
+      const batch = tokens.slice(offset, offset + 500);
+      const response = await messaging.sendEachForMulticast({
+        tokens: batch,
+        notification: { title, body },
+        data,
+        android: { priority: "high" },
+      });
+
+      const invalidTokens = response.responses.flatMap((result, index) => {
+        const code = result.error?.code;
+        const token = batch[index];
+        return token &&
+          (code === "messaging/registration-token-not-registered" ||
+            code === "messaging/invalid-registration-token")
+          ? [token]
+          : [];
+      });
+      if (!invalidTokens.length) continue;
+
+      const { error: deleteError } = await supabaseAdmin
+        .from("admin_push_tokens")
+        .delete()
+        .in("token", invalidTokens);
+      if (deleteError) {
+        console.error(
+          `Could not remove expired admin push tokens (${context}):`,
+          deleteError.message,
+        );
+      }
+    }
+  } catch (error) {
+    console.error(`${context} push notification failed:`, error);
+  }
 }

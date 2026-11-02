@@ -848,6 +848,11 @@ function AccountPage() {
               <p className="mt-1 text-xs text-muted-foreground">
                 {session.user.email_confirmed_at ? "Email verified" : "Email verification pending"}
               </p>
+              {session.user.app_metadata?.role === "admin" ? (
+                <AhabLink to="/admin/custom-orders" className="mt-3">
+                  Manage custom requests
+                </AhabLink>
+              ) : null}
             </div>
             <button
               type="button"
