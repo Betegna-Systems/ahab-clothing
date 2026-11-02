@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { AhabButton, AhabLink } from "@/components/site/ui";
-import { supabase } from "@/integrations/supabase/client";
+import { isSupabaseBrowserConfigured, supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { getAccountOrders } from "@/lib/orders.functions";
 import { formatPrice } from "@/lib/products";
@@ -43,6 +43,7 @@ function AccountPage() {
   const [orders, setOrders] = useState<AccountOrder[]>([]);
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [loadingData, setLoadingData] = useState(false);
+  const browserAuthConfigured = isSupabaseBrowserConfigured();
 
   const loadAccountData = useCallback(async (activeSession: Session) => {
     setLoadingData(true);
@@ -74,6 +75,12 @@ function AccountPage() {
   }, []);
 
   useEffect(() => {
+    if (!browserAuthConfigured) {
+      setNotice("Account sign-in is not configured for this deployment.");
+      setAuthInitialized(true);
+      return;
+    }
+
     let active = true;
     let authEventVersion = 0;
     const { data } = supabase.auth.onAuthStateChange((event, nextSession) => {
@@ -117,7 +124,7 @@ function AccountPage() {
       active = false;
       data.subscription.unsubscribe();
     };
-  }, [loadAccountData]);
+  }, [browserAuthConfigured, loadAccountData]);
 
   const submitAuth = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -321,7 +328,18 @@ function AccountPage() {
         </p>
       ) : null}
 
-      {passwordRecovery ? (
+      {!browserAuthConfigured ? (
+        <section className="mt-10 max-w-xl border border-border p-6">
+          <h2 className="font-serif text-2xl">Accounts are temporarily unavailable.</h2>
+          <p className="mt-3 text-sm text-muted-foreground">
+            The storefront deployment is missing its public Supabase Auth configuration. The shop
+            and guest checkout remain available; please try again later.
+          </p>
+          <AhabLink to="/shop" className="mt-6">
+            Continue shopping
+          </AhabLink>
+        </section>
+      ) : passwordRecovery ? (
         <form onSubmit={updatePassword} className="mt-10 max-w-md space-y-4">
           <h2 className="font-serif text-3xl">Choose a new password</h2>
           <p className="text-sm text-muted-foreground">

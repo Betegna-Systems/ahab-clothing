@@ -11,7 +11,7 @@ import { type Product } from "@/lib/products";
 import { useAllProducts, getProductCached } from "@/lib/firestore-products";
 import { MAX_CART_QUANTITY } from "@/lib/order-limits";
 import { getVariantAvailability } from "@/lib/inventory.functions";
-import { supabase } from "@/integrations/supabase/client";
+import { isSupabaseBrowserConfigured, supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export type CartLine = {
@@ -127,6 +127,11 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (!isSupabaseBrowserConfigured()) {
+      setAccountWishlistReady(true);
+      return;
+    }
+
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       const nextUserId = session?.user.id ?? null;
       setAccountUserId(nextUserId);

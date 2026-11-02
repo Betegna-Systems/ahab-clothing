@@ -7,7 +7,7 @@ import { AhabButton, AhabLink } from "@/components/site/ui";
 import { ChatOrderButtons } from "@/components/site/ChatOrderButtons";
 import { buildOrderMessage, submitOrder, type OrderPayload } from "@/lib/order-channels";
 import { PAYMENT_METHODS, getPaymentMethod } from "@/lib/payment-methods";
-import { supabase } from "@/integrations/supabase/client";
+import { isSupabaseBrowserConfigured, supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
@@ -78,6 +78,8 @@ function CheckoutPage() {
   }, []);
 
   useEffect(() => {
+    if (!isSupabaseBrowserConfigured()) return;
+
     let active = true;
     const loadSavedAddresses = async () => {
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
