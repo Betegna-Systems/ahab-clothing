@@ -8,6 +8,63 @@ export type Database = {
   };
   public: {
     Tables: {
+      account_saved_addresses: {
+        Row: {
+          address: string;
+          city: string;
+          created_at: string;
+          id: string;
+          label: string;
+          phone: string;
+          recipient_name: string;
+          sub_city: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          address: string;
+          city: string;
+          created_at?: string;
+          id?: string;
+          label: string;
+          phone: string;
+          recipient_name: string;
+          sub_city: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          address?: string;
+          city?: string;
+          created_at?: string;
+          id?: string;
+          label?: string;
+          phone?: string;
+          recipient_name?: string;
+          sub_city?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      account_wishlist: {
+        Row: {
+          created_at: string;
+          product_slug: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          product_slug: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          product_slug?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       admin_push_tokens: {
         Row: {
           created_at: string;

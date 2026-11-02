@@ -11,6 +11,7 @@ import { type Product } from "@/lib/products";
 import { useAllProducts, getProductCached } from "@/lib/firestore-products";
 import { MAX_CART_QUANTITY } from "@/lib/order-limits";
 import { getVariantAvailability } from "@/lib/inventory.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export type CartLine = {
@@ -72,6 +73,9 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   const { products: allProducts } = useAllProducts();
   const [cart, setCart] = useState<CartLine[]>([]);
   const [wishlist, setWishlist] = useState<string[]>([]);
+  const [wishlistLoaded, setWishlistLoaded] = useState(false);
+  const [accountUserId, setAccountUserId] = useState<string | null>(null);
+  const [accountWishlistReady, setAccountWishlistReady] = useState(false);
   const [recentlyViewed, setRecentlyViewed] = useState<string[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -114,6 +118,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       })),
     );
     setWishlist(read<string[]>(WISH_KEY, []));
+    setWishlistLoaded(true);
     setRecentlyViewed(read<string[]>(VIEWED_KEY, []));
     const savedPromo = read<string | null>(PROMO_KEY, null);
     setPromoCode(
@@ -122,11 +127,63 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      const nextUserId = session?.user.id ?? null;
+      setAccountUserId(nextUserId);
+      setAccountWishlistReady(!nextUserId);
+      if (!nextUserId) setWishlist(read<string[]>(WISH_KEY, []));
+    });
+
+    return () => data.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!wishlistLoaded || !accountUserId) return;
+    let active = true;
+    setAccountWishlistReady(false);
+
+    const loadWishlist = async () => {
+      const { data, error } = await supabase
+        .from("account_wishlist")
+        .select("product_slug")
+        .eq("user_id", accountUserId);
+      if (error) {
+        console.error("Account wishlist lookup failed:", error.message);
+        toast.error("Your saved wishlist couldn't be synced.");
+        return;
+      }
+
+      const localWishlist = read<string[]>(WISH_KEY, []);
+      const remoteWishlist = data.map((item) => item.product_slug);
+      const mergedWishlist = Array.from(new Set([...remoteWishlist, ...localWishlist]));
+      if (!active) return;
+      setWishlist(mergedWishlist);
+      setAccountWishlistReady(true);
+
+      const localOnly = localWishlist.filter((slug) => !remoteWishlist.includes(slug));
+      if (localOnly.length > 0) {
+        const { error: saveError } = await supabase
+          .from("account_wishlist")
+          .insert(localOnly.map((product_slug) => ({ user_id: accountUserId, product_slug })));
+        if (saveError) {
+          console.error("Local wishlist migration failed:", saveError.message);
+          toast.error("Some saved pieces couldn't be added to your account wishlist.");
+        }
+      }
+    };
+
+    void loadWishlist();
+    return () => {
+      active = false;
+    };
+  }, [accountUserId, wishlistLoaded]);
+
+  useEffect(() => {
     localStorage.setItem(CART_KEY, JSON.stringify(cart));
   }, [cart]);
   useEffect(() => {
-    localStorage.setItem(WISH_KEY, JSON.stringify(wishlist));
-  }, [wishlist]);
+    if (wishlistLoaded) localStorage.setItem(WISH_KEY, JSON.stringify(wishlist));
+  }, [wishlist, wishlistLoaded]);
   useEffect(() => {
     localStorage.setItem(VIEWED_KEY, JSON.stringify(recentlyViewed));
   }, [recentlyViewed]);
@@ -201,9 +258,30 @@ export function ShopProvider({ children }: { children: ReactNode }) {
 
   const clearPromo = useCallback(() => setPromoCode(null), []);
 
-  const toggleWishlist = useCallback((slug: string) => {
-    setWishlist((prev) => (prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]));
-  }, []);
+  const toggleWishlist = useCallback(
+    (slug: string) => {
+      const removing = wishlist.includes(slug);
+      setWishlist((prev) =>
+        prev.includes(slug) ? prev.filter((savedSlug) => savedSlug !== slug) : [...prev, slug],
+      );
+      if (!accountUserId || !accountWishlistReady) return;
+
+      const request = removing
+        ? supabase
+            .from("account_wishlist")
+            .delete()
+            .eq("user_id", accountUserId)
+            .eq("product_slug", slug)
+        : supabase.from("account_wishlist").insert({ user_id: accountUserId, product_slug: slug });
+      void request.then(({ error }) => {
+        if (error) {
+          console.error("Account wishlist update failed:", error.message);
+          toast.error("Your account wishlist couldn't be updated.");
+        }
+      });
+    },
+    [accountUserId, accountWishlistReady, wishlist],
+  );
 
   const markViewed = useCallback((slug: string) => {
     setRecentlyViewed((prev) => [slug, ...prev.filter((s) => s !== slug)].slice(0, 6));

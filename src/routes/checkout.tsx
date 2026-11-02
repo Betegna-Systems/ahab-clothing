@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { seo } from "@/lib/seo";
 import { formatPrice } from "@/lib/products";
 import { useShop } from "@/lib/shop-store";
@@ -7,7 +7,11 @@ import { AhabButton, AhabLink } from "@/components/site/ui";
 import { ChatOrderButtons } from "@/components/site/ChatOrderButtons";
 import { buildOrderMessage, submitOrder, type OrderPayload } from "@/lib/order-channels";
 import { PAYMENT_METHODS, getPaymentMethod } from "@/lib/payment-methods";
+import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+
+type SavedAddress = Database["public"]["Tables"]["account_saved_addresses"]["Row"];
 
 function CopyAccount({ value }: { value: string }) {
   return (
@@ -43,6 +47,7 @@ const field =
   "h-12 w-full border border-border bg-transparent px-4 text-sm outline-none focus:border-primary";
 
 function CheckoutPage() {
+  const formRef = useRef<HTMLFormElement>(null);
   const {
     lineItems,
     subtotal,
@@ -61,9 +66,66 @@ function CheckoutPage() {
   } | null>(null);
   const [payment, setPayment] = useState("cod");
   const [sending, setSending] = useState(false);
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState("");
   const shipping = subtotal === 0 || subtotal >= 5000 ? 0 : 250;
   const discountAmount = Math.round(subtotal * discount);
   const total = subtotal - discountAmount + shipping;
+
+  const setInputValue = useCallback((name: string, value: string) => {
+    const input = formRef.current?.elements.namedItem(name);
+    if (input instanceof HTMLInputElement) input.value = value;
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    const loadSavedAddresses = async () => {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        console.error("Checkout account lookup failed:", sessionError.message);
+        return;
+      }
+      const session = sessionData.session;
+      if (!session) return;
+
+      const { data, error } = await supabase
+        .from("account_saved_addresses")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .order("created_at", { ascending: false });
+      if (error) {
+        console.error("Checkout saved address lookup failed:", error.message);
+        toast.error("Saved delivery addresses couldn't be loaded.");
+        return;
+      }
+      if (!active) return;
+      setSavedAddresses(data ?? []);
+
+      const profileName = String(session.user.user_metadata["full_name"] ?? "").trim();
+      const [first, ...lastParts] = profileName.split(/\s+/);
+      setInputValue("first", first ?? "");
+      setInputValue("last", lastParts.join(" "));
+      setInputValue("email", session.user.email ?? "");
+    };
+
+    void loadSavedAddresses();
+    return () => {
+      active = false;
+    };
+  }, [setInputValue]);
+
+  const applySavedAddress = (id: string) => {
+    setSelectedAddressId(id);
+    const address = savedAddresses.find((saved) => saved.id === id);
+    if (!address) return;
+    const [first, ...lastParts] = address.recipient_name.trim().split(/\s+/);
+    setInputValue("first", first ?? "");
+    setInputValue("last", lastParts.join(" "));
+    setInputValue("phone", address.phone);
+    setInputValue("subCity", address.sub_city);
+    setInputValue("city", address.city);
+    setInputValue("address", address.address);
+  };
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -102,7 +164,7 @@ function CheckoutPage() {
         createdAt: new Date().toISOString(),
         customer: {
           name,
-          email: g("email"),
+          email: g("email").toLowerCase(),
           phone: g("phone"),
           address: g("address"),
           subCity: g("subCity"),
@@ -193,9 +255,26 @@ function CheckoutPage() {
 
   return (
     <div className="mx-auto grid max-w-[1200px] gap-16 px-5 py-20 md:px-10 lg:grid-cols-[1fr_400px]">
-      <form onSubmit={submit} className="space-y-5">
+      <form ref={formRef} onSubmit={submit} className="space-y-5">
         <p className="label-xs text-gold">Checkout</p>
         <h1 className="text-5xl">Delivery details</h1>
+        {savedAddresses.length > 0 ? (
+          <label className="block space-y-2 text-sm">
+            <span className="label-xs text-gold">Use a saved address</span>
+            <select
+              value={selectedAddressId}
+              onChange={(event) => applySavedAddress(event.currentTarget.value)}
+              className={field}
+            >
+              <option value="">Enter a new delivery address</option>
+              {savedAddresses.map((address) => (
+                <option key={address.id} value={address.id}>
+                  {address.label} — {address.sub_city}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
         <div className="grid gap-4 sm:grid-cols-2">
           <input required name="first" placeholder="First name" className={field} />
           <input required name="last" placeholder="Last name" className={field} />

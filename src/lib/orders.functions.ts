@@ -113,6 +113,47 @@ export const getTrackedOrder = createServerFn({ method: "GET" })
     };
   });
 
+const accountOrdersSchema = z.object({
+  accessToken: z.string().min(1).max(4096),
+});
+
+export const getAccountOrders = createServerFn({ method: "GET" })
+  .validator((d: unknown) => accountOrdersSchema.parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(data.accessToken);
+    const user = authData.user;
+
+    if (authError || !user?.email || !user.email_confirmed_at) {
+      return { ok: false as const, reason: "email_not_verified" as const };
+    }
+
+    const emailPattern = user.email.replace(/[\\%_*]/g, "\\$&");
+    const { data: orders, error } = await supabaseAdmin
+      .from("orders")
+      .select("order_number, status, payment_status, created_at, total, items")
+      .ilike("email", emailPattern)
+      .order("created_at", { ascending: false })
+      .limit(100);
+
+    if (error) {
+      console.error("Customer order history lookup failed:", error.message);
+      throw new Error("Order history is temporarily unavailable.");
+    }
+
+    return {
+      ok: true as const,
+      orders: (orders ?? []).map((order) => ({
+        orderNumber: order.order_number,
+        status: order.status,
+        paymentStatus: order.payment_status,
+        createdAt: order.created_at,
+        total: order.total,
+        items: orderItemsForTracking(order.items),
+      })),
+    };
+  });
+
 function orderItemsForTracking(items: Json): { slug: string; name: string }[] {
   if (!Array.isArray(items)) return [];
   return items.flatMap((item) => {
