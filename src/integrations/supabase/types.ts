@@ -8,6 +8,24 @@ export type Database = {
   };
   public: {
     Tables: {
+      account_security_settings: {
+        Row: {
+          mfa_required: boolean;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          mfa_required?: boolean;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          mfa_required?: boolean;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       account_saved_addresses: {
         Row: {
           address: string;
@@ -243,9 +261,21 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      account_mfa_is_required: {
+        Args: Record<PropertyKey, never>;
+        Returns: boolean;
+      };
+      account_session_is_verified: {
+        Args: Record<PropertyKey, never>;
+        Returns: boolean;
+      };
       place_order_with_inventory: {
         Args: { p_order: Json };
         Returns: Json;
+      };
+      set_account_mfa_required: {
+        Args: { p_required: boolean };
+        Returns: undefined;
       };
     };
     Enums: {

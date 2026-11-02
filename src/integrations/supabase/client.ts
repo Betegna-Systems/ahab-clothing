@@ -5,6 +5,7 @@ import type { Database } from "./types";
 function createBrowserClient(url: string, anonKey: string) {
   return createClient<Database>(url, anonKey, {
     auth: {
+      flowType: "pkce",
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,

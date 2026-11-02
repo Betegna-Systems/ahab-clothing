@@ -128,6 +128,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
+    let authStateVersion = 0;
     let subscription: { unsubscribe: () => void } | undefined;
 
     void initializeSupabaseBrowser()
@@ -139,10 +140,56 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         }
 
         const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-          const nextUserId = session?.user.id ?? null;
-          setAccountUserId(nextUserId);
-          setAccountWishlistReady(!nextUserId);
-          if (!nextUserId) setWishlist(read<string[]>(WISH_KEY, []));
+          const version = ++authStateVersion;
+          if (!session) {
+            setAccountUserId(null);
+            setAccountWishlistReady(true);
+            setWishlist(read<string[]>(WISH_KEY, []));
+            return;
+          }
+
+          window.setTimeout(() => {
+            void (async () => {
+              try {
+                if (!session.user.email_confirmed_at) {
+                  if (version === authStateVersion && active) {
+                    setAccountUserId(null);
+                    setAccountWishlistReady(true);
+                    setWishlist(read<string[]>(WISH_KEY, []));
+                  }
+                  return;
+                }
+
+                const { data: mfaRequired, error: settingsError } =
+                  await supabase.rpc("account_mfa_is_required");
+                if (settingsError) throw settingsError;
+                if (mfaRequired) {
+                  const { data: assurance, error: assuranceError } =
+                    await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+                  if (assuranceError) throw assuranceError;
+                  if (assurance.currentLevel !== "aal2") {
+                    if (version === authStateVersion && active) {
+                      setAccountUserId(null);
+                      setAccountWishlistReady(true);
+                      setWishlist(read<string[]>(WISH_KEY, []));
+                    }
+                    return;
+                  }
+                }
+
+                if (version === authStateVersion && active) {
+                  setAccountUserId(session.user.id);
+                  setAccountWishlistReady(false);
+                }
+              } catch (error) {
+                console.error("Account wishlist authorization check failed:", error);
+                if (version === authStateVersion && active) {
+                  setAccountUserId(null);
+                  setAccountWishlistReady(true);
+                }
+              }
+            })();
+          }, 0);
         });
         subscription = data.subscription;
       })

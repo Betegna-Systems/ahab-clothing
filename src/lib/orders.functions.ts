@@ -121,11 +121,32 @@ export const getAccountOrders = createServerFn({ method: "GET" })
   .validator((d: unknown) => accountOrdersSchema.parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: claimsData, error: claimsError } = await supabaseAdmin.auth.getClaims(
+      data.accessToken,
+    );
+    const userId = claimsData?.claims?.sub;
+    if (claimsError || typeof userId !== "string") {
+      return { ok: false as const, reason: "email_not_verified" as const };
+    }
+
     const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(data.accessToken);
     const user = authData.user;
 
     if (authError || !user?.email || !user.email_confirmed_at) {
       return { ok: false as const, reason: "email_not_verified" as const };
+    }
+
+    const { data: securitySettings, error: securityError } = await supabaseAdmin
+      .from("account_security_settings")
+      .select("mfa_required")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (securityError) {
+      console.error("Customer account security lookup failed:", securityError.message);
+      throw new Error("Order history is temporarily unavailable.");
+    }
+    if (securitySettings?.mfa_required && claimsData?.claims?.aal !== "aal2") {
+      return { ok: false as const, reason: "mfa_required" as const };
     }
 
     const emailPattern = user.email.replace(/[\\%_*]/g, "\\$&");
