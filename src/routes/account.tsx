@@ -32,8 +32,10 @@ export const Route = createFileRoute("/account")({
 
 function AccountPage() {
   const [session, setSession] = useState<Session | null>(null);
-  const [mode, setMode] = useState<"sign_in" | "sign_up">("sign_in");
+  const [authInitialized, setAuthInitialized] = useState(false);
+  const [mode, setMode] = useState<"sign_in" | "sign_up" | "forgot_password">("sign_in");
   const [passwordRecovery, setPasswordRecovery] = useState(false);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
   const [verificationPending, setVerificationPending] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
@@ -72,8 +74,13 @@ function AccountPage() {
   }, []);
 
   useEffect(() => {
+    let active = true;
+    let authEventVersion = 0;
     const { data } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      authEventVersion += 1;
+      if (!active) return;
       setSession(nextSession);
+      setAuthInitialized(true);
       setPasswordRecovery(event === "PASSWORD_RECOVERY");
       setNotice("");
       if (nextSession) {
@@ -84,7 +91,32 @@ function AccountPage() {
       }
     });
 
-    return () => data.subscription.unsubscribe();
+    const initialEventVersion = authEventVersion;
+    void supabase.auth
+      .getSession()
+      .then(({ data: sessionData, error }) => {
+        if (!active || authEventVersion !== initialEventVersion) return;
+        if (error) {
+          console.error("Account session lookup failed:", error.message);
+          setNotice("We couldn't check your sign-in. Please refresh and try again.");
+        }
+        setSession(sessionData.session);
+        setAuthInitialized(true);
+        if (sessionData.session) {
+          void loadAccountData(sessionData.session);
+        }
+      })
+      .catch((error: unknown) => {
+        if (!active || authEventVersion !== initialEventVersion) return;
+        console.error("Account session lookup failed:", error);
+        setNotice("We couldn't check your sign-in. Please refresh and try again.");
+        setAuthInitialized(true);
+      });
+
+    return () => {
+      active = false;
+      data.subscription.unsubscribe();
+    };
   }, [loadAccountData]);
 
   const submitAuth = async (event: FormEvent<HTMLFormElement>) => {
@@ -170,11 +202,13 @@ function AccountPage() {
     }
 
     setBusy(true);
+    setNotice("");
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/account`,
       });
       if (error) throw error;
+      setResetEmailSent(true);
       setNotice("If an account exists for that email, a password reset link is on its way.");
     } catch (error) {
       console.error("Password reset request failed:", error);
@@ -195,6 +229,7 @@ function AccountPage() {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
       setPasswordRecovery(false);
+      setMode("sign_in");
       setNotice("Your password has been updated.");
     } catch (error) {
       console.error("Account password update failed:", error);
@@ -261,12 +296,17 @@ function AccountPage() {
 
   const signOut = async () => {
     setBusy(true);
-    const { error } = await supabase.auth.signOut();
-    if (error) {
+    setNotice("");
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      setNotice("You have been signed out.");
+    } catch (error) {
       console.error("Account sign-out failed:", error);
       setNotice("We couldn't sign you out. Please try again.");
+    } finally {
+      setBusy(false);
     }
-    setBusy(false);
   };
 
   return (
@@ -281,83 +321,165 @@ function AccountPage() {
         </p>
       ) : null}
 
-      {!session ? (
+      {passwordRecovery ? (
+        <form onSubmit={updatePassword} className="mt-10 max-w-md space-y-4">
+          <h2 className="font-serif text-3xl">Choose a new password</h2>
+          <p className="text-sm text-muted-foreground">
+            Use at least 8 characters for your new password.
+          </p>
+          <input
+            required
+            name="password"
+            type="password"
+            minLength={8}
+            autoComplete="new-password"
+            placeholder="New password"
+            className={field}
+          />
+          <AhabButton type="submit" size="lg" disabled={busy}>
+            {busy ? "Updating…" : "Update password"}
+          </AhabButton>
+        </form>
+      ) : !authInitialized ? (
+        <p role="status" className="mt-8 text-sm text-muted-foreground">
+          Checking your account…
+        </p>
+      ) : !session ? (
         <section className="mt-12 grid gap-12 md:grid-cols-[1fr_0.8fr]">
-          <form onSubmit={submitAuth} className="space-y-4">
-            <h2 className="font-serif text-3xl">
-              {mode === "sign_in" ? "Sign in" : "Create your account"}
-            </h2>
-            {mode === "sign_up" ? (
-              <input
-                required
-                name="name"
-                autoComplete="name"
-                placeholder="Full name"
-                className={field}
-              />
-            ) : null}
-            <input
-              required
-              name="email"
-              type="email"
-              autoComplete="email"
-              placeholder="Email address"
-              value={emailInput}
-              onChange={(event) => setEmailInput(event.currentTarget.value)}
-              className={field}
-            />
-            <input
-              required
-              name="password"
-              type="password"
-              minLength={8}
-              autoComplete={mode === "sign_in" ? "current-password" : "new-password"}
-              placeholder="Password (at least 8 characters)"
-              className={field}
-            />
-            <AhabButton type="submit" size="lg" className="w-full" disabled={busy}>
-              {busy ? "Please wait…" : mode === "sign_in" ? "Sign in" : "Create account"}
-            </AhabButton>
-            {mode === "sign_in" ? (
-              <div className="flex flex-wrap gap-x-5 gap-y-2">
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void sendPasswordReset()}
-                  className="label-xs text-muted-foreground underline underline-offset-4"
-                >
-                  Forgot password?
-                </button>
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void resendVerificationEmail()}
-                  className="label-xs text-muted-foreground underline underline-offset-4"
-                >
-                  Resend verification email
-                </button>
-              </div>
-            ) : null}
-            {verificationPending ? (
+          {mode === "forgot_password" && resetEmailSent ? (
+            <div className="space-y-5">
+              <h2 className="font-serif text-3xl">Check your inbox</h2>
               <p className="text-sm text-muted-foreground">
-                This account still needs email verification. Check spam, or resend the verification
-                email above.
+                If an account exists for {emailInput.trim()}, you’ll receive a link to reset the
+                password. Check spam if it doesn’t arrive.
               </p>
-            ) : null}
-            <p className="text-sm text-muted-foreground">
-              {mode === "sign_in" ? "New to AHAB?" : "Already have an account?"}{" "}
               <button
                 type="button"
                 onClick={() => {
-                  setMode(mode === "sign_in" ? "sign_up" : "sign_in");
+                  setMode("sign_in");
+                  setResetEmailSent(false);
                   setNotice("");
                 }}
-                className="text-foreground underline underline-offset-4"
+                className="label-xs underline underline-offset-4"
               >
-                {mode === "sign_in" ? "Create an account" : "Sign in"}
+                Back to sign in
               </button>
-            </p>
-          </form>
+            </div>
+          ) : (
+            <form
+              onSubmit={(event) => {
+                if (mode === "forgot_password") {
+                  event.preventDefault();
+                  void sendPasswordReset();
+                } else {
+                  void submitAuth(event);
+                }
+              }}
+              className="space-y-4"
+            >
+              <h2 className="font-serif text-3xl">
+                {mode === "sign_in"
+                  ? "Sign in"
+                  : mode === "sign_up"
+                    ? "Create your account"
+                    : "Reset your password"}
+              </h2>
+              {mode === "sign_up" ? (
+                <input
+                  required
+                  name="name"
+                  autoComplete="name"
+                  placeholder="Full name"
+                  className={field}
+                />
+              ) : null}
+              <input
+                required
+                name="email"
+                type="email"
+                autoComplete="email"
+                placeholder="Email address"
+                value={emailInput}
+                onChange={(event) => setEmailInput(event.currentTarget.value)}
+                className={field}
+              />
+              {mode !== "forgot_password" ? (
+                <>
+                  <input
+                    required
+                    name="password"
+                    type="password"
+                    minLength={8}
+                    autoComplete={mode === "sign_in" ? "current-password" : "new-password"}
+                    placeholder="Password (at least 8 characters)"
+                    className={field}
+                  />
+                  <AhabButton type="submit" size="lg" className="w-full" disabled={busy}>
+                    {busy ? "Please wait…" : mode === "sign_in" ? "Sign in" : "Create account"}
+                  </AhabButton>
+                </>
+              ) : (
+                <AhabButton type="submit" size="lg" className="w-full" disabled={busy}>
+                  {busy ? "Sending…" : "Send reset link"}
+                </AhabButton>
+              )}
+              {mode === "sign_in" ? (
+                <div className="flex flex-wrap gap-x-5 gap-y-2">
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => {
+                      setMode("forgot_password");
+                      setNotice("");
+                    }}
+                    className="label-xs text-muted-foreground underline underline-offset-4"
+                  >
+                    Forgot password?
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void resendVerificationEmail()}
+                    className="label-xs text-muted-foreground underline underline-offset-4"
+                  >
+                    Resend verification email
+                  </button>
+                </div>
+              ) : null}
+              {verificationPending ? (
+                <p className="text-sm text-muted-foreground">
+                  This account still needs email verification. Check spam, or resend the
+                  verification email above.
+                </p>
+              ) : null}
+              {mode !== "forgot_password" ? (
+                <p className="text-sm text-muted-foreground">
+                  {mode === "sign_in" ? "New to AHAB?" : "Already have an account?"}{" "}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode(mode === "sign_in" ? "sign_up" : "sign_in");
+                      setNotice("");
+                    }}
+                    className="text-foreground underline underline-offset-4"
+                  >
+                    {mode === "sign_in" ? "Create an account" : "Sign in"}
+                  </button>
+                </p>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("sign_in");
+                    setNotice("");
+                  }}
+                  className="label-xs underline underline-offset-4"
+                >
+                  Back to sign in
+                </button>
+              )}
+            </form>
+          )}
           <div className="border-t border-border pt-8 md:border-l md:border-t-0 md:pl-10 md:pt-0">
             <h2 className="font-serif text-3xl">Made for you</h2>
             <ul className="mt-5 space-y-3 text-sm text-muted-foreground">
@@ -370,22 +492,6 @@ function AccountPage() {
             </AhabLink>
           </div>
         </section>
-      ) : passwordRecovery ? (
-        <form onSubmit={updatePassword} className="mt-10 max-w-md space-y-4">
-          <h2 className="font-serif text-3xl">Choose a new password</h2>
-          <input
-            required
-            name="password"
-            type="password"
-            minLength={8}
-            autoComplete="new-password"
-            placeholder="New password (at least 8 characters)"
-            className={field}
-          />
-          <AhabButton type="submit" size="lg" disabled={busy}>
-            {busy ? "Updating…" : "Update password"}
-          </AhabButton>
-        </form>
       ) : (
         <section className="mt-10">
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-6">
