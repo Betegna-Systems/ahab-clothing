@@ -13,12 +13,24 @@ const badgeLabel: Record<string, string> = {
 };
 
 export function ProductCard({ product, priority }: { product: Product; priority?: boolean }) {
-  const { toggleWishlist, isWished, addToCart } = useShop();
+  const {
+    toggleWishlist,
+    isWished,
+    addToCart,
+    inventoryStatus,
+    isProductAvailable,
+    isVariantAvailable,
+  } = useShop();
   const wished = isWished(product.slug);
   const [colorIndex, setColorIndex] = useState(0);
   const photo = product.images[colorIndex] ?? product.images[0];
   const color = product.colors[colorIndex] ?? product.colors[0];
   const count = product.images.length;
+  const available = isProductAvailable(product);
+  const quickAddAvailable =
+    color !== undefined &&
+    product.sizes[0] !== undefined &&
+    isVariantAvailable(product.slug, color.name, product.sizes[0]);
 
   const step = (dir: 1 | -1) => setColorIndex((i) => (i + dir + count) % count);
 
@@ -88,7 +100,8 @@ export function ProductCard({ product, priority }: { product: Product; priority?
               qty: 1,
             })
           }
-          className="label-xs absolute inset-x-0 bottom-0 flex h-12 translate-y-full items-center justify-center gap-2 bg-primary text-primary-foreground opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100"
+          disabled={inventoryStatus !== "ready" || !quickAddAvailable}
+          className="label-xs absolute inset-x-0 bottom-0 flex h-12 translate-y-full items-center justify-center gap-2 bg-primary text-primary-foreground opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Plus className="h-3.5 w-3.5" strokeWidth={1.5} /> Quick add
         </button>
@@ -102,7 +115,13 @@ export function ProductCard({ product, priority }: { product: Product; priority?
             </Link>
           </h3>
           <p className="mt-1 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-            {product.inStock ? "In stock" : "Made to order"}
+            {inventoryStatus === "loading"
+              ? "Checking stock"
+              : inventoryStatus === "error"
+                ? "Stock unavailable"
+                : available
+                  ? "In stock"
+                  : "Sold out"}
           </p>
         </div>
         <div className="text-right">

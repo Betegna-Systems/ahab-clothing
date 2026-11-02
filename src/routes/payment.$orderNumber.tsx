@@ -100,13 +100,18 @@ function PaymentPage() {
   const [file, setFile] = useState<File | null>(null);
   const [sending, setSending] = useState(false);
   const [preparing, setPreparing] = useState(false);
+  const [checkingStatus, setCheckingStatus] = useState(false);
 
   if (!order) {
     return (
       <div className="mx-auto max-w-xl px-5 py-28 text-center">
         <h1 className="text-4xl">Payment link unavailable.</h1>
-        <p className="mt-4 text-muted-foreground">Check the link from your order confirmation or contact AHAB for help.</p>
-        <AhabLink to="/shop" className="mt-8">Return to the shop</AhabLink>
+        <p className="mt-4 text-muted-foreground">
+          Check the link from your order confirmation or contact AHAB for help.
+        </p>
+        <AhabLink to="/shop" className="mt-8">
+          Return to the shop
+        </AhabLink>
       </div>
     );
   }
@@ -123,6 +128,7 @@ function PaymentPage() {
 
   const chatMessage = `Hello AHAB, I paid for order ${orderNumber} via ${payment.label}. Amount: ${formatPrice(order.total)}. I will attach my payment screenshot here.`;
   const receiptSubmitted = order.paymentStatus !== "pending";
+  const paymentConfirmed = order.paymentStatus === "confirmed";
 
   const onFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const selected = event.target.files?.[0] ?? null;
@@ -155,7 +161,11 @@ function PaymentPage() {
         data: { orderNumber, token, mimeType: "image/jpeg", imageBase64 },
       });
       if (!result.ok) {
-        toast.error(result.reason === "already_submitted" ? "A screenshot has already been submitted for this order." : "We couldn't submit your screenshot. Please try again or send it by chat.");
+        toast.error(
+          result.reason === "already_submitted"
+            ? "A screenshot has already been submitted for this order."
+            : "We couldn't submit your screenshot. Please try again or send it by chat.",
+        );
         await router.invalidate();
         return;
       }
@@ -174,10 +184,15 @@ function PaymentPage() {
       <div className="text-center">
         <p className="label-xs text-gold">Order {orderNumber}</p>
         <h1 className="mt-4 text-5xl">Complete your payment.</h1>
-        <p className="mt-4 text-muted-foreground">Transfer the exact total, then upload a screenshot of your receipt.</p>
+        <p className="mt-4 text-muted-foreground">
+          Transfer the exact total, then upload a screenshot of your receipt.
+        </p>
       </div>
 
-      <section className="mt-12 border border-border bg-secondary p-6 md:p-10" aria-label="Payment instructions">
+      <section
+        className="mt-12 border border-border bg-secondary p-6 md:p-10"
+        aria-label="Payment instructions"
+      >
         <div className="flex flex-wrap items-start justify-between gap-4 border-b border-border pb-6">
           <div>
             <p className="label-xs text-gold">Pay with {payment.label}</p>
@@ -204,7 +219,10 @@ function PaymentPage() {
         </div>
         <ol className="space-y-3 border-t border-border pt-6 text-sm leading-relaxed text-muted-foreground">
           <li>1. Send the amount above to the {payment.label} account.</li>
-          <li>2. Keep your payment receipt screenshot. Make sure the amount and transaction reference are visible.</li>
+          <li>
+            2. Keep your payment receipt screenshot. Make sure the amount and transaction reference
+            are visible.
+          </li>
           <li>3. Upload the screenshot below. AHAB will review it and confirm your order.</li>
         </ol>
       </section>
@@ -212,12 +230,39 @@ function PaymentPage() {
       {receiptSubmitted ? (
         <div className="mt-8 border border-gold/50 p-6 text-center">
           <Check className="mx-auto h-6 w-6 text-gold" strokeWidth={1.5} />
-          <h2 className="mt-3 font-serif text-2xl">Screenshot received</h2>
-          <p className="mt-2 text-sm text-muted-foreground">We’ll verify your payment and contact you to confirm delivery.</p>
+          <h2 className="mt-3 font-serif text-2xl">
+            {paymentConfirmed ? "Payment confirmed" : "Screenshot received"}
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {paymentConfirmed
+              ? "Your payment has been verified. AHAB will contact you to confirm delivery."
+              : "We’ll verify your payment and contact you to confirm delivery."}
+          </p>
+          {!paymentConfirmed ? (
+            <button
+              type="button"
+              onClick={async () => {
+                setCheckingStatus(true);
+                try {
+                  await router.invalidate();
+                } catch {
+                  toast.error("We couldn't check your payment status. Please try again.");
+                } finally {
+                  setCheckingStatus(false);
+                }
+              }}
+              disabled={checkingStatus}
+              className="label-xs mt-5 border border-border px-4 py-3 hover:border-primary disabled:opacity-50"
+            >
+              {checkingStatus ? "Checking…" : "Check payment status"}
+            </button>
+          ) : null}
         </div>
       ) : (
         <form onSubmit={submitReceipt} className="mt-8 space-y-4">
-          <label className="label-xs block text-gold" htmlFor="payment-screenshot">Payment screenshot</label>
+          <label className="label-xs block text-gold" htmlFor="payment-screenshot">
+            Payment screenshot
+          </label>
           <input
             id="payment-screenshot"
             type="file"
@@ -247,9 +292,25 @@ function PaymentPage() {
       )}
 
       <div className="mt-10 border-t border-border pt-8 text-center">
-        <p className="mb-4 text-sm text-muted-foreground">Need help? You can also send the screenshot to AHAB in chat.</p>
+        <p className="mb-4">
+          <Link
+            to="/tracking/$orderNumber"
+            params={{ orderNumber }}
+            search={{ token }}
+            className="label-xs underline underline-offset-4"
+          >
+            Track this order
+          </Link>
+        </p>
+        <p className="mb-4 text-sm text-muted-foreground">
+          Need help? You can also send the screenshot to AHAB in chat.
+        </p>
         <ChatOrderButtons message={chatMessage} />
-        <p className="mt-8"><Link to="/shop" className="label-xs text-muted-foreground underline underline-offset-4">Continue shopping</Link></p>
+        <p className="mt-8">
+          <Link to="/shop" className="label-xs text-muted-foreground underline underline-offset-4">
+            Continue shopping
+          </Link>
+        </p>
       </div>
     </div>
   );

@@ -41,12 +41,13 @@ export function firestoreRawToProduct(id: string, rawFields: Record<string, unkn
   }
 
   const rawColors = (data.colors as Array<{ name?: string; hex?: string }> | undefined) ?? [];
-  const colors = rawColors.length > 0
-    ? rawColors.map((c) => ({
-        name: c.name || "Standard",
-        hex: c.hex || "#1A1714",
-      }))
-    : [{ name: "Standard", hex: "#1A1714" }];
+  const colors =
+    rawColors.length > 0
+      ? rawColors.map((c) => ({
+          name: c.name || "Standard",
+          hex: c.hex || "#1A1714",
+        }))
+      : [{ name: "Standard", hex: "#1A1714" }];
 
   const rawImages = (data.images as string[] | undefined) ?? [];
   const images = rawImages.length > 0 ? rawImages : ["/placeholder.jpg"];
@@ -74,8 +75,8 @@ export function firestoreRawToProduct(id: string, rawFields: Record<string, unkn
     fabric: (data.fabric as string) || "Premium Stretch Jersey",
     care: (data.care as string) || "Machine wash cold. Dry flat.",
     badge: (data.badge as "new" | "sale" | "bestseller" | undefined) ?? "new",
-    rating: typeof data.rating === "number" ? data.rating : 5,
-    reviews: typeof data.reviews === "number" ? data.reviews : 1,
+    rating: 0,
+    reviews: 0,
     inStock: data.inStock !== false,
     createdAt,
     popularity: typeof data.popularity === "number" ? data.popularity : 85,

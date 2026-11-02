@@ -416,5 +416,71 @@
     "bytes": 58289,
     "createdAt": "2026-11-01T13:56:00Z",
     "optimizedUrl": "https://res.cloudinary.com/dvyj6ac75/image/upload/f_auto,q_auto/v1/ahab-clothing/products/suit-selam-camel"
+  },
+  "suit-almaz-pinstripe": {
+    "publicId": "ahab-clothing/products/suit-almaz-pinstripe",
+    "secureUrl": "https://res.cloudinary.com/dvyj6ac75/image/upload/v1793610668/ahab-clothing/products/suit-almaz-pinstripe.jpg",
+    "url": "https://res.cloudinary.com/dvyj6ac75/image/upload/v1793610668/ahab-clothing/products/suit-almaz-pinstripe.jpg",
+    "width": 768,
+    "height": 1024,
+    "format": "jpg",
+    "bytes": 66015,
+    "createdAt": "2026-11-02T09:11:08Z",
+    "optimizedUrl": "https://res.cloudinary.com/dvyj6ac75/image/upload/f_auto,q_auto/v1/ahab-clothing/products/suit-almaz-pinstripe?_a=BAMAROWO0"
+  },
+  "suit-aster-belted-olive": {
+    "publicId": "ahab-clothing/products/suit-aster-belted-olive",
+    "secureUrl": "https://res.cloudinary.com/dvyj6ac75/image/upload/v1793610669/ahab-clothing/products/suit-aster-belted-olive.jpg",
+    "url": "https://res.cloudinary.com/dvyj6ac75/image/upload/v1793610669/ahab-clothing/products/suit-aster-belted-olive.jpg",
+    "width": 768,
+    "height": 1024,
+    "format": "jpg",
+    "bytes": 64438,
+    "createdAt": "2026-11-02T09:11:09Z",
+    "optimizedUrl": "https://res.cloudinary.com/dvyj6ac75/image/upload/f_auto,q_auto/v1/ahab-clothing/products/suit-aster-belted-olive?_a=BAMAROWO0"
+  },
+  "suit-birtukan-velvet-burgundy": {
+    "publicId": "ahab-clothing/products/suit-birtukan-velvet-burgundy",
+    "secureUrl": "https://res.cloudinary.com/dvyj6ac75/image/upload/v1793610670/ahab-clothing/products/suit-birtukan-velvet-burgundy.jpg",
+    "url": "https://res.cloudinary.com/dvyj6ac75/image/upload/v1793610670/ahab-clothing/products/suit-birtukan-velvet-burgundy.jpg",
+    "width": 768,
+    "height": 1024,
+    "format": "jpg",
+    "bytes": 64695,
+    "createdAt": "2026-11-02T09:11:10Z",
+    "optimizedUrl": "https://res.cloudinary.com/dvyj6ac75/image/upload/f_auto,q_auto/v1/ahab-clothing/products/suit-birtukan-velvet-burgundy?_a=BAMAROWO0"
+  },
+  "suit-genet-linen-sand": {
+    "publicId": "ahab-clothing/products/suit-genet-linen-sand",
+    "secureUrl": "https://res.cloudinary.com/dvyj6ac75/image/upload/v1793610671/ahab-clothing/products/suit-genet-linen-sand.jpg",
+    "url": "https://res.cloudinary.com/dvyj6ac75/image/upload/v1793610671/ahab-clothing/products/suit-genet-linen-sand.jpg",
+    "width": 768,
+    "height": 1024,
+    "format": "jpg",
+    "bytes": 64919,
+    "createdAt": "2026-11-02T09:11:11Z",
+    "optimizedUrl": "https://res.cloudinary.com/dvyj6ac75/image/upload/f_auto,q_auto/v1/ahab-clothing/products/suit-genet-linen-sand?_a=BAMAROWO0"
+  },
+  "suit-makeda-tuxedo-black": {
+    "publicId": "ahab-clothing/products/suit-makeda-tuxedo-black",
+    "secureUrl": "https://res.cloudinary.com/dvyj6ac75/image/upload/v1793610672/ahab-clothing/products/suit-makeda-tuxedo-black.jpg",
+    "url": "https://res.cloudinary.com/dvyj6ac75/image/upload/v1793610672/ahab-clothing/products/suit-makeda-tuxedo-black.jpg",
+    "width": 768,
+    "height": 1024,
+    "format": "jpg",
+    "bytes": 61233,
+    "createdAt": "2026-11-02T09:11:12Z",
+    "optimizedUrl": "https://res.cloudinary.com/dvyj6ac75/image/upload/f_auto,q_auto/v1/ahab-clothing/products/suit-makeda-tuxedo-black?_a=BAMAROWO0"
+  },
+  "suit-senait-wide-leg-gold": {
+    "publicId": "ahab-clothing/products/suit-senait-wide-leg-gold",
+    "secureUrl": "https://res.cloudinary.com/dvyj6ac75/image/upload/v1793610673/ahab-clothing/products/suit-senait-wide-leg-gold.jpg",
+    "url": "https://res.cloudinary.com/dvyj6ac75/image/upload/v1793610673/ahab-clothing/products/suit-senait-wide-leg-gold.jpg",
+    "width": 768,
+    "height": 1024,
+    "format": "jpg",
+    "bytes": 67621,
+    "createdAt": "2026-11-02T09:11:13Z",
+    "optimizedUrl": "https://res.cloudinary.com/dvyj6ac75/image/upload/f_auto,q_auto/v1/ahab-clothing/products/suit-senait-wide-leg-gold?_a=BAMAROWO0"
   }
 }

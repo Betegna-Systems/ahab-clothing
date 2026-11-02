@@ -10,6 +10,8 @@ import {
 import { type Product } from "@/lib/products";
 import { useAllProducts, getProductCached } from "@/lib/firestore-products";
 import { MAX_CART_QUANTITY } from "@/lib/order-limits";
+import { getVariantAvailability } from "@/lib/inventory.functions";
+import { toast } from "sonner";
 
 export type CartLine = {
   slug: string;
@@ -40,6 +42,12 @@ type ShopState = {
   cartCount: number;
   subtotal: number;
   lineItems: { line: CartLine; product: Product }[];
+  inventoryStatus: "loading" | "ready" | "error";
+  isVariantAvailable: (slug: string, color: string, size: string) => boolean;
+  hasAvailableColor: (product: Product, color: string) => boolean;
+  isProductAvailable: (product: Product) => boolean;
+  hasUnavailableCartLines: boolean;
+  refreshInventory: () => Promise<void>;
   clearCart: () => void;
 };
 
@@ -68,6 +76,31 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   const [cartOpen, setCartOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [promoCode, setPromoCode] = useState<string | null>(null);
+  const [inventoryStatus, setInventoryStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [availableVariants, setAvailableVariants] = useState<Set<string>>(() => new Set());
+
+  const refreshInventory = useCallback(async () => {
+    setInventoryStatus("loading");
+    try {
+      const variants = await getVariantAvailability({ data: {} });
+      setAvailableVariants(
+        new Set(
+          variants.map((variant) =>
+            JSON.stringify([variant.product_slug, variant.color, variant.size]),
+          ),
+        ),
+      );
+      setInventoryStatus("ready");
+    } catch (error) {
+      console.error("Variant availability lookup failed:", error);
+      setInventoryStatus("error");
+      toast.error("Stock availability couldn't be checked. Please try again later.");
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshInventory();
+  }, [refreshInventory]);
 
   useEffect(() => {
     const storedCart = read<CartLine[]>(CART_KEY, []);
@@ -102,24 +135,50 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     else localStorage.removeItem(PROMO_KEY);
   }, [promoCode]);
 
-  const addToCart = useCallback((line: CartLine) => {
-    setCart((prev) => {
-      const i = prev.findIndex(
-        (l) => l.slug === line.slug && l.size === line.size && l.color === line.color,
-      );
-      if (i === -1) {
-        return [
-          ...prev,
-          { ...line, qty: Math.max(1, Math.min(MAX_CART_QUANTITY, line.qty)) },
-        ];
+  const isVariantAvailable = useCallback(
+    (slug: string, color: string, size: string) =>
+      inventoryStatus === "ready" && availableVariants.has(JSON.stringify([slug, color, size])),
+    [availableVariants, inventoryStatus],
+  );
+
+  const hasAvailableColor = useCallback(
+    (product: Product, color: string) =>
+      product.sizes.some((size) => isVariantAvailable(product.slug, color, size)),
+    [isVariantAvailable],
+  );
+
+  const isProductAvailable = useCallback(
+    (product: Product) => product.colors.some((color) => hasAvailableColor(product, color.name)),
+    [hasAvailableColor],
+  );
+
+  const addToCart = useCallback(
+    (line: CartLine) => {
+      if (inventoryStatus !== "ready") {
+        toast.error("Stock availability is still being checked. Please try again.");
+        return;
       }
-      const next = [...prev];
-      const cur = next[i]!;
-      next[i] = { ...cur, qty: Math.min(MAX_CART_QUANTITY, cur.qty + line.qty) };
-      return next;
-    });
-    setCartOpen(true);
-  }, []);
+      if (!isVariantAvailable(line.slug, line.color, line.size)) {
+        toast.error("That size and color are currently unavailable.");
+        return;
+      }
+
+      setCart((prev) => {
+        const i = prev.findIndex(
+          (l) => l.slug === line.slug && l.size === line.size && l.color === line.color,
+        );
+        if (i === -1) {
+          return [...prev, { ...line, qty: Math.max(1, Math.min(MAX_CART_QUANTITY, line.qty)) }];
+        }
+        const next = [...prev];
+        const cur = next[i]!;
+        next[i] = { ...cur, qty: Math.min(MAX_CART_QUANTITY, cur.qty + line.qty) };
+        return next;
+      });
+      setCartOpen(true);
+    },
+    [inventoryStatus, isVariantAvailable],
+  );
 
   const removeLine = useCallback((index: number) => {
     setCart((prev) => prev.filter((_, i) => i !== index));
@@ -143,9 +202,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   const clearPromo = useCallback(() => setPromoCode(null), []);
 
   const toggleWishlist = useCallback((slug: string) => {
-    setWishlist((prev) =>
-      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug],
-    );
+    setWishlist((prev) => (prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]));
   }, []);
 
   const markViewed = useCallback((slug: string) => {
@@ -157,13 +214,16 @@ export function ShopProvider({ children }: { children: ReactNode }) {
       cart
         .map((line) => {
           const product =
-            allProducts.find((p) => p.slug === line.slug) ??
-            getProductCached(line.slug);
+            allProducts.find((p) => p.slug === line.slug) ?? getProductCached(line.slug);
           return product ? { line, product } : null;
         })
         .filter((v): v is { line: CartLine; product: Product } => v !== null),
     [cart, allProducts],
   );
+  const hasUnavailableCartLines =
+    inventoryStatus !== "ready" ||
+    cart.length !== lineItems.length ||
+    lineItems.some(({ line }) => !isVariantAvailable(line.slug, line.color, line.size));
 
   const value: ShopState = {
     products: allProducts,
@@ -187,6 +247,12 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     cartCount: cart.reduce((n, l) => n + l.qty, 0),
     subtotal: lineItems.reduce((n, { line, product }) => n + product.price * line.qty, 0),
     lineItems,
+    inventoryStatus,
+    isVariantAvailable,
+    hasAvailableColor,
+    isProductAvailable,
+    hasUnavailableCartLines,
+    refreshInventory,
     clearCart: () => {
       setCart([]);
       clearPromo();

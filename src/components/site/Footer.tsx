@@ -43,16 +43,19 @@ export function Footer() {
         <div className="grid gap-14 lg:grid-cols-[1.4fr_2fr]">
           <div>
             <div className="flex items-center gap-3">
-              <img src="/ahab-logo.png" alt="AHAB" className="h-12 w-12 rounded-full object-contain bg-cream/15 p-1" />
+              <img
+                src="/ahab-logo.png"
+                alt="AHAB"
+                className="h-12 w-12 rounded-full object-contain bg-cream/15 p-1"
+              />
               <div>
                 <span className="font-serif text-3xl tracking-[0.25em]">AHAB</span>
                 <p className="label-xs text-gold">Made With Love</p>
               </div>
             </div>
             <p className="mt-6 max-w-sm text-sm leading-relaxed text-primary-foreground/70">
-              An independent house designing and sewing bodycon tops in Addis
-              Ababa. Cut, seamed and finished by hand.
-
+              An independent house designing and sewing women's suits and tops in Addis Ababa. Cut,
+              seamed and finished by hand.
             </p>
 
             <form
@@ -116,10 +119,22 @@ export function Footer() {
             © {new Date().getFullYear()} AHAB Clothing · Addis Ababa, Ethiopia
           </p>
           <div className="flex items-center gap-5">
-            <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer" aria-label="AHAB on Instagram" className="hover:text-gold">
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="AHAB on Instagram"
+              className="hover:text-gold"
+            >
               <Instagram className="h-4 w-4" strokeWidth={1.25} />
             </a>
-            <a href={TIKTOK_URL} target="_blank" rel="noreferrer" aria-label="AHAB on TikTok" className="hover:text-gold">
+            <a
+              href={TIKTOK_URL}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="AHAB on TikTok"
+              className="hover:text-gold"
+            >
               <Music2 className="h-4 w-4" strokeWidth={1.25} />
             </a>
           </div>

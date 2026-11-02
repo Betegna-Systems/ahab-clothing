@@ -1,32 +1,38 @@
-import { v2 as cloudinary } from 'cloudinary';
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import dotenv from 'dotenv';
+import { v2 as cloudinary } from "cloudinary";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import dotenv from "dotenv";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const rootDir = path.resolve(__dirname, '..');
+const rootDir = path.resolve(__dirname, "..");
 
 // Load environment variables from .env and .env.local
-if (fs.existsSync(path.join(rootDir, '.env'))) {
-  dotenv.config({ path: path.join(rootDir, '.env') });
+if (fs.existsSync(path.join(rootDir, ".env"))) {
+  dotenv.config({ path: path.join(rootDir, ".env"), quiet: true });
 }
-if (fs.existsSync(path.join(rootDir, '.env.local'))) {
-  dotenv.config({ path: path.join(rootDir, '.env.local'), override: true });
+if (fs.existsSync(path.join(rootDir, ".env.local"))) {
+  dotenv.config({ path: path.join(rootDir, ".env.local"), override: true, quiet: true });
 }
 
-const cloudName = process.env.CLOUDINARY_CLOUD_NAME || process.env.VITE_CLOUDINARY_CLOUD_NAME || 'dvyj6ac75';
-const apiKey = process.env.CLOUDINARY_API_KEY || process.env.VITE_CLOUDINARY_API_KEY;
+const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+const apiKey = process.env.CLOUDINARY_API_KEY;
 const apiSecret = process.env.CLOUDINARY_API_SECRET;
 
-if (!apiKey || !apiSecret) {
-  console.error('\n❌ Error: Missing Cloudinary API Key or API Secret.');
-  console.error('Please add the following to your .env or .env.local file:');
-  console.error(`CLOUDINARY_CLOUD_NAME=${cloudName}`);
-  console.error('CLOUDINARY_API_KEY=your_cloudinary_api_key');
-  console.error('CLOUDINARY_API_SECRET=your_cloudinary_api_secret\n');
+if (!cloudName || !apiKey || !apiSecret) {
+  console.error(
+    "Missing Cloudinary credentials. Configure CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in your local environment.",
+  );
   process.exit(1);
+}
+
+function safeErrorMessage(error) {
+  const message = error instanceof Error ? error.message : String(error);
+  return [apiKey, apiSecret].reduce(
+    (safeMessage, credential) => safeMessage.replaceAll(credential, "[redacted]"),
+    message,
+  );
 }
 
 cloudinary.config({
@@ -37,42 +43,69 @@ cloudinary.config({
 });
 
 async function uploadImages() {
-  console.log(`\n🚀 Starting upload to Cloudinary (Cloud: ${cloudName})...\n`);
+  console.log("\n🚀 Starting upload to Cloudinary...\n");
 
-  const assetsDir = path.join(rootDir, 'src', 'assets');
-  const files = fs.readdirSync(assetsDir).filter(f => /\.(jpe?g|png|webp|svg)$/i.test(f));
+  const assetsDir = path.join(rootDir, "src", "assets");
+  const assetFiles = fs
+    .readdirSync(assetsDir)
+    .filter((file) => /\.(jpe?g|png|webp|svg)$/i.test(file));
+  const requestedKeys = process.argv.slice(2);
+  const availableKeys = new Set(assetFiles.map((file) => path.parse(file).name));
+  const unknownKeys = requestedKeys.filter((key) => !availableKeys.has(key));
 
-  // Also include og-image from public/
-  const extraImages = [];
-  const ogPath = path.join(rootDir, 'public', 'og-image.jpg');
-  if (fs.existsSync(ogPath)) {
-    extraImages.push({
-      filePath: ogPath,
-      name: 'og-image',
-      folder: 'ahab-clothing/brand'
-    });
+  if (unknownKeys.length > 0) {
+    throw new Error(`Unknown asset key(s): ${unknownKeys.join(", ")}`);
   }
 
-  const manifest = {};
+  const selectedFiles =
+    requestedKeys.length > 0
+      ? assetFiles.filter((file) => requestedKeys.includes(path.parse(file).name))
+      : assetFiles;
+  const uploads = selectedFiles.map((file) => {
+    const manifestKey = path.parse(file).name;
+    return {
+      filePath: path.join(assetsDir, file),
+      manifestKey,
+      publicId: `ahab-clothing/products/${manifestKey}`,
+    };
+  });
 
-  for (const file of files) {
-    const filePath = path.join(assetsDir, file);
-    const parsed = path.parse(file);
-    const publicId = `ahab-clothing/products/${parsed.name}`;
+  if (requestedKeys.length === 0) {
+    const ogPath = path.join(rootDir, "public", "og-image.jpg");
+    if (fs.existsSync(ogPath)) {
+      uploads.push({
+        filePath: ogPath,
+        manifestKey: "og-image",
+        publicId: "ahab-clothing/brand/og-image",
+      });
+    }
+  }
 
-    console.log(`Uploading ${file} -> ${publicId}...`);
+  const manifestPath = path.join(rootDir, "src", "data", "cloudinary-manifest.json");
+  const manifest = fs.existsSync(manifestPath)
+    ? JSON.parse(fs.readFileSync(manifestPath, "utf-8"))
+    : {};
+
+  if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)) {
+    throw new Error("Cloudinary manifest must contain a JSON object.");
+  }
+
+  let hasFailures = false;
+
+  for (const upload of uploads) {
+    console.log(`Uploading ${path.basename(upload.filePath)} -> ${upload.publicId}...`);
 
     try {
-      const res = await cloudinary.uploader.upload(filePath, {
-        public_id: publicId,
+      const res = await cloudinary.uploader.upload(upload.filePath, {
+        public_id: upload.publicId,
         overwrite: true,
-        resource_type: 'image',
+        resource_type: "image",
       });
 
-      manifest[parsed.name] = {
+      manifest[upload.manifestKey] = {
         publicId: res.public_id,
         secureUrl: res.secure_url,
-        url: res.url,
+        url: res.secure_url,
         width: res.width,
         height: res.height,
         format: res.format,
@@ -80,61 +113,34 @@ async function uploadImages() {
         createdAt: res.created_at,
         // Optimized URL using auto format and auto quality
         optimizedUrl: cloudinary.url(res.public_id, {
-          fetch_format: 'auto',
-          quality: 'auto',
+          fetch_format: "auto",
+          quality: "auto",
           secure: true,
         }),
       };
 
-      console.log(`✅ Uploaded: ${res.secure_url}`);
+      console.log(`✅ Uploaded ${upload.manifestKey}`);
     } catch (err) {
-      console.error(`❌ Failed to upload ${file}:`, err.message || err);
+      hasFailures = true;
+      console.error(`❌ Failed to upload ${upload.manifestKey}: ${safeErrorMessage(err)}`);
     }
   }
 
-  for (const extra of extraImages) {
-    const publicId = `${extra.folder}/${extra.name}`;
-    console.log(`Uploading extra asset ${extra.name} -> ${publicId}...`);
-    try {
-      const res = await cloudinary.uploader.upload(extra.filePath, {
-        public_id: publicId,
-        overwrite: true,
-        resource_type: 'image',
-      });
-
-      manifest[extra.name] = {
-        publicId: res.public_id,
-        secureUrl: res.secure_url,
-        url: res.url,
-        width: res.width,
-        height: res.height,
-        format: res.format,
-        bytes: res.bytes,
-        createdAt: res.created_at,
-        optimizedUrl: cloudinary.url(res.public_id, {
-          fetch_format: 'auto',
-          quality: 'auto',
-          secure: true,
-        }),
-      };
-      console.log(`✅ Uploaded: ${res.secure_url}`);
-    } catch (err) {
-      console.error(`❌ Failed to upload ${extra.name}:`, err.message || err);
-    }
-  }
-
-  const outDir = path.join(rootDir, 'src', 'data');
+  const outDir = path.dirname(manifestPath);
   if (!fs.existsSync(outDir)) {
     fs.mkdirSync(outDir, { recursive: true });
   }
 
-  const manifestPath = path.join(outDir, 'cloudinary-manifest.json');
-  fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), 'utf-8');
-  console.log(`\n🎉 Success! Manifest saved to: ${manifestPath}`);
-  console.log(`Total images uploaded: ${Object.keys(manifest).length}`);
+  fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), "utf-8");
+  console.log(`\nManifest merged and saved to: ${manifestPath}`);
+  console.log(`Total manifest entries: ${Object.keys(manifest).length}`);
+
+  if (hasFailures) {
+    process.exitCode = 1;
+  }
 }
 
-uploadImages().catch(err => {
-  console.error('Fatal error during upload:', err);
+uploadImages().catch((err) => {
+  console.error("Fatal error during upload:", safeErrorMessage(err));
   process.exit(1);
 });

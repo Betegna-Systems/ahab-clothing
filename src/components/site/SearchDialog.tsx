@@ -42,7 +42,7 @@ export function SearchDialog() {
             autoFocus={searchOpen}
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search tops, ribbed, one shoulder…"
+            placeholder="Search suits, tops, colours, fabrics…"
             className="w-full bg-transparent font-serif text-2xl outline-hidden placeholder:text-muted-foreground/70"
           />
           <button type="button" onClick={() => setSearchOpen(false)} aria-label="Close search">
@@ -60,16 +60,10 @@ export function SearchDialog() {
                 onClick={() => setSearchOpen(false)}
                 className="flex items-center gap-4 py-3 transition-colors hover:bg-secondary/40"
               >
-                <img
-                  src={p.images[0]}
-                  alt={p.name}
-                  className="h-16 w-12 object-cover"
-                />
+                <img src={p.images[0]} alt={p.name} className="h-16 w-12 object-cover" />
                 <div className="flex-1">
                   <h4 className="font-serif text-lg">{p.name}</h4>
-                  <p className="label-xs text-muted-foreground">
-                    {p.categories.join(" · ")}
-                  </p>
+                  <p className="label-xs text-muted-foreground">{p.categories.join(" · ")}</p>
                 </div>
                 <p className="label-xs">{formatPrice(p.price)}</p>
               </Link>

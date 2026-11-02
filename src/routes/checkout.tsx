@@ -5,7 +5,7 @@ import { formatPrice } from "@/lib/products";
 import { useShop } from "@/lib/shop-store";
 import { AhabButton, AhabLink } from "@/components/site/ui";
 import { ChatOrderButtons } from "@/components/site/ChatOrderButtons";
-import { buildOrderMessage, submitOrder, type OrderLine } from "@/lib/order-channels";
+import { buildOrderMessage, submitOrder, type OrderPayload } from "@/lib/order-channels";
 import { PAYMENT_METHODS, getPaymentMethod } from "@/lib/payment-methods";
 import { toast } from "sonner";
 
@@ -39,11 +39,26 @@ export const Route = createFileRoute("/checkout")({
   component: CheckoutPage,
 });
 
-const field = "h-12 w-full border border-border bg-transparent px-4 text-sm outline-none focus:border-primary";
+const field =
+  "h-12 w-full border border-border bg-transparent px-4 text-sm outline-none focus:border-primary";
 
 function CheckoutPage() {
-  const { lineItems, subtotal, discount, promoCode, clearCart } = useShop();
-  const [placed, setPlaced] = useState<{ number: string; message: string } | null>(null);
+  const {
+    lineItems,
+    subtotal,
+    discount,
+    promoCode,
+    clearCart,
+    inventoryStatus,
+    isVariantAvailable,
+    hasUnavailableCartLines,
+    refreshInventory,
+  } = useShop();
+  const [placed, setPlaced] = useState<{
+    number: string;
+    message: string;
+    token: string;
+  } | null>(null);
   const [payment, setPayment] = useState("cod");
   const [sending, setSending] = useState(false);
   const shipping = subtotal === 0 || subtotal >= 5000 ? 0 : 250;
@@ -52,13 +67,20 @@ function CheckoutPage() {
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (inventoryStatus !== "ready" || hasUnavailableCartLines) {
+      if (inventoryStatus === "error") void refreshInventory();
+      toast.error("Some items are unavailable. Update your bag before placing the order.");
+      return;
+    }
+
     const f = new FormData(e.currentTarget);
     const g = (k: string) => String(f.get(k) ?? "").trim();
-    const items: OrderLine[] = lineItems.map(({ line, product }) => {
+    const items: OrderPayload["items"] = lineItems.map(({ line, product }) => {
       const colorIdx = product.colors.findIndex(
         (c) => c.name.toLowerCase() === line.color.toLowerCase(),
       );
       return {
+        slug: product.slug,
         name: product.name,
         color: line.color,
         size: line.size,
@@ -71,41 +93,61 @@ function CheckoutPage() {
     const name = `${g("first")} ${g("last")}`;
     const selectedPayment = getPaymentMethod(payment)!;
     const paymentLabel = selectedPayment.label;
-    const paymentAccessToken = payment === "cod" ? undefined : crypto.randomUUID();
+    const paymentAccessToken = crypto.randomUUID();
     setSending(true);
-    const ok = await submitOrder({
-      orderNumber: number,
-      createdAt: new Date().toISOString(),
-      customer: {
-        name,
-        email: g("email"),
-        phone: g("phone"),
-        address: g("address"),
-        subCity: g("subCity"),
-        city: g("city"),
-      },
-      items,
-      subtotal,
-      shipping,
-      total,
-      paymentMethod: paymentLabel,
-      ...(paymentAccessToken ? { paymentAccessToken } : {}),
-      notes: g("notes"),
-    });
-    setSending(false);
-    if (!ok) { toast.error("We couldn't send your order. Please try again or order by chat."); return; }
+    let result: Awaited<ReturnType<typeof submitOrder>> | undefined;
+    try {
+      result = await submitOrder({
+        orderNumber: number,
+        createdAt: new Date().toISOString(),
+        customer: {
+          name,
+          email: g("email"),
+          phone: g("phone"),
+          address: g("address"),
+          subCity: g("subCity"),
+          city: g("city"),
+        },
+        items,
+        subtotal,
+        shipping,
+        total,
+        paymentMethod: paymentLabel,
+        paymentAccessToken,
+        notes: g("notes"),
+      });
+    } catch (error) {
+      console.error("Checkout order submission failed:", error);
+      toast.error("We couldn't send your order. Please try again.");
+      return;
+    } finally {
+      setSending(false);
+    }
+
+    if (!result.ok) {
+      toast.error(
+        result.reason === "unavailable"
+          ? "One or more selected size and color combinations are not available."
+          : result.reason === "insufficient_stock"
+            ? "There isn't enough stock for the requested quantity. Update your bag and try again."
+            : "We couldn't send your order. Please try again.",
+      );
+      await refreshInventory();
+      return;
+    }
+    void refreshInventory();
     const message = buildOrderMessage(
       items,
       `Order ${number}\nName: ${name}\nPhone: ${g("phone")}\nArea: ${g("subCity")}\nPayment: ${paymentLabel}${promoCode ? `\nPromo code: ${promoCode} (-${formatPrice(discountAmount)})` : ""}\nAmount due: ${formatPrice(total)}`,
     );
     clearCart();
-    if (paymentAccessToken) {
+    if (payment !== "cod") {
       window.location.assign(
         `/payment/${encodeURIComponent(number)}?token=${encodeURIComponent(paymentAccessToken)}`,
       );
       return;
     }
-    setPlaced({ number, message });
+    setPlaced({ number, message, token: paymentAccessToken });
   };
 
   if (placed) {
@@ -114,9 +156,26 @@ function CheckoutPage() {
         <p className="label-xs text-gold">Thank you</p>
         <h1 className="mt-5 text-5xl">Your order is placed.</h1>
         <p className="mt-4 label-xs text-gold">Order {placed.number}</p>
-        <p className="mt-6 text-muted-foreground">We'll call you shortly to confirm delivery and payment. For a faster reply, send us your order on chat:</p>
-        <div className="mt-6"><ChatOrderButtons message={placed.message} /></div>
-        <div className="mt-10"><AhabLink to="/shop">Continue shopping</AhabLink></div>
+        <p className="mt-6 text-muted-foreground">
+          We'll call you shortly to confirm delivery and payment. For a faster reply, send us your
+          order on chat:
+        </p>
+        <p className="mt-6">
+          <Link
+            to="/tracking/$orderNumber"
+            params={{ orderNumber: placed.number }}
+            search={{ token: placed.token }}
+            className="label-xs link-underline"
+          >
+            Track this order
+          </Link>
+        </p>
+        <div className="mt-6">
+          <ChatOrderButtons message={placed.message} />
+        </div>
+        <div className="mt-10">
+          <AhabLink to="/shop">Continue shopping</AhabLink>
+        </div>
       </div>
     );
   }
@@ -125,7 +184,9 @@ function CheckoutPage() {
     return (
       <div className="mx-auto max-w-xl px-5 py-28 text-center">
         <h1 className="text-5xl">Your bag is empty.</h1>
-        <div className="mt-10"><AhabLink to="/shop">Discover the collection</AhabLink></div>
+        <div className="mt-10">
+          <AhabLink to="/shop">Discover the collection</AhabLink>
+        </div>
       </div>
     );
   }
@@ -139,24 +200,87 @@ function CheckoutPage() {
           <input required name="first" placeholder="First name" className={field} />
           <input required name="last" placeholder="Last name" className={field} />
         </div>
-        <input required name="phone" type="tel" placeholder="Phone (e.g. 0911 223344)" className={field} />
+        <input
+          required
+          name="phone"
+          type="tel"
+          placeholder="Phone (e.g. 0911 223344)"
+          className={field}
+        />
         <input name="email" type="email" placeholder="Email (optional)" className={field} />
         <div className="grid gap-4 sm:grid-cols-2">
           <input required name="subCity" placeholder="Sub-city (e.g. Bole)" className={field} />
-          <input required name="city" placeholder="City" className={field} defaultValue="Addis Ababa" />
+          <input
+            required
+            name="city"
+            placeholder="City"
+            className={field}
+            defaultValue="Addis Ababa"
+          />
         </div>
-        <input required name="address" placeholder="Street, building or landmark" className={field} />
-        <textarea name="notes" placeholder="Notes for delivery (optional)" className="min-h-24 w-full border border-border bg-transparent p-4 text-sm outline-none focus:border-primary" />
+        <input
+          required
+          name="address"
+          placeholder="Street, building or landmark"
+          className={field}
+        />
+        <textarea
+          name="notes"
+          placeholder="Notes for delivery (optional)"
+          className="min-h-24 w-full border border-border bg-transparent p-4 text-sm outline-none focus:border-primary"
+        />
         <fieldset className="space-y-3 pt-2">
           <legend className="label-xs mb-3 text-gold">Payment</legend>
           {PAYMENT_METHODS.map((p) => (
-            <label key={p.id} className={`flex cursor-pointer gap-3 border p-4 text-sm ${payment === p.id ? "border-primary" : "border-border"}`}>
-              <input type="radio" name="payment" checked={payment === p.id} onChange={() => setPayment(p.id)} className="mt-1 accent-primary" />
-              <span><span className="block font-medium">{p.label}</span><span className="text-muted-foreground">{p.note}</span>{p.account && payment === p.id && <CopyAccount value={p.account} />}</span>
+            <label
+              key={p.id}
+              className={`flex cursor-pointer gap-3 border p-4 text-sm ${payment === p.id ? "border-primary" : "border-border"}`}
+            >
+              <input
+                type="radio"
+                name="payment"
+                checked={payment === p.id}
+                onChange={() => setPayment(p.id)}
+                className="mt-1 accent-primary"
+              />
+              <span>
+                <span className="block font-medium">{p.label}</span>
+                <span className="text-muted-foreground">{p.note}</span>
+                {p.account && payment === p.id && <CopyAccount value={p.account} />}
+              </span>
             </label>
           ))}
         </fieldset>
-        <AhabButton type="submit" size="lg" className="w-full" disabled={sending}>{sending ? "Sending…" : "Place order"}</AhabButton>
+        {inventoryStatus === "error" ? (
+          <div className="border border-destructive/40 p-4 text-sm text-destructive">
+            Stock availability couldn't be verified.{" "}
+            <button type="button" className="underline" onClick={() => void refreshInventory()}>
+              Try again
+            </button>
+          </div>
+        ) : null}
+        {inventoryStatus === "loading" ? (
+          <p className="text-sm text-muted-foreground">Checking stock for your order…</p>
+        ) : null}
+        {inventoryStatus === "ready" && hasUnavailableCartLines ? (
+          <p className="text-sm text-destructive">
+            One or more items are unavailable in the selected size or color. Remove them from your
+            bag before continuing.
+          </p>
+        ) : null}
+        <AhabButton
+          type="submit"
+          size="lg"
+          className="w-full"
+          disabled={
+            sending ||
+            inventoryStatus !== "ready" ||
+            hasUnavailableCartLines ||
+            lineItems.some(({ line }) => !isVariantAvailable(line.slug, line.color, line.size))
+          }
+        >
+          {sending ? "Sending…" : "Place order"}
+        </AhabButton>
       </form>
 
       <aside className="h-fit bg-secondary p-8">
@@ -171,8 +295,16 @@ function CheckoutPage() {
               <li key={i} className="flex gap-4">
                 <img src={itemImage} alt={product.name} className="h-20 w-16 object-cover" />
                 <div className="flex-1 text-sm">
-                  <Link to="/product/$slug" params={{ slug: product.slug }} className="font-serif text-base">{product.name}</Link>
-                  <p className="text-muted-foreground">{line.color} · {line.size} · ×{line.qty}</p>
+                  <Link
+                    to="/product/$slug"
+                    params={{ slug: product.slug }}
+                    className="font-serif text-base"
+                  >
+                    {product.name}
+                  </Link>
+                  <p className="text-muted-foreground">
+                    {line.color} · {line.size} · ×{line.qty}
+                  </p>
                 </div>
                 <span className="text-sm">{formatPrice(product.price * line.qty)}</span>
               </li>
@@ -180,15 +312,24 @@ function CheckoutPage() {
           })}
         </ul>
         <dl className="mt-6 space-y-2 border-t border-border pt-6 text-sm">
-          <div className="flex justify-between"><dt>Subtotal</dt><dd>{formatPrice(subtotal)}</dd></div>
+          <div className="flex justify-between">
+            <dt>Subtotal</dt>
+            <dd>{formatPrice(subtotal)}</dd>
+          </div>
           {discountAmount > 0 ? (
             <div className="flex justify-between text-gold">
               <dt>Promo discount {promoCode}</dt>
               <dd>-{formatPrice(discountAmount)}</dd>
             </div>
           ) : null}
-          <div className="flex justify-between"><dt>Delivery</dt><dd>{shipping ? formatPrice(shipping) : "Free"}</dd></div>
-          <div className="flex justify-between font-serif text-xl"><dt>Total</dt><dd>{formatPrice(total)}</dd></div>
+          <div className="flex justify-between">
+            <dt>Delivery</dt>
+            <dd>{shipping ? formatPrice(shipping) : "Free"}</dd>
+          </div>
+          <div className="flex justify-between font-serif text-xl">
+            <dt>Total</dt>
+            <dd>{formatPrice(total)}</dd>
+          </div>
         </dl>
       </aside>
     </div>

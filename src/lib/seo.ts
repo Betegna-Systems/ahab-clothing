@@ -2,9 +2,9 @@ import { products, type Product } from "@/lib/products";
 import { INSTAGRAM_URL, TIKTOK_URL } from "@/lib/social";
 
 export const SITE_NAME = "AHAB Clothing";
-export const DEFAULT_TITLE = "AHAB Clothing — Bodycon Tops Made in Addis Ababa";
+export const DEFAULT_TITLE = "AHAB Suits & Tops — Made in Addis Ababa";
 export const DEFAULT_DESCRIPTION =
-  "Fitted bodycon tops — ribbed, one-shoulder, cowl and cutout styles — designed and sewn by hand in Addis Ababa.";
+  "Discover tailored women's suits and sculpted tops, designed and sewn by hand in Addis Ababa.";
 export const DEFAULT_OG_IMAGE = "/og-image.jpg";
 
 const FALLBACK_ORIGIN = "https://ahabclothing.com";
@@ -140,8 +140,25 @@ export function breadcrumbJsonLd(items: { name: string; path: string }[], origin
   };
 }
 
-export function productJsonLd(product: Product, origin = SITE_URL) {
+export function productJsonLd(
+  product: Product,
+  origin = SITE_URL,
+  reviews: { reviewerName: string; rating: number; reviewText: string; createdAt: string }[] = [],
+) {
   const url = absoluteUrl(`/product/${product.slug}`, origin);
+  const aggregateRating =
+    reviews.length > 0
+      ? {
+          "@type": "AggregateRating",
+          ratingValue:
+            Math.round(
+              (reviews.reduce((total, review) => total + review.rating, 0) / reviews.length) * 10,
+            ) / 10,
+          reviewCount: reviews.length,
+          bestRating: 5,
+          worstRating: 1,
+        }
+      : undefined;
   return {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -153,20 +170,32 @@ export function productJsonLd(product: Product, origin = SITE_URL) {
     brand: { "@type": "Brand", name: SITE_NAME },
     material: product.fabric,
     color: product.colors.map((color) => color.name),
-    category: "Apparel > Tops",
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: product.rating,
-      reviewCount: product.reviews,
-      bestRating: 5,
-      worstRating: 1,
-    },
+    category: product.categories.includes("suits") ? "Apparel > Suits" : "Apparel > Tops",
+    ...(aggregateRating ? { aggregateRating } : {}),
+    ...(reviews.length > 0
+      ? {
+          review: reviews.map((review) => ({
+            "@type": "Review",
+            reviewRating: {
+              "@type": "Rating",
+              ratingValue: review.rating,
+              bestRating: 5,
+              worstRating: 1,
+            },
+            author: { "@type": "Person", name: review.reviewerName },
+            reviewBody: review.reviewText,
+            datePublished: review.createdAt.slice(0, 10),
+          })),
+        }
+      : {}),
     offers: {
       "@type": "Offer",
       url,
       priceCurrency: "ETB",
       price: product.price,
-      availability: product.inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      availability: product.inStock
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
       itemCondition: "https://schema.org/NewCondition",
       seller: { "@id": `${origin}/#organization` },
     },
@@ -179,7 +208,8 @@ export function collectionJsonLd(origin = SITE_URL) {
     "@type": "CollectionPage",
     name: `Shop — ${SITE_NAME}`,
     url: absoluteUrl("/shop", origin),
-    description: "Shop AHAB bodycon tops — ribbed, cowl, one-shoulder and cutout styles, sewn in Addis Ababa.",
+    description:
+      "Shop AHAB tailored women's suits and sculpted tops, designed and sewn in Addis Ababa.",
     isPartOf: { "@id": `${origin}/#website` },
     mainEntity: {
       "@type": "ItemList",

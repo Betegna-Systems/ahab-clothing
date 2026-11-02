@@ -16,9 +16,7 @@ import {
 
 /** Prefer the Cloudinary manifest entry; fall back to the bundled photo until uploaded. */
 function suitImage(manifestKey: string, localFallback: string): string {
-  return hasAsset(manifestKey)
-    ? getCloudinaryAsset(manifestKey).optimizedUrl
-    : localFallback;
+  return hasAsset(manifestKey) ? getCloudinaryAsset(manifestKey).optimizedUrl : localFallback;
 }
 
 export { cloudinaryAssets, getCloudinaryAsset, buildCloudinaryUrl, type CloudinaryAsset };
@@ -78,7 +76,7 @@ export type Product = {
   popularity: number;
 };
 
-export const products: Product[] = [
+const catalogProducts: Product[] = [
   {
     slug: "taitu-double-breasted-suit",
     name: "Taitu Double-Breasted Suit",
@@ -590,6 +588,12 @@ export const products: Product[] = [
   },
 ];
 
+export const products: Product[] = catalogProducts.map((product) => ({
+  ...product,
+  rating: 0,
+  reviews: 0,
+}));
+
 export const collections = [
   {
     title: "AHAB Suits",
@@ -640,27 +644,6 @@ export const collections = [
     imageDetails: cloudinaryAssets.topCrew,
   },
 ] as const;
-
-export const testimonials = [
-  {
-    name: "Selam T.",
-    city: "Addis Ababa",
-    quote:
-      "I wore the Meri square neck to dinner in Bole and two people asked where it was from before the starters arrived. The fit is unreal.",
-  },
-  {
-    name: "Yonas G.",
-    city: "Bahir Dar",
-    quote:
-      "I ordered the Saba one-shoulder for my sister's birthday and she has not taken it off since. Ordered a second one in black two weeks later.",
-  },
-  {
-    name: "Hiwot A.",
-    city: "London",
-    quote:
-      "They took my measurements over video and the corset top arrived fitting like it was made for me. Worth every penny.",
-  },
-];
 
 export function formatPrice(birr: number) {
   return `ETB ${birr.toLocaleString("en-US")}`;

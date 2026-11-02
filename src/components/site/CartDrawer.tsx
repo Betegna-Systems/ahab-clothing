@@ -23,6 +23,10 @@ export function CartDrawer() {
     promoCode,
     discount,
     applyPromoCode,
+    inventoryStatus,
+    isVariantAvailable,
+    hasUnavailableCartLines,
+    refreshInventory,
   } = useShop();
   const [promo, setPromo] = useState("");
 
@@ -42,6 +46,7 @@ export function CartDrawer() {
   };
 
   const orderLines = lineItems.map(({ line, product }) => ({
+    slug: product.slug,
     name: product.name,
     color: line.color,
     size: line.size,
@@ -106,7 +111,8 @@ export function CartDrawer() {
                   const colorIdx = product.colors.findIndex(
                     (c) => c.name.toLowerCase() === line.color.toLowerCase(),
                   );
-                  const itemImage = product.images[colorIdx >= 0 ? colorIdx : 0] ?? product.images[0];
+                  const itemImage =
+                    product.images[colorIdx >= 0 ? colorIdx : 0] ?? product.images[0];
                   return (
                     <li key={`${line.slug}-${line.size}-${line.color}`} className="flex gap-4 py-5">
                       <img
@@ -136,6 +142,12 @@ export function CartDrawer() {
                         <p className="label-xs mt-1 text-muted-foreground">
                           {line.color} · {line.size}
                         </p>
+                        {inventoryStatus === "ready" &&
+                        !isVariantAvailable(line.slug, line.color, line.size) ? (
+                          <p className="mt-2 text-xs text-destructive">
+                            This size and color are unavailable. Remove it to continue.
+                          </p>
+                        ) : null}
                         <p className="label-xs mt-2 text-foreground">
                           {formatPrice(product.price)}
                         </p>
@@ -209,12 +221,33 @@ export function CartDrawer() {
               <div className="mt-5 grid gap-2.5">
                 <Link
                   to="/checkout"
-                  onClick={() => setCartOpen(false)}
-                  className="label-xs grid h-13 w-full place-items-center bg-primary text-primary-foreground"
+                  onClick={(event) => {
+                    if (hasUnavailableCartLines) {
+                      event.preventDefault();
+                      if (inventoryStatus === "error") void refreshInventory();
+                      toast.error("Check stock for every item before continuing to checkout.");
+                      return;
+                    }
+                    setCartOpen(false);
+                  }}
+                  aria-disabled={hasUnavailableCartLines}
+                  className={cn(
+                    "label-xs grid h-13 w-full place-items-center bg-primary text-primary-foreground",
+                    hasUnavailableCartLines && "cursor-not-allowed opacity-50",
+                  )}
                 >
                   Proceed to Checkout
                 </Link>
-                <ChatOrderButtons message={chatMessage} />
+                <ChatOrderButtons
+                  message={chatMessage}
+                  onBeforeOpen={() => {
+                    if (hasUnavailableCartLines) {
+                      toast.error("Some selected size and color combinations are unavailable.");
+                      return false;
+                    }
+                    return true;
+                  }}
+                />
               </div>
             </div>
           </>
