@@ -122,7 +122,7 @@ export function Header() {
         <nav className="flex flex-col gap-2 px-6 pt-10">
           {[{ label: "Home", to: "/" }, ...nav].map((item, i) => (
             <Link
-              key={item.to}
+              key={item.label}
               to={item.to}
               className="border-b border-border py-5 font-serif text-3xl"
               style={{ animationDelay: `${i * 60}ms` }}
