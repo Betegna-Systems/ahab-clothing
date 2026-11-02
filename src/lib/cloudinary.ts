@@ -82,6 +82,13 @@ export function getCloudinaryAsset(key: keyof typeof manifest | string): Cloudin
 }
 
 /**
+ * True when the manifest actually contains the asset (i.e. it exists on Cloudinary).
+ */
+export function hasAsset(key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(manifest, key);
+}
+
+/**
  * All storefront images mapped to their Cloudinary optimized URLs and details.
  */
 export const cloudinaryAssets = {
