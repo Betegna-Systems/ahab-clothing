@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { Check, Copy, Upload } from "lucide-react";
 import { z } from "zod";
@@ -95,12 +95,40 @@ async function prepareReceiptImage(file: File) {
 function PaymentPage() {
   const { orderNumber } = Route.useParams();
   const { token } = Route.useSearch();
-  const order = Route.useLoaderData();
+  const loadedOrder = Route.useLoaderData();
+  const [order, setOrder] = useState(loadedOrder);
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [sending, setSending] = useState(false);
   const [preparing, setPreparing] = useState(false);
   const [checkingStatus, setCheckingStatus] = useState(false);
+
+  useEffect(() => {
+    setOrder(loadedOrder);
+  }, [loadedOrder]);
+
+  const checkPaymentStatus = async () => {
+    setCheckingStatus(true);
+    try {
+      const latestOrder = await getPaymentOrder({ data: { orderNumber, token } });
+      if (!latestOrder) {
+        setOrder(null);
+        toast.error("This payment link is no longer available.");
+        return;
+      }
+      setOrder(latestOrder);
+      toast.success(
+        latestOrder.paymentStatus === "confirmed"
+          ? "Payment confirmed."
+          : "Payment is still awaiting verification.",
+      );
+    } catch (error) {
+      console.error("Payment status refresh failed:", error);
+      toast.error("We couldn't check your payment status. Please try again.");
+    } finally {
+      setCheckingStatus(false);
+    }
+  };
 
   if (!order) {
     return (
@@ -241,16 +269,7 @@ function PaymentPage() {
           {!paymentConfirmed ? (
             <button
               type="button"
-              onClick={async () => {
-                setCheckingStatus(true);
-                try {
-                  await router.invalidate();
-                } catch {
-                  toast.error("We couldn't check your payment status. Please try again.");
-                } finally {
-                  setCheckingStatus(false);
-                }
-              }}
+              onClick={() => void checkPaymentStatus()}
               disabled={checkingStatus}
               className="label-xs mt-5 border border-border px-4 py-3 hover:border-primary disabled:opacity-50"
             >

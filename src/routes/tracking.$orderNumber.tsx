@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { AhabLink } from "@/components/site/ui";
 import { getTrackedOrder, submitVerifiedReview } from "@/lib/orders.functions";
@@ -181,8 +181,33 @@ function ReviewForm({
 function OrderTrackingPage() {
   const { orderNumber } = Route.useParams();
   const { token } = Route.useSearch();
-  const order = Route.useLoaderData();
+  const loadedOrder = Route.useLoaderData();
+  const [order, setOrder] = useState(loadedOrder);
+  const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    setOrder(loadedOrder);
+  }, [loadedOrder]);
+
+  const refreshStatus = async () => {
+    setRefreshing(true);
+    try {
+      const latestOrder = await getTrackedOrder({ data: { orderNumber, token } });
+      if (!latestOrder) {
+        setOrder(null);
+        toast.error("This tracking link is no longer available.");
+        return;
+      }
+      setOrder(latestOrder);
+      toast.success("Order status updated.");
+    } catch (error) {
+      console.error("Order status refresh failed:", error);
+      toast.error("We couldn't refresh your order status. Please try again.");
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   if (!order) {
     return (
@@ -246,10 +271,11 @@ function OrderTrackingPage() {
       <div className="mt-8 flex flex-wrap justify-center gap-4">
         <button
           type="button"
-          onClick={() => router.invalidate()}
+          onClick={() => void refreshStatus()}
+          disabled={refreshing}
           className="label-xs border border-border px-5 py-3 hover:border-primary"
         >
-          Refresh status
+          {refreshing ? "Refreshing…" : "Refresh status"}
         </button>
         <Link to="/shop" className="label-xs border border-border px-5 py-3 hover:border-primary">
           Continue shopping

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight, Heart, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { formatPrice, type Product } from "@/lib/products";
@@ -12,27 +12,49 @@ const badgeLabel: Record<string, string> = {
   bestseller: "Best Seller",
 };
 
-export function ProductCard({ product, priority }: { product: Product; priority?: boolean }) {
+export function ProductCard({
+  product,
+  priority,
+  showPurchaseOptions = false,
+}: {
+  product: Product;
+  priority?: boolean;
+  showPurchaseOptions?: boolean;
+}) {
   const {
     toggleWishlist,
     isWished,
     addToCart,
+    setCartOpen,
     inventoryStatus,
     isProductAvailable,
     isVariantAvailable,
   } = useShop();
+  const navigate = useNavigate();
   const wished = isWished(product.slug);
   const [colorIndex, setColorIndex] = useState(0);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const photo = product.images[colorIndex] ?? product.images[0];
   const color = product.colors[colorIndex] ?? product.colors[0];
   const count = product.images.length;
   const available = isProductAvailable(product);
-  const quickAddAvailable =
-    color !== undefined &&
-    product.sizes[0] !== undefined &&
-    isVariantAvailable(product.slug, color.name, product.sizes[0]);
+  const availableSizes =
+    color && inventoryStatus === "ready"
+      ? product.sizes.filter((size) => isVariantAvailable(product.slug, color.name, size))
+      : [];
+  const quickAddSize = availableSizes[0];
+  const purchaseSize =
+    selectedSize && availableSizes.includes(selectedSize) ? selectedSize : availableSizes[0];
 
   const step = (dir: 1 | -1) => setColorIndex((i) => (i + dir + count) % count);
+  const addSelected = (buyNow: boolean) => {
+    if (!color || !purchaseSize) return;
+    addToCart({ slug: product.slug, size: purchaseSize, color: color.name, qty: 1 });
+    if (buyNow) {
+      setCartOpen(false);
+      void navigate({ to: "/checkout" });
+    }
+  };
 
   return (
     <article className="group relative">
@@ -95,12 +117,12 @@ export function ProductCard({ product, priority }: { product: Product; priority?
           onClick={() =>
             addToCart({
               slug: product.slug,
-              size: product.sizes[0] ?? "",
+              size: quickAddSize ?? "",
               color: color?.name ?? "",
               qty: 1,
             })
           }
-          disabled={inventoryStatus !== "ready" || !quickAddAvailable}
+          disabled={inventoryStatus !== "ready" || !quickAddSize}
           className="label-xs absolute inset-x-0 bottom-0 flex h-12 translate-y-full items-center justify-center gap-2 bg-primary text-primary-foreground opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Plus className="h-3.5 w-3.5" strokeWidth={1.5} /> Quick add
@@ -152,6 +174,64 @@ export function ProductCard({ product, priority }: { product: Product; priority?
         ))}
         <span className="label-xs ml-1 text-muted-foreground">{color?.name}</span>
       </div>
+
+      {showPurchaseOptions ? (
+        <div className="mt-5 space-y-4">
+          <div>
+            <p className="label-xs text-muted-foreground">Choose a size</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {product.sizes.map((size) => {
+                const inStock = availableSizes.includes(size);
+                return (
+                  <button
+                    key={size}
+                    type="button"
+                    disabled={inventoryStatus !== "ready" || !inStock}
+                    onClick={() => setSelectedSize(size)}
+                    aria-pressed={purchaseSize === size}
+                    className={cn(
+                      "label-xs min-w-10 border px-3 py-2",
+                      purchaseSize === size
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border",
+                      (!inStock || inventoryStatus !== "ready") &&
+                        "cursor-not-allowed opacity-40 line-through",
+                    )}
+                  >
+                    {size}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          {inventoryStatus !== "ready" || !purchaseSize ? (
+            <p className="text-xs text-muted-foreground">
+              {inventoryStatus === "loading"
+                ? "Checking stock availability…"
+                : inventoryStatus === "error"
+                  ? "Stock couldn't be checked. Try again later."
+                  : "Currently unavailable in this color."}
+            </p>
+          ) : (
+            <div className="grid gap-2 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => addSelected(false)}
+                className="label-xs min-h-11 bg-primary px-4 text-primary-foreground hover:bg-gold hover:text-gold-foreground"
+              >
+                Add to bag
+              </button>
+              <button
+                type="button"
+                onClick={() => addSelected(true)}
+                className="label-xs min-h-11 border border-primary/40 px-4 hover:border-primary"
+              >
+                Buy now
+              </button>
+            </div>
+          )}
+        </div>
+      ) : null}
     </article>
   );
 }

@@ -20,10 +20,16 @@ function Wishlist() {
       {items.length === 0 ? (
         <div className="py-20 text-center">
           <p className="text-muted-foreground">Tap the heart on any piece to save it here.</p>
-          <AhabLink to="/shop" className="mt-8">Discover the collection</AhabLink>
+          <AhabLink to="/shop" className="mt-8">
+            Discover the collection
+          </AhabLink>
         </div>
       ) : (
-        <div className="mt-14 grid grid-cols-2 gap-x-4 gap-y-12 lg:grid-cols-4">{items.map((p) => <ProductCard key={p.slug} product={p} />)}</div>
+        <div className="mt-14 grid grid-cols-2 gap-x-4 gap-y-12 lg:grid-cols-4">
+          {items.map((product) => (
+            <ProductCard key={product.slug} product={product} showPurchaseOptions />
+          ))}
+        </div>
       )}
     </div>
   );
