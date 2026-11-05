@@ -11,7 +11,8 @@ import { type Product } from "@/lib/products";
 import { useAllProducts, getProductCached } from "@/lib/firestore-products";
 import { MAX_CART_QUANTITY } from "@/lib/order-limits";
 import { getVariantAvailability } from "@/lib/inventory.functions";
-import { initializeSupabaseBrowser, supabase } from "@/integrations/supabase/client";
+import { initializeSupabaseBrowser } from "@/integrations/supabase/client";
+import { featureClient as supabase } from "@/lib/feature-client";
 import { toast } from "sonner";
 
 export type CartLine = {
