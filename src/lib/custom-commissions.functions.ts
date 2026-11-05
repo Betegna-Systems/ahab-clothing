@@ -1,6 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { hasValidImageSignature } from "@/lib/image-validation";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { FeatureDatabase } from "@/lib/feature-database";
+
+async function getFeatureAdmin() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin as unknown as SupabaseClient<FeatureDatabase>;
+}
 
 const imageSchema = z.object({
   mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]),

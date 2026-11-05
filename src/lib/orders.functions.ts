@@ -3,6 +3,13 @@ import { z } from "zod";
 import { MAX_CART_QUANTITY } from "@/lib/order-limits";
 import { hasValidImageSignature } from "@/lib/image-validation";
 import type { Json } from "@/integrations/supabase/types";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { FeatureDatabase } from "@/lib/feature-database";
+
+async function getFeatureAdmin() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin as unknown as SupabaseClient<FeatureDatabase>;
+}
 
 const line = z.object({
   slug: z.string().max(120),
@@ -45,7 +52,7 @@ const orderResultSchema = z.discriminatedUnion("ok", [
 export const placeOrder = createServerFn({ method: "POST" })
   .validator((d: unknown) => orderSchema.parse(d))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getFeatureAdmin();
     const { paymentAccessToken, ...order } = data;
     const { data: result, error } = await supabaseAdmin.rpc("place_order_with_inventory", {
       p_order: {
