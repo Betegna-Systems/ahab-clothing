@@ -7,8 +7,9 @@ import { AhabButton, AhabLink } from "@/components/site/ui";
 import { ChatOrderButtons } from "@/components/site/ChatOrderButtons";
 import { buildOrderMessage, submitOrder, type OrderPayload } from "@/lib/order-channels";
 import { PAYMENT_METHODS, getPaymentMethod } from "@/lib/payment-methods";
-import { initializeSupabaseBrowser, supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
+import { initializeSupabaseBrowser } from "@/integrations/supabase/client";
+import { featureClient as supabase } from "@/lib/feature-client";
+import type { FeatureDatabase as Database } from "@/lib/feature-database";
 import { toast } from "sonner";
 
 type SavedAddress = Database["public"]["Tables"]["account_saved_addresses"]["Row"];

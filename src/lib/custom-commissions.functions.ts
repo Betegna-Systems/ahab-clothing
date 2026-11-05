@@ -83,7 +83,7 @@ const updateStatusSchema = adminTokenSchema.extend({
 });
 
 async function requireAdmin(accessToken: string) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const supabaseAdmin = await getFeatureAdmin();
   const [{ data, error }, { data: claimsData, error: claimsError }] = await Promise.all([
     supabaseAdmin.auth.getUser(accessToken),
     supabaseAdmin.auth.getClaims(accessToken),
@@ -120,7 +120,7 @@ function imageExtension(mimeType: z.infer<typeof imageSchema>["mimeType"]) {
 export const submitCustomCommission = createServerFn({ method: "POST" })
   .validator((data: unknown) => commissionSchema.parse(data))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getFeatureAdmin();
     const email = data.email.toLowerCase();
     const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const { data: recentRequests, error: rateLimitError } = await supabaseAdmin
@@ -271,7 +271,7 @@ export const getAdminCustomCommissions = createServerFn({ method: "GET" })
   .validator((data: unknown) => adminTokenSchema.parse(data))
   .handler(async ({ data }) => {
     await requireAdmin(data.accessToken);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getFeatureAdmin();
     const { data: commissions, error } = await supabaseAdmin
       .from("custom_commissions")
       .select("*")
@@ -309,7 +309,7 @@ export const updateAdminCustomCommissionStatus = createServerFn({ method: "POST"
   .validator((data: unknown) => updateStatusSchema.parse(data))
   .handler(async ({ data }) => {
     await requireAdmin(data.accessToken);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getFeatureAdmin();
     const { error } = await supabaseAdmin
       .from("custom_commissions")
       .update({ status: data.status, updated_at: new Date().toISOString() })

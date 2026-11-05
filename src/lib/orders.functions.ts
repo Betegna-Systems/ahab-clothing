@@ -95,7 +95,7 @@ const paymentAccessSchema = z.object({
 export const getTrackedOrder = createServerFn({ method: "GET" })
   .validator((d: unknown) => paymentAccessSchema.parse(d))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getFeatureAdmin();
     const tokenHash = await hashPaymentToken(data.token);
     const { data: order, error } = await supabaseAdmin
       .from("orders")
@@ -128,7 +128,7 @@ const accountOrdersSchema = z.object({
 export const getAccountOrders = createServerFn({ method: "GET" })
   .validator((d: unknown) => accountOrdersSchema.parse(d))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getFeatureAdmin();
     const { data: claimsData, error: claimsError } = await supabaseAdmin.auth.getClaims(
       data.accessToken,
     );
@@ -216,7 +216,7 @@ const reviewSchema = paymentAccessSchema
 export const submitVerifiedReview = createServerFn({ method: "POST" })
   .validator((data: unknown) => reviewSchema.parse(data))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getFeatureAdmin();
     const tokenHash = await hashPaymentToken(data.token);
     const { data: order, error: orderError } = await supabaseAdmin
       .from("orders")
@@ -304,7 +304,7 @@ export const submitVerifiedReview = createServerFn({ method: "POST" })
 export const getApprovedProductReviews = createServerFn({ method: "GET" })
   .validator((data: unknown) => z.object({ productSlug: z.string().max(120) }).parse(data))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getFeatureAdmin();
     const { data: reviews, error } = await supabaseAdmin
       .from("customer_reviews")
       .select("reviewer_name, rating, fit_feedback, review_text, photo_path, created_at")
@@ -347,7 +347,7 @@ export const getApprovedProductReviews = createServerFn({ method: "GET" })
 export const getPaymentOrder = createServerFn({ method: "GET" })
   .validator((d: unknown) => paymentAccessSchema.parse(d))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getFeatureAdmin();
     const tokenHash = await hashPaymentToken(data.token);
     const { data: order, error } = await supabaseAdmin
       .from("orders")
@@ -389,7 +389,7 @@ export const submitPaymentProof = createServerFn({ method: "POST" })
       return { ok: false as const, reason: "invalid_image" as const };
     }
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getFeatureAdmin();
     const tokenHash = await hashPaymentToken(data.token);
     const { data: order, error: lookupError } = await supabaseAdmin
       .from("orders")
