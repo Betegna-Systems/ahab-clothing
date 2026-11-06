@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { AhabButton, AhabLink } from "@/components/site/ui";
 import { initializeSupabaseBrowser, supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
+import type { FeatureDatabase } from "@/lib/feature-database";
 import {
   getAdminCustomCommissions,
   updateAdminCustomCommissionStatus,
@@ -14,7 +14,7 @@ import { toast } from "sonner";
 
 type CommissionStatus =
   "new" | "contacted" | "consultation" | "quoted" | "in_progress" | "completed" | "declined";
-type CommissionRow = Database["public"]["Tables"]["custom_commissions"]["Row"];
+type CommissionRow = FeatureDatabase["public"]["Tables"]["custom_commissions"]["Row"];
 type Commission = CommissionRow & { imageUrls: string[] };
 type ViewStatus = "all" | CommissionStatus;
 

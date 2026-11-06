@@ -7,7 +7,7 @@ export const DEFAULT_DESCRIPTION =
   "Discover tailored women's suits and sculpted tops, designed and sewn by hand in Addis Ababa.";
 export const DEFAULT_OG_IMAGE = "/og-image.jpg";
 
-const FALLBACK_ORIGIN = "https://ahabclothing.com";
+const FALLBACK_ORIGIN = "https://www.ahabclothing.com";
 
 export function getSiteOrigin(request?: Request) {
   const fromEnv = import.meta.env["VITE_SITE_URL"];

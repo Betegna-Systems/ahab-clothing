@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { seo } from "@/lib/seo";
 import { InfoPage } from "@/components/site/InfoPage";
 
@@ -9,13 +9,6 @@ const women = [
   ["L", "96", "78", "104"],
   ["XL", "102", "84", "110"],
 ];
-const men = [
-  ["S / 46", "92", "78"],
-  ["M / 48", "98", "84"],
-  ["L / 50", "104", "90"],
-  ["XL / 52", "110", "96"],
-  ["XXL / 54", "116", "102"],
-];
 
 function Table({ head, rows }: { head: string[]; rows: string[][] }) {
   return (
@@ -23,7 +16,9 @@ function Table({ head, rows }: { head: string[]; rows: string[][] }) {
       <thead>
         <tr>
           {head.map((h) => (
-            <th key={h} className="label-xs border-b border-border py-3 text-left text-foreground">{h}</th>
+            <th key={h} className="label-xs border-b border-border py-3 text-left text-foreground">
+              {h}
+            </th>
           ))}
         </tr>
       </thead>
@@ -31,7 +26,9 @@ function Table({ head, rows }: { head: string[]; rows: string[][] }) {
         {rows.map((r) => (
           <tr key={r[0]}>
             {r.map((c, i) => (
-              <td key={i} className="border-b border-border py-3">{c}</td>
+              <td key={i} className="border-b border-border py-3">
+                {c}
+              </td>
             ))}
           </tr>
         ))}
@@ -42,18 +39,36 @@ function Table({ head, rows }: { head: string[]; rows: string[][] }) {
 
 export const Route = createFileRoute("/size-guide")({
   head: () =>
-    seo("Size Guide", "Find your AHAB size — bust, waist and hip measurements for women, men and kids.", {
-      path: "/size-guide",
-    }),
+    seo(
+      "Size Guide",
+      "Find your AHAB size — bust, waist and hip measurements for our women's suits and tops.",
+      {
+        path: "/size-guide",
+      },
+    ),
   component: () => (
     <InfoPage eyebrow="Customer care" title="Size guide">
-      <p>All measurements are in centimetres. Between sizes? Choose the larger, or contact us for a tailored fit.</p>
-      <h2>Women</h2>
+      <p>
+        All measurements are in centimetres. Between sizes? Choose the larger, or contact us for a
+        tailored fit.
+      </p>
+      <h2>Suits & tops</h2>
       <Table head={["Size", "Bust", "Waist", "Hip"]} rows={women} />
-      <h2>Men</h2>
-      <Table head={["Size", "Chest", "Waist"]} rows={men} />
-      <h2>Kids</h2>
-      <p>Kids sizes follow age (2Y–10Y). For a roomier fit, size up one year.</p>
+      <h2>How to measure</h2>
+      <p>
+        Measure over light clothing with the tape level and snug, not tight. Bust: around the
+        fullest part. Waist: around the narrowest part of your natural waistline. Hip: around the
+        fullest part of your hips.
+      </p>
+      <h2>Suit fit</h2>
+      <p>
+        Blazers and trousers are sized together. If your bust and hip fall in different sizes,
+        choose the larger and we can advise on alterations, or{" "}
+        <Link to="/custom" className="text-foreground underline">
+          request a made-to-measure suit
+        </Link>
+        .
+      </p>
     </InfoPage>
   ),
 });
