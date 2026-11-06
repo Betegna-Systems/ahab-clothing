@@ -61,12 +61,29 @@ type Inventory = {
 };
 type Security = { user_id: string; mfa_required: boolean; updated_at: string };
 type FeatureTables = {
-  custom_commissions: Table<Commission, Omit<Commission, "id" | "created_at" | "updated_at"> & Partial<Pick<Commission, "id" | "created_at" | "updated_at">>>;
-  customer_reviews: Table<Review, Omit<Review, "id" | "created_at"> & Partial<Pick<Review, "id" | "created_at">>>;
-  account_saved_addresses: Table<Address, Omit<Address, "id" | "created_at" | "updated_at"> & Partial<Pick<Address, "id" | "created_at" | "updated_at">>>;
+  custom_commissions: Table<
+    Commission,
+    Omit<Commission, "id" | "created_at" | "updated_at"> &
+      Partial<Pick<Commission, "id" | "created_at" | "updated_at">>
+  >;
+  customer_reviews: Table<
+    Review,
+    Omit<Review, "id" | "created_at"> & Partial<Pick<Review, "id" | "created_at">>
+  >;
+  account_saved_addresses: Table<
+    Address,
+    Omit<Address, "id" | "created_at" | "updated_at"> &
+      Partial<Pick<Address, "id" | "created_at" | "updated_at">>
+  >;
   account_wishlist: Table<Wishlist, Omit<Wishlist, "created_at"> & { created_at?: string }>;
-  product_variant_inventory: Table<Inventory, Omit<Inventory, "quantity" | "updated_at"> & Partial<Pick<Inventory, "quantity" | "updated_at">>>;
-  account_security_settings: Table<Security, Pick<Security, "user_id"> & Partial<Omit<Security, "user_id">>>;
+  product_variant_inventory: Table<
+    Inventory,
+    Omit<Inventory, "quantity" | "updated_at"> & Partial<Pick<Inventory, "quantity" | "updated_at">>
+  >;
+  account_security_settings: Table<
+    Security,
+    Pick<Security, "user_id"> & Partial<Omit<Security, "user_id">>
+  >;
 };
 export type FeatureDatabase = Omit<Database, "public"> & {
   public: Omit<Database["public"], "Tables" | "Functions"> & {

@@ -19,17 +19,42 @@ export function SizeChart({ compact }: { compact?: boolean }) {
     <div>
       <div className="flex gap-2">
         {(["cm", "in"] as const).map((u) => (
-          <button key={u} type="button" onClick={() => setUnit(u)} className={cn("label-xs border px-3 py-1.5", unit === u ? "border-primary bg-primary text-primary-foreground" : "border-border")}>{u}</button>
+          <button
+            key={u}
+            type="button"
+            onClick={() => setUnit(u)}
+            className={cn(
+              "label-xs border px-3 py-1.5",
+              unit === u ? "border-primary bg-primary text-primary-foreground" : "border-border",
+            )}
+          >
+            {u}
+          </button>
         ))}
       </div>
       <table className="mt-4 w-full text-left text-sm">
         <thead className="label-xs text-muted-foreground">
-          <tr><th className="py-2">Size</th><th>Bust</th><th>Waist</th><th>Hips</th></tr>
+          <tr>
+            <th className="py-2">Size</th>
+            <th>Bust</th>
+            <th>Waist</th>
+            <th>Hips</th>
+          </tr>
         </thead>
         <tbody>
           {rows.map((r) => (
-            <tr key={r.size} onClick={() => setPicked(r.size)} className={cn("cursor-pointer border-t border-border transition-colors hover:bg-secondary", picked === r.size && "bg-secondary")}>
-              <td className="py-3 font-medium">{r.size}</td><td>{fmt(r.bust)}</td><td>{fmt(r.waist)}</td><td>{fmt(r.hips)}</td>
+            <tr
+              key={r.size}
+              onClick={() => setPicked(r.size)}
+              className={cn(
+                "cursor-pointer border-t border-border transition-colors hover:bg-secondary",
+                picked === r.size && "bg-secondary",
+              )}
+            >
+              <td className="py-3 font-medium">{r.size}</td>
+              <td>{fmt(r.bust)}</td>
+              <td>{fmt(r.waist)}</td>
+              <td>{fmt(r.hips)}</td>
             </tr>
           ))}
         </tbody>
@@ -37,11 +62,17 @@ export function SizeChart({ compact }: { compact?: boolean }) {
       {!compact ? (
         <div className="mt-10 grid gap-6 sm:grid-cols-3">
           {[
-            ["Bust", "Measure around the fullest part of your chest, keeping the tape level under your arms."],
+            [
+              "Bust",
+              "Measure around the fullest part of your chest, keeping the tape level under your arms.",
+            ],
             ["Waist", "Measure around your natural waistline — the narrowest part of your torso."],
             ["Hips", "Stand with feet together and measure around the fullest part of your hips."],
           ].map(([t, d]) => (
-            <div key={t}><h3 className="font-serif text-2xl">{t}</h3><p className="mt-2 text-sm text-muted-foreground">{d}</p></div>
+            <div key={t}>
+              <h3 className="font-serif text-2xl">{t}</h3>
+              <p className="mt-2 text-sm text-muted-foreground">{d}</p>
+            </div>
           ))}
         </div>
       ) : null}

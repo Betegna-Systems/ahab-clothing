@@ -8,16 +8,21 @@ import { INSTAGRAM_HANDLE, INSTAGRAM_URL, TIKTOK_HANDLE, TIKTOK_URL } from "@/li
 
 export const Route = createFileRoute("/contact")({
   head: () =>
-    seo("Contact", "Reach AHAB Clothing in Addis Ababa by phone, email, WhatsApp or social media.", {
-      path: "/contact",
-      jsonLd: {
-        "@context": "https://schema.org",
-        "@type": "ContactPage",
-        name: "Contact AHAB Clothing",
-        url: `${SITE_URL}/contact`,
-        description: "Reach AHAB Clothing in Addis Ababa by phone, email, WhatsApp or social media.",
+    seo(
+      "Contact",
+      "Reach AHAB Clothing in Addis Ababa by phone, email, WhatsApp or social media.",
+      {
+        path: "/contact",
+        jsonLd: {
+          "@context": "https://schema.org",
+          "@type": "ContactPage",
+          name: "Contact AHAB Clothing",
+          url: `${SITE_URL}/contact`,
+          description:
+            "Reach AHAB Clothing in Addis Ababa by phone, email, WhatsApp or social media.",
+        },
       },
-    }),
+    ),
   component: Contact,
 });
 
@@ -46,8 +51,16 @@ function Contact() {
           <input required name="name" placeholder="Name" className={field} />
           <input required name="email" type="email" placeholder="Email" className={field} />
           <input name="phone" type="tel" placeholder="Phone" className={field} />
-          <textarea required name="message" rows={5} placeholder="Your message" className="border-b border-border bg-transparent py-2 outline-hidden focus:border-gold" />
-          <AhabButton type="submit" size="lg">Send message</AhabButton>
+          <textarea
+            required
+            name="message"
+            rows={5}
+            placeholder="Your message"
+            className="border-b border-border bg-transparent py-2 outline-hidden focus:border-gold"
+          />
+          <AhabButton type="submit" size="lg">
+            Send message
+          </AhabButton>
         </form>
         <div className="space-y-8">
           <dl className="grid grid-cols-2 gap-8 text-sm">
@@ -56,13 +69,25 @@ function Contact() {
               ["Email", SUPPORT_EMAIL, `mailto:${SUPPORT_EMAIL}`],
               ["WhatsApp", "Chat with us", "https://wa.me/251925105950"],
               ["Instagram", INSTAGRAM_HANDLE, INSTAGRAM_URL],
-              ["TikTok", TIKTOK_HANDLE, TIKTOK_URL], 
+              ["TikTok", TIKTOK_HANDLE, TIKTOK_URL],
             ].map(([k, v, href]) => (
-              <div key={k}><dt className="label-xs text-muted-foreground">{k}</dt><dd className="mt-2"><a href={href} className="link-underline">{v}</a></dd></div>
+              <div key={k}>
+                <dt className="label-xs text-muted-foreground">{k}</dt>
+                <dd className="mt-2">
+                  <a href={href} className="link-underline">
+                    {v}
+                  </a>
+                </dd>
+              </div>
             ))}
           </dl>
           <p className="label-xs">Addis Ababa, Ethiopia</p>
-          <iframe title="AHAB location" loading="lazy" className="aspect-4/3 w-full border-0 grayscale" src="https://www.google.com/maps?q=Addis+Ababa&output=embed" />
+          <iframe
+            title="AHAB location"
+            loading="lazy"
+            className="aspect-4/3 w-full border-0 grayscale"
+            src="https://www.google.com/maps?q=Addis+Ababa&output=embed"
+          />
         </div>
       </div>
     </div>

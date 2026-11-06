@@ -23,7 +23,10 @@ function NotFoundComponent() {
       <div className="max-w-md text-center">
         <h1 className="text-7xl">404</h1>
         <p className="mt-4 text-sm text-muted-foreground">This page has wandered off.</p>
-        <Link to="/" className="label-xs mt-8 inline-block bg-primary px-8 py-4 text-primary-foreground">
+        <Link
+          to="/"
+          className="label-xs mt-8 inline-block bg-primary px-8 py-4 text-primary-foreground"
+        >
           Return home
         </Link>
       </div>

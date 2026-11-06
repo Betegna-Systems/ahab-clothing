@@ -70,20 +70,12 @@ export function SectionHeading({
   className?: string;
 }) {
   return (
-    <div
-      className={cn(
-        "max-w-2xl",
-        align === "center" && "mx-auto text-center",
-        className,
-      )}
-    >
+    <div className={cn("max-w-2xl", align === "center" && "mx-auto text-center", className)}>
       {eyebrow ? <Eyebrow>{eyebrow}</Eyebrow> : null}
       <h2 className="mt-5 text-4xl leading-[1.05] tracking-tight sm:text-5xl md:text-6xl">
         {title}
       </h2>
-      {copy ? (
-        <p className="mt-5 text-base leading-relaxed text-muted-foreground">{copy}</p>
-      ) : null}
+      {copy ? <p className="mt-5 text-base leading-relaxed text-muted-foreground">{copy}</p> : null}
     </div>
   );
 }
