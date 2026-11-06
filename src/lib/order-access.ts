@@ -1,0 +1,60 @@
+// Pure order access rules shared by the order server functions. Keep runtime imports out of
+// this module so the rules can be unit-tested without the app's path aliases.
+
+type TokenGuarded = { payment_access_token_hash: string | null };
+
+/** The private tracking link (order number + token) is the proof of a guest order. */
+export function hasOrderToken(order: TokenGuarded | null | undefined, tokenHash: string) {
+  return (
+    Boolean(order?.payment_access_token_hash) && order!.payment_access_token_hash === tokenHash
+  );
+}
+
+/** Account order history is limited to orders explicitly linked to the account, never by email. */
+export function isOrderOwner(order: { customer_user_id: string | null }, userId: string) {
+  return order.customer_user_id !== null && order.customer_user_id === userId;
+}
+
+export type ClaimDecision = "claim" | "already_yours" | "claimed_by_other" | "order_not_found";
+
+export function canClaimOrder(
+  order: (TokenGuarded & { customer_user_id: string | null }) | null | undefined,
+  tokenHash: string,
+  userId: string,
+): ClaimDecision {
+  if (!order || !hasOrderToken(order, tokenHash)) return "order_not_found";
+  if (order.customer_user_id === null) return "claim";
+  return order.customer_user_id === userId ? "already_yours" : "claimed_by_other";
+}
+
+export const RECEIPT_PAYMENT_METHODS = ["Telebirr", "CBE bank transfer"];
+
+export type ReceiptDecision = "accept" | "order_not_found" | "already_submitted";
+
+export function canSubmitReceipt(
+  order: (TokenGuarded & { payment_method: string; payment_status: string }) | null | undefined,
+  tokenHash: string,
+): ReceiptDecision {
+  if (!order || !hasOrderToken(order, tokenHash)) return "order_not_found";
+  if (!RECEIPT_PAYMENT_METHODS.includes(order.payment_method)) return "order_not_found";
+  return order.payment_status === "pending" ? "accept" : "already_submitted";
+}
+
+export type ReviewDecision = "allow" | "order_not_found" | "not_delivered" | "product_not_ordered";
+
+export function reviewEligibility(
+  order: (TokenGuarded & { status: string; items: unknown }) | null | undefined,
+  tokenHash: string,
+  productSlug: string,
+): ReviewDecision {
+  if (!order || !hasOrderToken(order, tokenHash)) return "order_not_found";
+  if (order.status.trim().toLowerCase() !== "delivered") return "not_delivered";
+  const items = Array.isArray(order.items) ? order.items : [];
+  const ordered = items.some(
+    (item) =>
+      item !== null &&
+      typeof item === "object" &&
+      (item as Record<string, unknown>)["slug"] === productSlug,
+  );
+  return ordered ? "allow" : "product_not_ordered";
+}

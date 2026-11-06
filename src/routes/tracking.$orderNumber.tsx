@@ -2,7 +2,8 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { AhabLink } from "@/components/site/ui";
-import { getTrackedOrder, submitVerifiedReview } from "@/lib/orders.functions";
+import { claimAccountOrder, getTrackedOrder, submitVerifiedReview } from "@/lib/orders.functions";
+import { initializeSupabaseBrowser, supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/tracking/$orderNumber")({
@@ -178,6 +179,68 @@ function ReviewForm({
   );
 }
 
+function SaveToAccount({ orderNumber, token }: { orderNumber: string; token: string }) {
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [state, setState] = useState<"idle" | "saving" | "saved">("idle");
+
+  useEffect(() => {
+    let active = true;
+    void initializeSupabaseBrowser()
+      .then(async (configured) => {
+        if (!configured) return;
+        const { data } = await supabase.auth.getSession();
+        if (active) setAccessToken(data.session?.access_token ?? null);
+      })
+      .catch(() => console.error("Tracking account session check failed."));
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (!accessToken) return null;
+
+  const save = async () => {
+    setState("saving");
+    try {
+      const result = await claimAccountOrder({ data: { orderNumber, token, accessToken } });
+      if (result.ok) {
+        setState("saved");
+        toast.success("Order saved to your account.");
+        return;
+      }
+      setState("idle");
+      toast.error(
+        result.reason === "mfa_required"
+          ? "Complete two-step verification in your account first."
+          : result.reason === "email_not_verified"
+            ? "Verify your account email first."
+            : result.reason === "claimed_by_other"
+              ? "This order is already linked to another account."
+              : "We couldn't save this order to your account.",
+      );
+    } catch (error) {
+      console.error("Order claim failed:", error);
+      setState("idle");
+      toast.error("We couldn't save this order to your account.");
+    }
+  };
+
+  return state === "saved" ? (
+    <Link to="/account" className="label-xs border border-border px-5 py-3 hover:border-primary">
+      View in account
+    </Link>
+  ) : (
+    <button
+      type="button"
+      onClick={() => void save()}
+      disabled={state === "saving"}
+      className="label-xs border border-border px-5 py-3 hover:border-primary"
+    >
+      {state === "saving" ? "Saving…" : "Save to my account"}
+    </button>
+  );
+}
+
 function OrderTrackingPage() {
   const { orderNumber } = Route.useParams();
   const { token } = Route.useSearch();
@@ -277,6 +340,7 @@ function OrderTrackingPage() {
         >
           {refreshing ? "Refreshing…" : "Refresh status"}
         </button>
+        <SaveToAccount orderNumber={orderNumber} token={token} />
         <Link to="/shop" className="label-xs border border-border px-5 py-3 hover:border-primary">
           Continue shopping
         </Link>

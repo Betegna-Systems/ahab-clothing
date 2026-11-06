@@ -60,7 +60,16 @@ type Inventory = {
   updated_at: string;
 };
 type Security = { user_id: string; mfa_required: boolean; updated_at: string };
+type LiveOrders = Database["public"]["Tables"]["orders"];
+// Pending: 202611060001_order_ownership.sql adds customer_user_id.
+type OrderOwnership = { customer_user_id?: string | null };
 type FeatureTables = {
+  orders: {
+    Row: LiveOrders["Row"] & { customer_user_id: string | null };
+    Insert: LiveOrders["Insert"] & OrderOwnership;
+    Update: LiveOrders["Update"] & OrderOwnership;
+    Relationships: [];
+  };
   custom_commissions: Table<
     Commission,
     Omit<Commission, "id" | "created_at" | "updated_at"> &
@@ -87,7 +96,7 @@ type FeatureTables = {
 };
 export type FeatureDatabase = Omit<Database, "public"> & {
   public: Omit<Database["public"], "Tables" | "Functions"> & {
-    Tables: Database["public"]["Tables"] & FeatureTables;
+    Tables: Omit<Database["public"]["Tables"], "orders"> & FeatureTables;
     Functions: Database["public"]["Functions"] & {
       place_order_with_inventory: { Args: { p_order: Json }; Returns: Json };
       account_mfa_is_required: { Args: Record<string, never>; Returns: boolean };

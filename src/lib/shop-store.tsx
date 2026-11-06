@@ -10,6 +10,7 @@ import {
 import { type Product } from "@/lib/products";
 import { useAllProducts, getProductCached } from "@/lib/firestore-products";
 import { MAX_CART_QUANTITY } from "@/lib/order-limits";
+import { PROMOS, promoRate } from "@/lib/order-pricing";
 import { getVariantAvailability } from "@/lib/inventory.functions";
 import { initializeSupabaseBrowser } from "@/integrations/supabase/client";
 import { featureClient as supabase } from "@/lib/feature-client";
@@ -59,7 +60,6 @@ const CART_KEY = "ahab.cart";
 const WISH_KEY = "ahab.wishlist";
 const VIEWED_KEY = "ahab.viewed";
 const PROMO_KEY = "ahab.promo";
-const PROMOS: Record<string, number> = { AHAB10: 0.1, MADEWITHLOVE: 0.15 };
 
 function read<T>(key: string, fallback: T): T {
   try {
@@ -73,6 +73,8 @@ function read<T>(key: string, fallback: T): T {
 export function ShopProvider({ children }: { children: ReactNode }) {
   const { products: allProducts } = useAllProducts();
   const [cart, setCart] = useState<CartLine[]>([]);
+  // Persisting before the saved state is read would overwrite it with the empty defaults.
+  const [storageLoaded, setStorageLoaded] = useState(false);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [wishlistLoaded, setWishlistLoaded] = useState(false);
   const [accountUserId, setAccountUserId] = useState<string | null>(null);
@@ -125,6 +127,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     setPromoCode(
       savedPromo && Object.prototype.hasOwnProperty.call(PROMOS, savedPromo) ? savedPromo : null,
     );
+    setStorageLoaded(true);
   }, []);
 
   useEffect(() => {
@@ -247,18 +250,19 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   }, [accountUserId, wishlistLoaded]);
 
   useEffect(() => {
-    localStorage.setItem(CART_KEY, JSON.stringify(cart));
-  }, [cart]);
+    if (storageLoaded) localStorage.setItem(CART_KEY, JSON.stringify(cart));
+  }, [cart, storageLoaded]);
   useEffect(() => {
     if (wishlistLoaded) localStorage.setItem(WISH_KEY, JSON.stringify(wishlist));
   }, [wishlist, wishlistLoaded]);
   useEffect(() => {
-    localStorage.setItem(VIEWED_KEY, JSON.stringify(recentlyViewed));
-  }, [recentlyViewed]);
+    if (storageLoaded) localStorage.setItem(VIEWED_KEY, JSON.stringify(recentlyViewed));
+  }, [recentlyViewed, storageLoaded]);
   useEffect(() => {
+    if (!storageLoaded) return;
     if (promoCode) localStorage.setItem(PROMO_KEY, promoCode);
     else localStorage.removeItem(PROMO_KEY);
-  }, [promoCode]);
+  }, [promoCode, storageLoaded]);
 
   const isVariantAvailable = useCallback(
     (slug: string, color: string, size: string) =>
@@ -377,7 +381,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     wishlist,
     recentlyViewed,
     promoCode,
-    discount: promoCode ? PROMOS[promoCode]! : 0,
+    discount: promoRate(promoCode),
     cartOpen,
     searchOpen,
     setCartOpen,

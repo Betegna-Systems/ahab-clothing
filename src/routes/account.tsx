@@ -81,7 +81,7 @@ function AccountPage() {
         setNotice(
           orderResult.reason === "mfa_required"
             ? "Complete authenticator verification to view your orders."
-            : "Verify your email address to view orders placed with that email.",
+            : "Verify your email address to view your order history.",
         );
       } else {
         setOrders(orderResult.orders);
@@ -832,7 +832,7 @@ function AccountPage() {
           <div className="border-t border-border pt-8 md:border-l md:border-t-0 md:pl-10 md:pt-0">
             <h2 className="font-serif text-3xl">Made for you</h2>
             <ul className="mt-5 space-y-3 text-sm text-muted-foreground">
-              <li>See orders placed with your verified email.</li>
+              <li>See orders placed while signed in, or saved from their tracking links.</li>
               <li>Keep your wishlist in sync across devices.</li>
               <li>Save delivery addresses for a quicker checkout.</li>
             </ul>
@@ -949,7 +949,8 @@ function AccountPage() {
               ) : orders.length === 0 ? (
                 <div className="mt-5 border border-border p-6">
                   <p className="text-sm text-muted-foreground">
-                    Orders placed with your verified account email will appear here.
+                    Orders placed while signed in appear here. For earlier orders, open the tracking
+                    link and choose “Save to my account”.
                   </p>
                   <AhabLink to="/shop" className="mt-5">
                     Discover the collection

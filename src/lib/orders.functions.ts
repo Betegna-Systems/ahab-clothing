@@ -5,6 +5,13 @@ import { hasValidImageSignature } from "@/lib/image-validation";
 import type { Json } from "@/integrations/supabase/types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { FeatureDatabase } from "@/lib/feature-database";
+import { priceOrder } from "@/lib/order-pricing";
+import {
+  canClaimOrder,
+  canSubmitReceipt,
+  isOrderOwner,
+  reviewEligibility,
+} from "@/lib/order-access";
 
 async function getFeatureAdmin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -37,6 +44,8 @@ const orderSchema = z.object({
   subtotal: z.number().min(0),
   shipping: z.number().min(0),
   total: z.number().min(0),
+  promoCode: z.string().trim().max(40).nullable().optional(),
+  accountAccessToken: z.string().min(1).max(4096).optional(),
   paymentMethod: z.enum(["Cash on delivery", "Telebirr", "CBE bank transfer"]),
   notes: z.string().max(1000),
 });
@@ -49,15 +58,54 @@ const orderResultSchema = z.discriminatedUnion("ok", [
   }),
 ]);
 
+async function loadOrderCatalog() {
+  const { fetchAllFirestoreProducts, getAllProductsCached } =
+    await import("@/lib/firestore-products");
+  await fetchAllFirestoreProducts();
+  return getAllProductsCached();
+}
+
 export const placeOrder = createServerFn({ method: "POST" })
   .validator((d: unknown) => orderSchema.parse(d))
   .handler(async ({ data }) => {
+    const priced = priceOrder(data.items, await loadOrderCatalog(), data.promoCode);
+    if (!priced.ok) {
+      return {
+        ok: false as const,
+        reason: priced.reason === "invalid_promo" ? ("price_changed" as const) : priced.reason,
+      };
+    }
+    // The browser's figures are only a consistency check; the server's are saved.
+    if (
+      priced.subtotal !== data.subtotal ||
+      priced.shipping !== data.shipping ||
+      priced.total !== data.total ||
+      priced.items.some((item, index) => item.price !== data.items[index]!.price)
+    ) {
+      return { ok: false as const, reason: "price_changed" as const };
+    }
+
     const supabaseAdmin = await getFeatureAdmin();
-    const { paymentAccessToken, ...order } = data;
+    const account = data.accountAccessToken
+      ? await verifyAccountUser(data.accountAccessToken)
+      : null;
+    const promoNote = priced.promoCode
+      ? `Promo code ${priced.promoCode}: -${priced.discount} ETB`
+      : "";
     const { data: result, error } = await supabaseAdmin.rpc("place_order_with_inventory", {
       p_order: {
-        ...order,
-        paymentAccessTokenHash: await hashPaymentToken(paymentAccessToken),
+        orderNumber: data.orderNumber,
+        createdAt: new Date().toISOString(),
+        customer: data.customer,
+        items: priced.items,
+        subtotal: priced.subtotal,
+        shipping: priced.shipping,
+        total: priced.total,
+        paymentMethod: data.paymentMethod,
+        notes: [promoNote, data.notes].filter(Boolean).join("\n").slice(0, 1000),
+        paymentAccessTokenHash: await hashPaymentToken(data.paymentAccessToken),
+        // Ignored until 202611060001_order_ownership.sql is deployed.
+        customerUserId: account?.ok ? account.userId : null,
       },
     });
     if (error) {
@@ -71,7 +119,7 @@ export const placeOrder = createServerFn({ method: "POST" })
     const { notifyAdminsOfNewOrder } = await import("@/lib/admin-notifications.server");
     await notifyAdminsOfNewOrder({
       orderNumber: data.orderNumber,
-      total: data.total,
+      total: priced.total,
       paymentMethod: data.paymentMethod,
       customerName: data.customer.name,
       customerPhone: data.customer.phone,
@@ -125,43 +173,49 @@ const accountOrdersSchema = z.object({
   accessToken: z.string().min(1).max(4096),
 });
 
+/** Verified-email account with MFA enforced when the customer has opted in. */
+async function verifyAccountUser(accessToken: string) {
+  const supabaseAdmin = await getFeatureAdmin();
+  const { data: claimsData, error: claimsError } = await supabaseAdmin.auth.getClaims(accessToken);
+  const userId = claimsData?.claims?.sub;
+  if (claimsError || typeof userId !== "string") {
+    return { ok: false as const, reason: "email_not_verified" as const };
+  }
+
+  const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(accessToken);
+  const user = authData.user;
+  if (authError || !user?.email || !user.email_confirmed_at || user.id !== userId) {
+    return { ok: false as const, reason: "email_not_verified" as const };
+  }
+
+  const { data: securitySettings, error: securityError } = await supabaseAdmin
+    .from("account_security_settings")
+    .select("mfa_required")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (securityError) {
+    console.error("Customer account security lookup failed:", securityError.message);
+    throw new Error("Your account is temporarily unavailable.");
+  }
+  if (securitySettings?.mfa_required && claimsData?.claims?.aal !== "aal2") {
+    return { ok: false as const, reason: "mfa_required" as const };
+  }
+
+  return { ok: true as const, userId };
+}
+
 export const getAccountOrders = createServerFn({ method: "GET" })
   .validator((d: unknown) => accountOrdersSchema.parse(d))
   .handler(async ({ data }) => {
+    const account = await verifyAccountUser(data.accessToken);
+    if (!account.ok) return account;
+
+    // Ownership is the explicit account link only; a matching email never grants access.
     const supabaseAdmin = await getFeatureAdmin();
-    const { data: claimsData, error: claimsError } = await supabaseAdmin.auth.getClaims(
-      data.accessToken,
-    );
-    const userId = claimsData?.claims?.sub;
-    if (claimsError || typeof userId !== "string") {
-      return { ok: false as const, reason: "email_not_verified" as const };
-    }
-
-    const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(data.accessToken);
-    const user = authData.user;
-
-    if (authError || !user?.email || !user.email_confirmed_at) {
-      return { ok: false as const, reason: "email_not_verified" as const };
-    }
-
-    const { data: securitySettings, error: securityError } = await supabaseAdmin
-      .from("account_security_settings")
-      .select("mfa_required")
-      .eq("user_id", userId)
-      .maybeSingle();
-    if (securityError) {
-      console.error("Customer account security lookup failed:", securityError.message);
-      throw new Error("Order history is temporarily unavailable.");
-    }
-    if (securitySettings?.mfa_required && claimsData?.claims?.aal !== "aal2") {
-      return { ok: false as const, reason: "mfa_required" as const };
-    }
-
-    const emailPattern = user.email.replace(/[\\%_*]/g, "\\$&");
     const { data: orders, error } = await supabaseAdmin
       .from("orders")
-      .select("order_number, status, payment_status, created_at, total, items")
-      .ilike("email", emailPattern)
+      .select("order_number, status, payment_status, created_at, total, items, customer_user_id")
+      .eq("customer_user_id", account.userId)
       .order("created_at", { ascending: false })
       .limit(100);
 
@@ -172,15 +226,61 @@ export const getAccountOrders = createServerFn({ method: "GET" })
 
     return {
       ok: true as const,
-      orders: (orders ?? []).map((order) => ({
-        orderNumber: order.order_number,
-        status: order.status,
-        paymentStatus: order.payment_status,
-        createdAt: order.created_at,
-        total: order.total,
-        items: orderItemsForTracking(order.items),
-      })),
+      orders: (orders ?? [])
+        .filter((order) => isOrderOwner(order, account.userId))
+        .map((order) => ({
+          orderNumber: order.order_number,
+          status: order.status,
+          paymentStatus: order.payment_status,
+          createdAt: order.created_at,
+          total: order.total,
+          items: orderItemsForTracking(order.items),
+        })),
     };
+  });
+
+const claimOrderSchema = paymentAccessSchema.extend({
+  accessToken: z.string().min(1).max(4096),
+});
+
+/** Links a guest order to the signed-in account using the order's private tracking link. */
+export const claimAccountOrder = createServerFn({ method: "POST" })
+  .validator((d: unknown) => claimOrderSchema.parse(d))
+  .handler(async ({ data }) => {
+    const account = await verifyAccountUser(data.accessToken);
+    if (!account.ok) return account;
+
+    const supabaseAdmin = await getFeatureAdmin();
+    const tokenHash = await hashPaymentToken(data.token);
+    const { data: order, error } = await supabaseAdmin
+      .from("orders")
+      .select("order_number, customer_user_id, payment_access_token_hash")
+      .eq("order_number", data.orderNumber)
+      .maybeSingle();
+    if (error) {
+      console.error("Order claim lookup failed:", error.message);
+      return { ok: false as const, reason: "failed" as const };
+    }
+
+    const decision = canClaimOrder(order, tokenHash, account.userId);
+    if (decision === "already_yours") return { ok: true as const };
+    if (decision !== "claim") return { ok: false as const, reason: decision };
+
+    // The null guard keeps two accounts from claiming the same order concurrently.
+    const { data: claimed, error: claimError } = await supabaseAdmin
+      .from("orders")
+      .update({ customer_user_id: account.userId })
+      .eq("order_number", data.orderNumber)
+      .eq("payment_access_token_hash", tokenHash)
+      .is("customer_user_id", null)
+      .select("order_number");
+    if (claimError) {
+      console.error("Order claim failed:", claimError.message);
+      return { ok: false as const, reason: "failed" as const };
+    }
+    return claimed?.length
+      ? { ok: true as const }
+      : { ok: false as const, reason: "claimed_by_other" as const };
   });
 
 function orderItemsForTracking(items: Json): { slug: string; name: string }[] {
@@ -225,14 +325,12 @@ export const submitVerifiedReview = createServerFn({ method: "POST" })
       .maybeSingle();
 
     if (orderError) throw orderError;
-    if (!order || order.payment_access_token_hash !== tokenHash) {
-      return { ok: false as const, reason: "order_not_found" as const };
-    }
-    if (order.status.trim().toLowerCase() !== "delivered") {
-      return { ok: false as const, reason: "not_delivered" as const };
-    }
-    if (!orderItemsForTracking(order.items).some((item) => item.slug === data.productSlug)) {
-      return { ok: false as const, reason: "product_not_ordered" as const };
+    const eligibility = reviewEligibility(order, tokenHash, data.productSlug);
+    if (eligibility !== "allow" || !order) {
+      return {
+        ok: false as const,
+        reason: eligibility === "allow" ? "order_not_found" : eligibility,
+      };
     }
 
     let photoPath: string | null = null;
@@ -399,16 +497,12 @@ export const submitPaymentProof = createServerFn({ method: "POST" })
       .eq("order_number", data.orderNumber)
       .maybeSingle();
 
-    if (
-      lookupError ||
-      !order ||
-      order.payment_access_token_hash !== tokenHash ||
-      !["Telebirr", "CBE bank transfer"].includes(order.payment_method)
-    ) {
-      return { ok: false as const, reason: "order_not_found" as const };
-    }
-    if (order.payment_status !== "pending") {
-      return { ok: false as const, reason: "already_submitted" as const };
+    const receiptDecision = lookupError ? "order_not_found" : canSubmitReceipt(order, tokenHash);
+    if (receiptDecision !== "accept" || !order) {
+      return {
+        ok: false as const,
+        reason: receiptDecision === "accept" ? "order_not_found" : receiptDecision,
+      };
     }
 
     const extension =

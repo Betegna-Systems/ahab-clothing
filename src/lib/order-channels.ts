@@ -50,6 +50,9 @@ export type OrderPayload = {
   subtotal: number;
   shipping: number;
   total: number;
+  promoCode: string | null;
+  /** Signed-in customer's session token; links the order to their account. */
+  accountAccessToken?: string;
   paymentMethod: string;
   notes: string;
 };
