@@ -61,7 +61,7 @@ type Inventory = {
 };
 type Security = { user_id: string; mfa_required: boolean; updated_at: string };
 type LiveOrders = Database["public"]["Tables"]["orders"];
-// Pending: 202611060001_order_ownership.sql adds customer_user_id.
+// 202611060001_order_ownership.sql adds customer_user_id (not yet in the generated types).
 type OrderOwnership = { customer_user_id?: string | null };
 type FeatureTables = {
   orders: {

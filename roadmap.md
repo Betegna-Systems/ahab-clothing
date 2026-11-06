@@ -2,10 +2,10 @@
 - [x] Design system, imagery, product data, cart/wishlist store
 - [x] Header, footer, cart drawer, search
 - [x] All pages (home, shop, product, lookbook, custom, about, contact, wishlist, account, checkout, policies) — reuse existing images only, no new generation
-- [ ] Accounts/orders with saved wishlist
+- [x] Accounts/orders with saved wishlist
 - [ ] Custom logo and brand polish
 - [x] Repair unfinished checkout and stock checks; activate pending order support
 - [x] Activate private payment receipt uploads
-- [ ] Activate account storage and verified reviews
+- [x] Activate account storage and verified reviews
 - [ ] Finish suit/top sizing guide and inspect SEO
 - [ ] Verify priority shopping and account flows; Telegram alerts excluded
