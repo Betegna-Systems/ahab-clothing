@@ -29,6 +29,8 @@ import { Route as AdminCustomOrdersRouteImport } from './routes/admin.custom-ord
 import { Route as PaymentOrderNumberRouteImport } from './routes/payment.$orderNumber'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
 import { Route as TrackingOrderNumberRouteImport } from './routes/tracking.$orderNumber'
+import { Route as ApiAdminCloudinarySignatureRouteImport } from './routes/api.admin.cloudinary-signature'
+import { Route as ApiAdminFirebaseTokenRouteImport } from './routes/api.admin.firebase-token'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -130,6 +132,17 @@ const TrackingOrderNumberRoute = TrackingOrderNumberRouteImport.update({
   path: '/tracking/$orderNumber',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminCloudinarySignatureRoute =
+  ApiAdminCloudinarySignatureRouteImport.update({
+    id: '/api/admin/cloudinary-signature',
+    path: '/api/admin/cloudinary-signature',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiAdminFirebaseTokenRoute = ApiAdminFirebaseTokenRouteImport.update({
+  id: '/api/admin/firebase-token',
+  path: '/api/admin/firebase-token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -152,6 +165,8 @@ export interface FileRoutesByFullPath {
   '/payment/$orderNumber': typeof PaymentOrderNumberRoute
   '/product/$slug': typeof ProductSlugRoute
   '/tracking/$orderNumber': typeof TrackingOrderNumberRoute
+  '/api/admin/cloudinary-signature': typeof ApiAdminCloudinarySignatureRoute
+  '/api/admin/firebase-token': typeof ApiAdminFirebaseTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -174,6 +189,8 @@ export interface FileRoutesByTo {
   '/payment/$orderNumber': typeof PaymentOrderNumberRoute
   '/product/$slug': typeof ProductSlugRoute
   '/tracking/$orderNumber': typeof TrackingOrderNumberRoute
+  '/api/admin/cloudinary-signature': typeof ApiAdminCloudinarySignatureRoute
+  '/api/admin/firebase-token': typeof ApiAdminFirebaseTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -197,6 +214,8 @@ export interface FileRoutesById {
   '/payment/$orderNumber': typeof PaymentOrderNumberRoute
   '/product/$slug': typeof ProductSlugRoute
   '/tracking/$orderNumber': typeof TrackingOrderNumberRoute
+  '/api/admin/cloudinary-signature': typeof ApiAdminCloudinarySignatureRoute
+  '/api/admin/firebase-token': typeof ApiAdminFirebaseTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -221,6 +240,8 @@ export interface FileRouteTypes {
     | '/payment/$orderNumber'
     | '/product/$slug'
     | '/tracking/$orderNumber'
+    | '/api/admin/cloudinary-signature'
+    | '/api/admin/firebase-token'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -243,6 +264,8 @@ export interface FileRouteTypes {
     | '/payment/$orderNumber'
     | '/product/$slug'
     | '/tracking/$orderNumber'
+    | '/api/admin/cloudinary-signature'
+    | '/api/admin/firebase-token'
   id:
     | '__root__'
     | '/'
@@ -265,6 +288,8 @@ export interface FileRouteTypes {
     | '/payment/$orderNumber'
     | '/product/$slug'
     | '/tracking/$orderNumber'
+    | '/api/admin/cloudinary-signature'
+    | '/api/admin/firebase-token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -288,6 +313,8 @@ export interface RootRouteChildren {
   PaymentOrderNumberRoute: typeof PaymentOrderNumberRoute
   ProductSlugRoute: typeof ProductSlugRoute
   TrackingOrderNumberRoute: typeof TrackingOrderNumberRoute
+  ApiAdminCloudinarySignatureRoute: typeof ApiAdminCloudinarySignatureRoute
+  ApiAdminFirebaseTokenRoute: typeof ApiAdminFirebaseTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -432,6 +459,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TrackingOrderNumberRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/cloudinary-signature': {
+      id: '/api/admin/cloudinary-signature'
+      path: '/api/admin/cloudinary-signature'
+      fullPath: '/api/admin/cloudinary-signature'
+      preLoaderRoute: typeof ApiAdminCloudinarySignatureRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/firebase-token': {
+      id: '/api/admin/firebase-token'
+      path: '/api/admin/firebase-token'
+      fullPath: '/api/admin/firebase-token'
+      preLoaderRoute: typeof ApiAdminFirebaseTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -456,6 +497,8 @@ const rootRouteChildren: RootRouteChildren = {
   PaymentOrderNumberRoute: PaymentOrderNumberRoute,
   ProductSlugRoute: ProductSlugRoute,
   TrackingOrderNumberRoute: TrackingOrderNumberRoute,
+  ApiAdminCloudinarySignatureRoute: ApiAdminCloudinarySignatureRoute,
+  ApiAdminFirebaseTokenRoute: ApiAdminFirebaseTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
