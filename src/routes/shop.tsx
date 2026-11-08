@@ -2,7 +2,11 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
 import { type Category, inCategory } from "@/lib/products";
-import { useAllProducts } from "@/lib/firestore-products";
+import {
+  fetchAllFirestoreProducts,
+  getAllProductsCached,
+  useAllProducts,
+} from "@/lib/firestore-products";
 import { ProductCard } from "@/components/site/ProductCard";
 import { collectionJsonLd, seo } from "@/lib/seo";
 import { cn } from "@/lib/utils";
@@ -34,13 +38,21 @@ export const Route = createFileRoute("/shop")({
   validateSearch: (s: Record<string, unknown>): { category?: Category | undefined } => ({
     category: CATS.includes(s["category"] as Category) ? (s["category"] as Category) : undefined,
   }),
-  head: () =>
+  // Structured data lists the live catalog; fetched only when rendering on the server so
+  // client-side navigation to the shop stays instant.
+  loader: async () => {
+    if (typeof window === "undefined") await fetchAllFirestoreProducts();
+    return {
+      catalog: getAllProductsCached().map(({ slug, name }) => ({ slug, name })),
+    };
+  },
+  head: ({ loaderData }) =>
     seo(
       "Shop",
       "Shop AHAB Suits and bodycon tops — tailored women's suits and sculpted tops, made in Addis Ababa.",
       {
         path: "/shop",
-        jsonLd: collectionJsonLd(),
+        jsonLd: collectionJsonLd(undefined, loaderData?.catalog),
       },
     ),
   component: Shop,

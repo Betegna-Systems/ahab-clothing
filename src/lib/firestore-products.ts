@@ -83,74 +83,85 @@ export function firestoreRawToProduct(id: string, rawFields: Record<string, unkn
   };
 }
 
+// Firestore is the catalog: the admin app adds, edits and deletes products there. The
+// built-in list in products.ts is only an emergency fallback for when Firestore cannot be
+// reached, so a product deleted in the admin app does not reappear from it.
 let _cachedFirestoreProducts: Product[] = [];
+let _firestoreLoaded = false;
+
+const SLUG_PATTERN = /^[a-z0-9-]{1,120}$/;
+
+/** The catalog to show: Firestore once it has answered, otherwise the built-in fallback. */
+function catalogFrom(remote: Product[] | null): Product[] {
+  return remote ?? staticProducts;
+}
 
 /**
  * Fetch a single product by slug from Firestore REST API
  */
 export async function fetchProductBySlug(slug: string): Promise<Product | undefined> {
-  // Check static list first for standard products
-  const staticFound = staticProducts.find((p) => p.slug === slug);
-  if (staticFound) return staticFound;
-
-  // Check in-memory cache
-  const cached = _cachedFirestoreProducts.find((p) => p.slug === slug);
-  if (cached) return cached;
+  if (!SLUG_PATTERN.test(slug)) return undefined;
 
   try {
     const res = await fetchJson(`${REST_BASE_URL}/${slug}`);
     if (res.ok) {
       const doc = await res.json();
-      const product = firestoreRawToProduct(slug, doc.fields ?? {});
-      _cachedFirestoreProducts.unshift(product);
-      return product;
+      return firestoreRawToProduct(slug, doc.fields ?? {});
     }
+    // Firestore answered: the product does not exist (or was deleted).
+    if (res.status === 404) return undefined;
   } catch (err) {
     console.warn("fetchProductBySlug error:", err);
   }
 
-  return undefined;
+  // Firestore unreachable: use the last good catalog, then the built-in fallback.
+  return getProductCached(slug);
 }
 
 /**
- * Fetch all Firestore products via REST API
+ * Fetch all Firestore products via REST API. Returns null when Firestore could not be read.
  */
-export async function fetchAllFirestoreProducts(): Promise<Product[]> {
+export async function fetchAllFirestoreProducts(): Promise<Product[] | null> {
   try {
-    const res = await fetchJson(REST_BASE_URL);
-    if (!res.ok) return [];
-    const data = await res.json();
-    const docs = (data.documents as Array<{ name: string; fields: Record<string, unknown> }>) ?? [];
-    const products = docs.map((d) => {
-      const id = d.name.split("/").pop()!;
-      return firestoreRawToProduct(id, d.fields ?? {});
-    });
+    const products: Product[] = [];
+    let pageToken = "";
+    do {
+      const res = await fetchJson(
+        `${REST_BASE_URL}?pageSize=300${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ""}`,
+      );
+      if (!res.ok) return null;
+      const data = await res.json();
+      const docs =
+        (data.documents as Array<{ name: string; fields: Record<string, unknown> }>) ?? [];
+      for (const d of docs) {
+        products.push(firestoreRawToProduct(d.name.split("/").pop()!, d.fields ?? {}));
+      }
+      pageToken = typeof data.nextPageToken === "string" ? data.nextPageToken : "";
+    } while (pageToken);
+
     _cachedFirestoreProducts = products;
+    _firestoreLoaded = true;
     return products;
   } catch (err) {
     console.warn("fetchAllFirestoreProducts error:", err);
-    return [];
+    return null;
   }
 }
 
 export function getAllProductsCached(): Product[] {
-  const firestoreSlugs = new Set(_cachedFirestoreProducts.map((p) => p.slug));
-  const kept = staticProducts.filter((p) => !firestoreSlugs.has(p.slug));
-  return [..._cachedFirestoreProducts, ...kept];
+  return catalogFrom(_firestoreLoaded ? _cachedFirestoreProducts : null);
 }
 
 export function getProductCached(slug: string): Product | undefined {
-  return (
-    _cachedFirestoreProducts.find((p) => p.slug === slug) ??
-    staticProducts.find((p) => p.slug === slug)
-  );
+  return getAllProductsCached().find((p) => p.slug === slug);
 }
 
 /**
- * Client hook: fetches products on mount, polls periodically, and blends with static catalog
+ * Client hook: fetches products on mount and polls periodically. Shows the built-in
+ * fallback until Firestore answers; a later failed poll keeps the last good catalog.
  */
 export function useAllProducts() {
-  const [dynamicProducts, setDynamicProducts] = useState<Product[]>([]);
+  const [remoteProducts, setRemoteProducts] = useState<Product[] | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -159,7 +170,7 @@ export function useAllProducts() {
     async function load() {
       const remote = await fetchAllFirestoreProducts();
       if (mounted) {
-        setDynamicProducts(remote);
+        if (remote) setRemoteProducts(remote);
         setLoading(false);
       }
     }
@@ -174,11 +185,5 @@ export function useAllProducts() {
     };
   }, []);
 
-  const merged = (() => {
-    const dynamicSlugs = new Set(dynamicProducts.map((p) => p.slug));
-    const kept = staticProducts.filter((p) => !dynamicSlugs.has(p.slug));
-    return [...dynamicProducts, ...kept];
-  })();
-
-  return { products: merged, loading };
+  return { products: catalogFrom(remoteProducts), loading };
 }

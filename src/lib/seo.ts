@@ -1,4 +1,4 @@
-import { products, type Product } from "@/lib/products";
+import { products as staticCatalog, type Product } from "@/lib/products";
 import { INSTAGRAM_URL, TIKTOK_URL } from "@/lib/social";
 
 export const SITE_NAME = "AHAB Clothing";
@@ -202,7 +202,12 @@ export function productJsonLd(
   };
 }
 
-export function collectionJsonLd(origin = SITE_URL) {
+type CatalogEntry = Pick<Product, "slug" | "name" | "createdAt">;
+
+export function collectionJsonLd(
+  origin = SITE_URL,
+  products: readonly Pick<Product, "slug" | "name">[] = staticCatalog,
+) {
   return {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
@@ -247,7 +252,10 @@ function xmlEscape(value: string) {
     .replaceAll("'", "&apos;");
 }
 
-export function buildSitemapXml(origin = SITE_URL) {
+export function buildSitemapXml(
+  origin = SITE_URL,
+  products: readonly CatalogEntry[] = staticCatalog,
+) {
   const staticUrls = PUBLIC_SITEMAP_PAGES.map(
     (page) => `  <url>
     <loc>${xmlEscape(absoluteUrl(page.path, origin))}</loc>
