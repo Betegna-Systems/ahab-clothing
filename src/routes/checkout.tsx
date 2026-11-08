@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { seo } from "@/lib/seo";
 import { formatPrice } from "@/lib/products";
+import { orderTotals } from "@/lib/order-pricing";
+import { generateOrderNumber } from "@/lib/order-access";
 import { useShop } from "@/lib/shop-store";
 import { AhabButton, AhabLink } from "@/components/site/ui";
 import { ChatOrderButtons } from "@/components/site/ChatOrderButtons";
@@ -52,7 +54,6 @@ function CheckoutPage() {
   const {
     lineItems,
     subtotal,
-    discount,
     promoCode,
     clearCart,
     inventoryStatus,
@@ -69,9 +70,7 @@ function CheckoutPage() {
   const [sending, setSending] = useState(false);
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState("");
-  const shipping = subtotal === 0 || subtotal >= 5000 ? 0 : 250;
-  const discountAmount = Math.round(subtotal * discount);
-  const total = subtotal - discountAmount + shipping;
+  const { discount: discountAmount, shipping, total } = orderTotals(subtotal, promoCode);
 
   const setInputValue = useCallback((name: string, value: string) => {
     const input = formRef.current?.elements.namedItem(name);
@@ -157,7 +156,7 @@ function CheckoutPage() {
         image: product.images[colorIdx >= 0 ? colorIdx : 0] ?? product.images[0] ?? "",
       };
     });
-    const number = `AHAB-${Date.now().toString(36).toUpperCase().slice(-6)}`;
+    const number = generateOrderNumber((bytes) => crypto.getRandomValues(bytes));
     const name = `${g("first")} ${g("last")}`;
     const selectedPayment = getPaymentMethod(payment)!;
     const paymentLabel = selectedPayment.label;
@@ -165,7 +164,11 @@ function CheckoutPage() {
     setSending(true);
     let result: Awaited<ReturnType<typeof submitOrder>> | undefined;
     try {
+      const accountAccessToken = (await initializeSupabaseBrowser())
+        ? (await supabase.auth.getSession()).data.session?.access_token
+        : undefined;
       result = await submitOrder({
+        ...(accountAccessToken ? { accountAccessToken } : {}),
         orderNumber: number,
         createdAt: new Date().toISOString(),
         customer: {
@@ -180,6 +183,7 @@ function CheckoutPage() {
         subtotal,
         shipping,
         total,
+        promoCode,
         paymentMethod: paymentLabel,
         paymentAccessToken,
         notes: g("notes"),
@@ -198,7 +202,11 @@ function CheckoutPage() {
           ? "One or more selected size and color combinations are not available."
           : result.reason === "insufficient_stock"
             ? "There isn't enough stock for the requested quantity. Update your bag and try again."
-            : "We couldn't send your order. Please try again.",
+            : result.reason === "price_changed"
+              ? "Prices or delivery charges have changed. Review your bag and try again."
+              : result.reason === "rate_limited"
+                ? "Several orders were just placed with this phone number. Please contact AHAB on chat to place another."
+                : "We couldn't send your order. Please try again.",
       );
       await refreshInventory();
       return;

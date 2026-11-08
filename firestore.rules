@@ -1,0 +1,28 @@
+rules_version = '2';
+
+// Firestore security rules for the AHAB product catalog.
+//
+// Why this matters: checkout (`placeOrder`) prices every order from the `products`
+// collection, so anyone who can write a product can change what customers are charged.
+//
+// - The storefront only reads `products` (public REST reads).
+// - Writes are limited to signed-in Firebase users carrying the `admin` custom claim.
+//   Grant it once with the Admin SDK: `getAuth().setCustomUserClaims(uid, { admin: true })`.
+//   Server code using the Firebase Admin SDK bypasses these rules and is unaffected.
+// - Everything else is denied.
+//
+// Deploy: `firebase deploy --only firestore:rules` (or paste into
+// Firebase console → Firestore Database → Rules) and confirm the admin app can still edit.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /products/{productId} {
+      allow read: if true;
+      allow create, update, delete: if request.auth != null
+        && request.auth.token.admin == true;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

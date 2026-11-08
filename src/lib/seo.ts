@@ -278,6 +278,9 @@ Allow: /
 Disallow: /checkout
 Disallow: /account
 Disallow: /wishlist
+Disallow: /payment/
+Disallow: /tracking/
+Disallow: /admin/
 
 Sitemap: ${origin}/sitemap.xml
 `;
