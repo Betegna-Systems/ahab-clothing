@@ -10,6 +10,7 @@ import {
   canClaimOrder,
   canSubmitReceipt,
   isOrderOwner,
+  ORDER_NUMBER_PATTERN,
   reviewEligibility,
 } from "@/lib/order-access";
 
@@ -28,13 +29,18 @@ const line = z.object({
   image: z.string().max(2000),
 });
 
+const orderNumberSchema = z.string().regex(ORDER_NUMBER_PATTERN);
+
+/** Orders a single phone number may place per hour; stops scripted stock reservation. */
+const MAX_ORDERS_PER_PHONE_PER_HOUR = 5;
+
 const orderSchema = z.object({
-  orderNumber: z.string().max(40),
+  orderNumber: orderNumberSchema,
   paymentAccessToken: z.string().uuid(),
   createdAt: z.string().max(40),
   customer: z.object({
     name: z.string().trim().min(1).max(200),
-    email: z.string().max(200),
+    email: z.union([z.literal(""), z.string().trim().email().max(200)]),
     phone: z.string().trim().min(3).max(40),
     address: z.string().max(500),
     subCity: z.string().max(100),
@@ -86,6 +92,19 @@ export const placeOrder = createServerFn({ method: "POST" })
     }
 
     const supabaseAdmin = await getFeatureAdmin();
+    const { count: recentOrders, error: rateLimitError } = await supabaseAdmin
+      .from("orders")
+      .select("order_number", { count: "exact", head: true })
+      .eq("phone", data.customer.phone)
+      .gte("created_at", new Date(Date.now() - 60 * 60 * 1000).toISOString());
+    if (rateLimitError) {
+      console.error("Order rate-limit check failed:", rateLimitError.message);
+      return { ok: false as const, reason: "failed" as const };
+    }
+    if ((recentOrders ?? 0) >= MAX_ORDERS_PER_PHONE_PER_HOUR) {
+      return { ok: false as const, reason: "rate_limited" as const };
+    }
+
     const account = data.accountAccessToken
       ? await verifyAccountUser(data.accountAccessToken)
       : null;
@@ -127,8 +146,6 @@ export const placeOrder = createServerFn({ method: "POST" })
 
     return { ok: true as const };
   });
-
-const orderNumberSchema = z.string().regex(/^AHAB-[A-Z0-9]{4,12}$/);
 
 async function hashPaymentToken(token: string) {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token));

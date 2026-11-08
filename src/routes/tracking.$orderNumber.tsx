@@ -3,14 +3,18 @@ import { useEffect, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { AhabLink } from "@/components/site/ui";
 import { claimAccountOrder, getTrackedOrder, submitVerifiedReview } from "@/lib/orders.functions";
+import { isWellFormedOrderLink } from "@/lib/order-access";
 import { initializeSupabaseBrowser, supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/tracking/$orderNumber")({
-  validateSearch: z.object({ token: z.string().uuid() }),
+  // A missing or mangled link shows "unavailable" rather than a server error.
+  validateSearch: z.object({ token: z.string().catch("") }),
   loaderDeps: ({ search }) => ({ token: search.token }),
   loader: ({ params, deps }) =>
-    getTrackedOrder({ data: { orderNumber: params.orderNumber, token: deps.token } }),
+    isWellFormedOrderLink(params.orderNumber, deps.token)
+      ? getTrackedOrder({ data: { orderNumber: params.orderNumber, token: deps.token } })
+      : null,
   head: () => ({
     meta: [
       { title: "Track Your Order | AHAB" },

@@ -4,7 +4,10 @@ import { orderTotals, priceOrder } from "./order-pricing.ts";
 import {
   canClaimOrder,
   canSubmitReceipt,
+  generateOrderNumber,
   isOrderOwner,
+  isWellFormedOrderLink,
+  ORDER_NUMBER_PATTERN,
   reviewEligibility,
 } from "./order-access.ts";
 
@@ -179,5 +182,28 @@ describe("review eligibility", () => {
       "product_not_ordered",
     );
     assert.equal(reviewEligibility(order, OTHER_TOKEN, "bete-seamless-crew"), "order_not_found");
+  });
+});
+
+describe("order links", () => {
+  const uuid = "3f2b8c1e-9a4d-4e6f-8b2a-1c3d5e7f9a0b";
+
+  it("generates random order numbers the tracking routes accept", () => {
+    const seen = new Set<string>();
+    for (let i = 0; i < 200; i += 1) {
+      const number = generateOrderNumber((bytes) => crypto.getRandomValues(bytes));
+      assert.match(number, ORDER_NUMBER_PATTERN);
+      assert.doesNotMatch(number.slice(5), /[01IO]/);
+      seen.add(number);
+    }
+    assert.equal(seen.size, 200);
+  });
+
+  it("treats missing or malformed links as unavailable instead of throwing", () => {
+    assert.equal(isWellFormedOrderLink("AHAB-7K2M9QXP", uuid), true);
+    assert.equal(isWellFormedOrderLink("AHAB-7K2M9QXP", undefined), false);
+    assert.equal(isWellFormedOrderLink("AHAB-7K2M9QXP", "not-a-uuid"), false);
+    assert.equal(isWellFormedOrderLink("ahab-7k2m9qxp", uuid), false);
+    assert.equal(isWellFormedOrderLink("AHAB-<script>", uuid), false);
   });
 });

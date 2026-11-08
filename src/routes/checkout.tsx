@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 import { seo } from "@/lib/seo";
 import { formatPrice } from "@/lib/products";
 import { orderTotals } from "@/lib/order-pricing";
+import { generateOrderNumber } from "@/lib/order-access";
 import { useShop } from "@/lib/shop-store";
 import { AhabButton, AhabLink } from "@/components/site/ui";
 import { ChatOrderButtons } from "@/components/site/ChatOrderButtons";
@@ -155,7 +156,7 @@ function CheckoutPage() {
         image: product.images[colorIdx >= 0 ? colorIdx : 0] ?? product.images[0] ?? "",
       };
     });
-    const number = `AHAB-${Date.now().toString(36).toUpperCase().slice(-6)}`;
+    const number = generateOrderNumber((bytes) => crypto.getRandomValues(bytes));
     const name = `${g("first")} ${g("last")}`;
     const selectedPayment = getPaymentMethod(payment)!;
     const paymentLabel = selectedPayment.label;
@@ -203,7 +204,9 @@ function CheckoutPage() {
             ? "There isn't enough stock for the requested quantity. Update your bag and try again."
             : result.reason === "price_changed"
               ? "Prices or delivery charges have changed. Review your bag and try again."
-              : "We couldn't send your order. Please try again.",
+              : result.reason === "rate_limited"
+                ? "Several orders were just placed with this phone number. Please contact AHAB on chat to place another."
+                : "We couldn't send your order. Please try again.",
       );
       await refreshInventory();
       return;

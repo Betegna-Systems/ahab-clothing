@@ -5,15 +5,19 @@ import { z } from "zod";
 import { ChatOrderButtons } from "@/components/site/ChatOrderButtons";
 import { AhabLink } from "@/components/site/ui";
 import { getPaymentOrder, submitPaymentProof } from "@/lib/orders.functions";
+import { isWellFormedOrderLink } from "@/lib/order-access";
 import { PAYMENT_METHODS } from "@/lib/payment-methods";
 import { formatPrice } from "@/lib/products";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/payment/$orderNumber")({
-  validateSearch: z.object({ token: z.string().uuid() }),
+  // A missing or mangled link shows "unavailable" rather than a server error.
+  validateSearch: z.object({ token: z.string().catch("") }),
   loaderDeps: ({ search }) => ({ token: search.token }),
   loader: ({ params, deps }) =>
-    getPaymentOrder({ data: { orderNumber: params.orderNumber, token: deps.token } }),
+    isWellFormedOrderLink(params.orderNumber, deps.token)
+      ? getPaymentOrder({ data: { orderNumber: params.orderNumber, token: deps.token } })
+      : null,
   head: () => ({
     meta: [
       { title: "Complete Your Payment | AHAB" },
