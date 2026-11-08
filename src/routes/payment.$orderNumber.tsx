@@ -5,7 +5,7 @@ import { z } from "zod";
 import { ChatOrderButtons } from "@/components/site/ChatOrderButtons";
 import { AhabLink } from "@/components/site/ui";
 import { getPaymentOrder, submitPaymentProof } from "@/lib/orders.functions";
-import { isWellFormedOrderLink } from "@/lib/order-access";
+import { isPaymentConfirmed, isWellFormedOrderLink } from "@/lib/order-access";
 import { PAYMENT_METHODS } from "@/lib/payment-methods";
 import { formatPrice } from "@/lib/products";
 import { toast } from "sonner";
@@ -122,7 +122,7 @@ function PaymentPage() {
       }
       setOrder(latestOrder);
       toast.success(
-        latestOrder.paymentStatus === "confirmed"
+        isPaymentConfirmed(latestOrder.paymentStatus)
           ? "Payment confirmed."
           : "Payment is still awaiting verification.",
       );
@@ -160,7 +160,7 @@ function PaymentPage() {
 
   const chatMessage = `Hello AHAB, I paid for order ${orderNumber} via ${payment.label}. Amount: ${formatPrice(order.total)}. I will attach my payment screenshot here.`;
   const receiptSubmitted = order.paymentStatus !== "pending";
-  const paymentConfirmed = order.paymentStatus === "confirmed";
+  const paymentConfirmed = isPaymentConfirmed(order.paymentStatus);
 
   const onFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const selected = event.target.files?.[0] ?? null;

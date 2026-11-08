@@ -3,7 +3,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { AhabLink } from "@/components/site/ui";
 import { claimAccountOrder, getTrackedOrder, submitVerifiedReview } from "@/lib/orders.functions";
-import { isWellFormedOrderLink } from "@/lib/order-access";
+import { isPaymentConfirmed, isWellFormedOrderLink } from "@/lib/order-access";
 import { initializeSupabaseBrowser, supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -288,7 +288,7 @@ function OrderTrackingPage() {
     );
   }
 
-  const paymentConfirmed = order.paymentStatus === "confirmed";
+  const paymentConfirmed = isPaymentConfirmed(order.paymentStatus);
   const paymentReceiptSubmitted = order.paymentStatus === "receipt_submitted";
 
   return (

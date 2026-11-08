@@ -51,6 +51,19 @@ export function canClaimOrder(
 
 export const RECEIPT_PAYMENT_METHODS = ["Telebirr", "CBE bank transfer"];
 
+/** The admin app marks verified payments "paid"; "confirmed" is accepted for older orders. */
+export function isPaymentConfirmed(paymentStatus: string | null | undefined) {
+  return paymentStatus === "paid" || paymentStatus === "confirmed";
+}
+
+/** Customer-facing wording for an order's payment state. */
+export function paymentStatusLabel(paymentStatus: string, paymentMethod: string) {
+  if (isPaymentConfirmed(paymentStatus)) return "Payment confirmed";
+  if (paymentStatus === "receipt_submitted") return "Receipt received, being verified";
+  if (!RECEIPT_PAYMENT_METHODS.includes(paymentMethod)) return "Pay on delivery";
+  return "Awaiting payment";
+}
+
 export type ReceiptDecision = "accept" | "order_not_found" | "already_submitted";
 
 export function canSubmitReceipt(

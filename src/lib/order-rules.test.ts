@@ -6,8 +6,10 @@ import {
   canSubmitReceipt,
   generateOrderNumber,
   isOrderOwner,
+  isPaymentConfirmed,
   isWellFormedOrderLink,
   ORDER_NUMBER_PATTERN,
+  paymentStatusLabel,
   reviewEligibility,
 } from "./order-access.ts";
 
@@ -205,5 +207,24 @@ describe("order links", () => {
     assert.equal(isWellFormedOrderLink("AHAB-7K2M9QXP", "not-a-uuid"), false);
     assert.equal(isWellFormedOrderLink("ahab-7k2m9qxp", uuid), false);
     assert.equal(isWellFormedOrderLink("AHAB-<script>", uuid), false);
+  });
+});
+
+describe("payment status", () => {
+  it("treats the admin app's 'paid' (and legacy 'confirmed') as confirmed", () => {
+    assert.equal(isPaymentConfirmed("paid"), true);
+    assert.equal(isPaymentConfirmed("confirmed"), true);
+    assert.equal(isPaymentConfirmed("receipt_submitted"), false);
+    assert.equal(isPaymentConfirmed("pending"), false);
+  });
+
+  it("labels payment state for customers", () => {
+    assert.equal(paymentStatusLabel("paid", "Telebirr"), "Payment confirmed");
+    assert.equal(
+      paymentStatusLabel("receipt_submitted", "CBE bank transfer"),
+      "Receipt received, being verified",
+    );
+    assert.equal(paymentStatusLabel("pending", "Telebirr"), "Awaiting payment");
+    assert.equal(paymentStatusLabel("pending", "Cash on delivery"), "Pay on delivery");
   });
 });

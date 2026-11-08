@@ -6,6 +6,7 @@ import { initializeSupabaseBrowser } from "@/integrations/supabase/client";
 import { featureClient as supabase } from "@/lib/feature-client";
 import type { FeatureDatabase as Database } from "@/lib/feature-database";
 import { getAccountOrders } from "@/lib/orders.functions";
+import { paymentStatusLabel } from "@/lib/order-access";
 import { formatPrice } from "@/lib/products";
 import { seo } from "@/lib/seo";
 
@@ -14,6 +15,7 @@ type AccountOrder = {
   orderNumber: string;
   status: string;
   paymentStatus: string;
+  paymentMethod: string;
   createdAt: string;
   total: number;
   items: { slug: string; name: string }[];
@@ -970,7 +972,8 @@ function AccountPage() {
                         <p className="text-right text-sm">
                           {formatPrice(order.total)}
                           <span className="mt-1 block text-xs text-muted-foreground">
-                            {order.status} · Payment {order.paymentStatus}
+                            {order.status} ·{" "}
+                            {paymentStatusLabel(order.paymentStatus, order.paymentMethod)}
                           </span>
                         </p>
                       </div>

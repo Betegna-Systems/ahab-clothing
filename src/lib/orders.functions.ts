@@ -276,7 +276,9 @@ export const getAccountOrders = createServerFn({ method: "GET" })
     const supabaseAdmin = await getFeatureAdmin();
     const { data: orders, error } = await supabaseAdmin
       .from("orders")
-      .select("order_number, status, payment_status, created_at, total, items, customer_user_id")
+      .select(
+        "order_number, status, payment_status, payment_method, created_at, total, items, customer_user_id",
+      )
       .eq("customer_user_id", account.userId)
       .order("created_at", { ascending: false })
       .limit(100);
@@ -294,6 +296,7 @@ export const getAccountOrders = createServerFn({ method: "GET" })
           orderNumber: order.order_number,
           status: order.status,
           paymentStatus: order.payment_status,
+          paymentMethod: order.payment_method,
           createdAt: order.created_at,
           total: order.total,
           items: orderItemsForTracking(order.items),
