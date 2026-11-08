@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Heart, RotateCw, Star } from "lucide-react";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/products";
-import { getProductCached, fetchProductBySlug } from "@/lib/firestore-products";
+import { fetchProductBySlug } from "@/lib/firestore-products";
 import { breadcrumbJsonLd, productJsonLd, seo } from "@/lib/seo";
 import { useShop } from "@/lib/shop-store";
 import { ProductCard } from "@/components/site/ProductCard";
@@ -23,10 +23,9 @@ import { getProductVariantAvailability } from "@/lib/inventory.functions";
 
 export const Route = createFileRoute("/product/$slug")({
   loader: async ({ params }) => {
-    let product = getProductCached(params.slug);
-    if (!product) {
-      product = await fetchProductBySlug(params.slug);
-    }
+    // Always ask Firestore so edits made in the admin app show immediately; it falls back
+    // to the last known catalog when Firestore is unreachable.
+    const product = await fetchProductBySlug(params.slug);
     if (!product) throw notFound();
     const [reviews, availableVariants] = await Promise.all([
       getApprovedProductReviews({ data: { productSlug: product.slug } }),
