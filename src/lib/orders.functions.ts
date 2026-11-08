@@ -11,6 +11,7 @@ import {
   canSubmitReceipt,
   isOrderOwner,
   ORDER_NUMBER_PATTERN,
+  RECEIPT_PAYMENT_METHODS,
   reviewEligibility,
 } from "@/lib/order-access";
 
@@ -144,8 +145,52 @@ export const placeOrder = createServerFn({ method: "POST" })
       customerPhone: data.customer.phone,
     });
 
+    if (data.customer.email) {
+      await sendOrderConfirmationEmail(data, priced);
+    }
+
     return { ok: true as const };
   });
+
+/** Emails the customer their order summary and private tracking/payment links. */
+async function sendOrderConfirmationEmail(
+  data: z.infer<typeof orderSchema>,
+  priced: Extract<ReturnType<typeof priceOrder>, { ok: true }>,
+) {
+  try {
+    const [{ getRequest }, { buildOrderConfirmationEmail }, { sendEmail }, { PAYMENT_METHODS }] =
+      await Promise.all([
+        import("@tanstack/react-start/server"),
+        import("@/lib/order-email"),
+        import("@/lib/email.server"),
+        import("@/lib/payment-methods"),
+      ]);
+    // The site the customer ordered from, so links work before and after a domain change.
+    const origin = new URL(getRequest().url).origin;
+    const query = `?token=${encodeURIComponent(data.paymentAccessToken)}`;
+    const number = encodeURIComponent(data.orderNumber);
+    const payByTransfer = RECEIPT_PAYMENT_METHODS.includes(data.paymentMethod);
+
+    const email = buildOrderConfirmationEmail({
+      orderNumber: data.orderNumber,
+      customerName: data.customer.name,
+      items: priced.items,
+      subtotal: priced.subtotal,
+      discount: priced.discount,
+      shipping: priced.shipping,
+      total: priced.total,
+      paymentMethod: data.paymentMethod,
+      paymentAccount:
+        PAYMENT_METHODS.find((method) => method.label === data.paymentMethod)?.account ?? "",
+      trackingUrl: `${origin}/tracking/${number}${query}`,
+      paymentUrl: payByTransfer ? `${origin}/payment/${number}${query}` : null,
+    });
+    await sendEmail({ to: data.customer.email, ...email });
+  } catch (error) {
+    // The order is placed; a failed email must not turn it into an error.
+    console.error("Order confirmation email failed:", error);
+  }
+}
 
 async function hashPaymentToken(token: string) {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token));
