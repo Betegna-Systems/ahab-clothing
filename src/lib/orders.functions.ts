@@ -413,6 +413,19 @@ export const submitVerifiedReview = createServerFn({ method: "POST" })
       return { ok: false as const, reason: "save_failed" as const };
     }
 
+    // Reviews stay hidden until approved in the admin app, so tell admins one arrived.
+    try {
+      const { notifyAdminsOfNewReview } = await import("@/lib/admin-notifications.server");
+      await notifyAdminsOfNewReview({
+        orderNumber: order.order_number,
+        productSlug: data.productSlug,
+        reviewerName: data.reviewerName,
+        rating: data.rating,
+      });
+    } catch (error) {
+      console.error("New review notification could not be sent:", error);
+    }
+
     return { ok: true as const };
   });
 

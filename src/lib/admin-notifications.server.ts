@@ -99,6 +99,31 @@ export async function notifyAdminsOfNewCustomCommission(commission: CustomCommis
   );
 }
 
+export async function notifyAdminsOfNewReview(review: {
+  orderNumber: string;
+  productSlug: string;
+  reviewerName: string;
+  rating: number;
+}) {
+  await safelySendTelegramAlert(
+    [
+      "New AHAB review waiting for approval",
+      `Product: ${review.productSlug}`,
+      `Rating: ${"★".repeat(review.rating)}${"☆".repeat(5 - review.rating)}`,
+      `By: ${review.reviewerName} (order ${review.orderNumber})`,
+      "Approve it in the admin app → Reviews.",
+    ].join("\n"),
+    "New review",
+  );
+
+  await sendAdminPushNotification(
+    "New review to approve",
+    `${review.reviewerName} · ${review.rating}/5 · ${review.productSlug}`,
+    { type: "new_review", orderNumber: review.orderNumber },
+    "New review",
+  );
+}
+
 export async function notifyAdminsOfPaymentReceiptSubmission(order: OrderAlert) {
   await safelySendTelegramAlert(
     [
