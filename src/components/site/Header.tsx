@@ -16,6 +16,27 @@ const nav = [
   { label: "Contact", to: "/contact" },
 ] as const;
 
+// Desktop nav is split around the centred logo so links never run underneath it.
+const leftNav = nav.slice(0, 4);
+const rightNav = nav.slice(4);
+
+function NavLinks({ items }: { items: readonly (typeof nav)[number][] }) {
+  return (
+    <nav className="hidden items-center gap-7 xl:flex 2xl:gap-9">
+      {items.map((item) => (
+        <Link
+          key={item.label}
+          to={item.to}
+          {...("search" in item ? { search: item.search } : {})}
+          className="label-xs link-underline whitespace-nowrap text-foreground/80 hover:text-foreground"
+        >
+          {item.label}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
 export function Header() {
   const { cartCount, wishlist, setCartOpen, setSearchOpen } = useShop();
   const [scrolled, setScrolled] = useState(false);
@@ -33,8 +54,11 @@ export function Header() {
 
   return (
     <>
-      <div className="label-xs bg-primary py-2.5 text-center text-primary-foreground">
-        Free delivery in Addis Ababa on orders over ETB 5,000
+      <div className="label-xs bg-primary px-4 py-2.5 text-center text-primary-foreground">
+        <span className="sm:hidden">Free Addis delivery over ETB 5,000</span>
+        <span className="hidden sm:inline">
+          Free delivery in Addis Ababa on orders over ETB 5,000
+        </span>
       </div>
 
       <header
@@ -43,33 +67,21 @@ export function Header() {
           scrolled ? "bg-cream/95 shadow-soft backdrop-blur-md" : "bg-cream",
         )}
       >
-        <div className="mx-auto flex h-20 max-w-[1500px] items-center justify-between px-5 md:px-10">
-          <button
-            type="button"
-            onClick={() => setMenuOpen(true)}
-            aria-label="Open menu"
-            className="lg:hidden"
-          >
-            <Menu className="h-5 w-5" strokeWidth={1.25} />
-          </button>
+        {/* Three columns: the equal outer columns keep the logo centred without overlap. */}
+        <div className="mx-auto grid h-20 max-w-[1500px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-5 md:px-10">
+          <div className="flex items-center">
+            <button
+              type="button"
+              onClick={() => setMenuOpen(true)}
+              aria-label="Open menu"
+              className="xl:hidden"
+            >
+              <Menu className="h-5 w-5" strokeWidth={1.25} />
+            </button>
+            <NavLinks items={leftNav} />
+          </div>
 
-          <nav className="hidden items-center gap-9 lg:flex">
-            {nav.map((item) => (
-              <Link
-                key={item.label}
-                to={item.to}
-                {...("search" in item ? { search: item.search } : {})}
-                className="label-xs link-underline text-foreground/80 hover:text-foreground"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-
-          <Link
-            to="/"
-            className="absolute left-1/2 flex -translate-x-1/2 items-center gap-1.5 text-center sm:gap-3"
-          >
+          <Link to="/" className="flex items-center gap-1.5 text-center sm:gap-3">
             <img
               src="/ahab-logo.png"
               alt="AHAB Clothing"
@@ -85,7 +97,8 @@ export function Header() {
             </div>
           </Link>
 
-          <div className="flex shrink-0 items-center gap-2 sm:gap-5">
+          <div className="flex items-center justify-end gap-2 sm:gap-5 xl:gap-7 2xl:gap-9">
+            <NavLinks items={rightNav} />
             <button type="button" onClick={() => setSearchOpen(true)} aria-label="Search">
               <Search className="h-5 w-5" strokeWidth={1.25} />
             </button>
@@ -120,7 +133,7 @@ export function Header() {
       {/* Mobile full-screen menu */}
       <div
         className={cn(
-          "fixed inset-0 z-[60] bg-cream transition-opacity duration-500 lg:hidden",
+          "fixed inset-0 z-[60] bg-cream transition-opacity duration-500 xl:hidden",
           menuOpen ? "opacity-100" : "pointer-events-none opacity-0",
         )}
       >
