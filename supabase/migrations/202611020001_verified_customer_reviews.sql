@@ -12,10 +12,11 @@ create table if not exists public.customer_reviews (
   unique (order_number, product_slug)
 );
 
-alter table public.customer_reviews enable row level security;
 revoke all on public.customer_reviews from anon, authenticated;
 grant all on public.customer_reviews to service_role;
 grant select, update on public.customer_reviews to authenticated;
+
+alter table public.customer_reviews enable row level security;
 
 drop policy if exists "customer_reviews_admin_read" on public.customer_reviews;
 create policy "customer_reviews_admin_read"
@@ -32,18 +33,7 @@ create policy "customer_reviews_admin_update"
   using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin')
   with check ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
 
-insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values (
-  'customer-review-photos',
-  'customer-review-photos',
-  false,
-  3145728,
-  array['image/jpeg', 'image/png', 'image/webp']
-)
-on conflict (id) do update set
-  public = excluded.public,
-  file_size_limit = excluded.file_size_limit,
-  allowed_mime_types = excluded.allowed_mime_types;
+-- Private bucket configured through the Storage API.
 
 drop policy if exists "customer_review_photos_admin_read" on storage.objects;
 create policy "customer_review_photos_admin_read"

@@ -15,6 +15,41 @@
       "when": 1793537235041,
       "tag": "0001_orders_payment_and_push_tokens",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794123659047,
+      "tag": "0002_verified_customer_reviews",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794123678379,
+      "tag": "0003_variant_inventory",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794123695094,
+      "tag": "0004_customer_accounts",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794123713946,
+      "tag": "0005_customer_auth_hardening",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794123725459,
+      "tag": "0006_custom_commissions",
+      "breakpoints": true
     }
   ]
 }

@@ -11,13 +11,14 @@ create table if not exists public.product_variant_inventory (
   primary key (product_slug, color, size)
 );
 
+revoke all on public.product_variant_inventory from anon, authenticated;
+grant select, insert, update, delete on public.product_variant_inventory to authenticated;
+grant all on public.product_variant_inventory to service_role;
+
 comment on table public.product_variant_inventory is
   'Manage live stock by product slug, exact color name, and size; missing or zero quantities are unavailable.';
 
 alter table public.product_variant_inventory enable row level security;
-revoke all on public.product_variant_inventory from anon, authenticated;
-grant select, insert, update, delete on public.product_variant_inventory to authenticated;
-grant all on public.product_variant_inventory to service_role;
 
 drop policy if exists "variant_inventory_admin_access" on public.product_variant_inventory;
 create policy "variant_inventory_admin_access"

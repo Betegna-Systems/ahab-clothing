@@ -14,6 +14,81 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_saved_addresses: {
+        Row: {
+          address: string
+          city: string
+          created_at: string
+          id: string
+          label: string
+          phone: string
+          recipient_name: string
+          sub_city: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          city: string
+          created_at?: string
+          id?: string
+          label: string
+          phone: string
+          recipient_name: string
+          sub_city: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          city?: string
+          created_at?: string
+          id?: string
+          label?: string
+          phone?: string
+          recipient_name?: string
+          sub_city?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      account_security_settings: {
+        Row: {
+          mfa_required: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          mfa_required?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          mfa_required?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      account_wishlist: {
+        Row: {
+          created_at: string
+          product_slug: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          product_slug: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          product_slug?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_push_tokens: {
         Row: {
           created_at: string
@@ -38,6 +113,116 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_commissions: {
+        Row: {
+          budget: string
+          color: string
+          commission_type: string
+          created_at: string
+          customer_name: string
+          email: string
+          fabric: string
+          fit_preferences: string
+          id: string
+          image_paths: string[]
+          measurements: Json
+          notes: string
+          occasion: string
+          phone: string
+          privacy_consent_at: string
+          status: string
+          style: string
+          updated_at: string
+        }
+        Insert: {
+          budget: string
+          color?: string
+          commission_type: string
+          created_at?: string
+          customer_name: string
+          email: string
+          fabric?: string
+          fit_preferences?: string
+          id?: string
+          image_paths?: string[]
+          measurements?: Json
+          notes?: string
+          occasion: string
+          phone: string
+          privacy_consent_at?: string
+          status?: string
+          style: string
+          updated_at?: string
+        }
+        Update: {
+          budget?: string
+          color?: string
+          commission_type?: string
+          created_at?: string
+          customer_name?: string
+          email?: string
+          fabric?: string
+          fit_preferences?: string
+          id?: string
+          image_paths?: string[]
+          measurements?: Json
+          notes?: string
+          occasion?: string
+          phone?: string
+          privacy_consent_at?: string
+          status?: string
+          style?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      customer_reviews: {
+        Row: {
+          created_at: string
+          fit_feedback: string
+          id: string
+          order_number: string
+          photo_path: string | null
+          product_slug: string
+          rating: number
+          review_text: string
+          reviewer_name: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          fit_feedback: string
+          id?: string
+          order_number: string
+          photo_path?: string | null
+          product_slug: string
+          rating: number
+          review_text: string
+          reviewer_name: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          fit_feedback?: string
+          id?: string
+          order_number?: string
+          photo_path?: string | null
+          product_slug?: string
+          rating?: number
+          review_text?: string
+          reviewer_name?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_reviews_order_number_fkey"
+            columns: ["order_number"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["order_number"]
+          },
+        ]
+      }
       orders: {
         Row: {
           address: string | null
@@ -48,6 +233,8 @@ export type Database = {
           email: string | null
           id: string
           image_url: string | null
+          inventory_released_at: string | null
+          inventory_reserved_at: string | null
           items: Json
           notes: string | null
           order_number: string
@@ -71,6 +258,8 @@ export type Database = {
           email?: string | null
           id?: string
           image_url?: string | null
+          inventory_released_at?: string | null
+          inventory_reserved_at?: string | null
           items: Json
           notes?: string | null
           order_number: string
@@ -94,6 +283,8 @@ export type Database = {
           email?: string | null
           id?: string
           image_url?: string | null
+          inventory_released_at?: string | null
+          inventory_reserved_at?: string | null
           items?: Json
           notes?: string | null
           order_number?: string
@@ -110,12 +301,42 @@ export type Database = {
         }
         Relationships: []
       }
+      product_variant_inventory: {
+        Row: {
+          color: string
+          product_slug: string
+          quantity: number
+          size: string
+          updated_at: string
+        }
+        Insert: {
+          color: string
+          product_slug: string
+          quantity?: number
+          size: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          product_slug?: string
+          quantity?: number
+          size?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      account_mfa_is_required: { Args: never; Returns: boolean }
+      account_session_is_verified: { Args: never; Returns: boolean }
+      place_order_with_inventory: { Args: { p_order: Json }; Returns: Json }
+      set_account_mfa_required: {
+        Args: { p_required: boolean }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

@@ -1,12 +1,13 @@
 create table if not exists public.account_security_settings (
-  user_id uuid primary key references auth.users(id) on delete cascade,
+  user_id uuid primary key,
   mfa_required boolean not null default false,
   updated_at timestamptz not null default now()
 );
 
-alter table public.account_security_settings enable row level security;
 revoke all on public.account_security_settings from anon, authenticated;
 grant all on public.account_security_settings to service_role;
+
+alter table public.account_security_settings enable row level security;
 
 create or replace function public.account_mfa_is_required()
 returns boolean
@@ -38,7 +39,7 @@ begin
     raise exception 'Authentication required';
   end if;
 
-  if (auth.jwt() ->> 'email_verified') is distinct from 'true' then
+  if not exists (select 1 from auth.users where id = requesting_user_id and email_confirmed_at is not null) then
     raise exception 'A verified email address is required';
   end if;
 
@@ -62,7 +63,7 @@ security definer
 set search_path = ''
 as $$
   select auth.uid() is not null
-    and auth.jwt() ->> 'email_verified' = 'true'
+    and exists (select 1 from auth.users where id = auth.uid() and email_confirmed_at is not null)
     and (
       not public.account_mfa_is_required()
       or auth.jwt() ->> 'aal' = 'aal2'

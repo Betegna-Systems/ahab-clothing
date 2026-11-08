@@ -21,6 +21,10 @@ create table if not exists public.custom_commissions (
   check (cardinality(image_paths) <= 3)
 );
 
+revoke all on public.custom_commissions from anon, authenticated;
+grant select, update on public.custom_commissions to authenticated;
+grant all on public.custom_commissions to service_role;
+
 create index if not exists custom_commissions_created_at_idx
   on public.custom_commissions (created_at desc);
 create index if not exists custom_commissions_email_created_idx
@@ -29,9 +33,6 @@ create index if not exists custom_commissions_status_created_idx
   on public.custom_commissions (status, created_at desc);
 
 alter table public.custom_commissions enable row level security;
-revoke all on public.custom_commissions from anon, authenticated;
-grant select, update on public.custom_commissions to authenticated;
-grant all on public.custom_commissions to service_role;
 
 drop policy if exists "custom_commissions_admin_read" on public.custom_commissions;
 create policy "custom_commissions_admin_read"
@@ -57,18 +58,7 @@ create policy "custom_commissions_admin_update"
     and auth.jwt() ->> 'aal' = 'aal2'
   );
 
-insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values (
-  'custom-commission-inspiration',
-  'custom-commission-inspiration',
-  false,
-  1048576,
-  array['image/jpeg', 'image/png', 'image/webp']
-)
-on conflict (id) do update set
-  public = excluded.public,
-  file_size_limit = excluded.file_size_limit,
-  allowed_mime_types = excluded.allowed_mime_types;
+-- Private bucket configured through the Storage API.
 
 drop policy if exists "custom_commission_photos_admin_read" on storage.objects;
 create policy "custom_commission_photos_admin_read"
