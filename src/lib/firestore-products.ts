@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { type Product, type Category, products as staticProducts } from "@/lib/products";
+import { useRouterState } from "@tanstack/react-router";
+import {
+  type Product,
+  type Category,
+  type ProductTranslation,
+  products as staticProducts,
+} from "@/lib/products";
 
 const PROJECT_ID = "ahab-clothing-9baef";
 const REST_BASE_URL = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/products`;
@@ -40,7 +46,8 @@ export function firestoreRawToProduct(id: string, rawFields: Record<string, unkn
     data[k] = parseFirestoreValue(v);
   }
 
-  const rawColors = (data.colors as Array<{ name?: string; hex?: string }> | undefined) ?? [];
+  const rawColors =
+    (data.colors as Array<{ name?: string; hex?: string; name_am?: string }> | undefined) ?? [];
   const colors =
     rawColors.length > 0
       ? rawColors.map((c) => ({
@@ -80,7 +87,33 @@ export function firestoreRawToProduct(id: string, rawFields: Record<string, unkn
     inStock: data.inStock !== false,
     createdAt,
     popularity: typeof data.popularity === "number" ? data.popularity : 85,
+    am: amharicFields(data, rawColors),
   };
+}
+
+const text = (value: unknown) =>
+  typeof value === "string" && value.trim() ? value.trim() : undefined;
+
+/** Optional Amharic fields written by the admin app (name_am, description_am, …). */
+function amharicFields(
+  data: Record<string, unknown>,
+  rawColors: Array<{ name?: string; name_am?: string }>,
+): ProductTranslation | undefined {
+  const colors: Record<string, string> = {};
+  for (const c of rawColors) {
+    const amName = text(c.name_am);
+    if (c.name && amName) colors[c.name] = amName;
+  }
+  const am: ProductTranslation = {
+    name: text(data.name_am),
+    description: text(data.description_am),
+    fabric: text(data.fabric_am),
+    care: text(data.care_am),
+    colors,
+  };
+  return am.name || am.description || am.fabric || am.care || Object.keys(colors).length
+    ? am
+    : undefined;
 }
 
 // Firestore is the catalog: the admin app adds, edits and deletes products there. The
@@ -161,7 +194,13 @@ export function getProductCached(slug: string): Product | undefined {
  * fallback until Firestore answers; a later failed poll keeps the last good catalog.
  */
 export function useAllProducts() {
-  const [remoteProducts, setRemoteProducts] = useState<Product[] | null>(null);
+  // Start from the catalog the root route loaded on the server, so the first render (and
+  // what search engines see) already shows live Firestore products and their translations.
+  const initialCatalog = useRouterState({
+    select: (state) =>
+      (state.matches[0]?.loaderData as { catalog?: Product[] | null } | undefined)?.catalog ?? null,
+  });
+  const [remoteProducts, setRemoteProducts] = useState<Product[] | null>(initialCatalog);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

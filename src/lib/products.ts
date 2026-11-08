@@ -74,6 +74,19 @@ export type Product = {
   inStock: boolean;
   createdAt: string;
   popularity: number;
+  /**
+   * Optional Amharic text entered in the admin app; English is shown for anything empty.
+   * Color translations are keyed by the English color name, which stays the stock/order key.
+   */
+  am?: ProductTranslation;
+};
+
+export type ProductTranslation = {
+  name?: string;
+  description?: string;
+  fabric?: string;
+  care?: string;
+  colors?: Record<string, string>;
 };
 
 const catalogProducts: Product[] = [

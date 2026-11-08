@@ -19,9 +19,11 @@
   --radius-3xl: 4px;
   --radius-4xl: 6px;
 
-  --font-serif: "Cormorant Garamond", Georgia, serif;
-  --font-sans: "Jost", "Helvetica Neue", Arial, sans-serif;
-  --font-display: "Cormorant Garamond", Georgia, serif;
+  /* Noto Ethiopic only renders Amharic letters (the Latin fonts have none); English keeps
+     Cormorant/Jost. Browsers fetch it only when Ethiopic text is on the page. */
+  --font-serif: "Cormorant Garamond", "Noto Serif Ethiopic", Georgia, serif;
+  --font-sans: "Jost", "Noto Sans Ethiopic", "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Cormorant Garamond", "Noto Serif Ethiopic", Georgia, serif;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -160,6 +162,12 @@
   font-weight: 400;
   letter-spacing: 0.22em;
   text-transform: uppercase;
+}
+
+/* Ethiopic script has no capitals and needs a little more size; wide tracking breaks it up. */
+:lang(am) .label-xs {
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
 }
 
 /* Thin underline that draws in on hover */

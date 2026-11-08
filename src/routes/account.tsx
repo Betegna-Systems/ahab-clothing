@@ -9,6 +9,7 @@ import { getAccountOrders } from "@/lib/orders.functions";
 import { paymentStatusLabel } from "@/lib/order-access";
 import { formatPrice } from "@/lib/products";
 import { seo } from "@/lib/seo";
+import { formatDate, headT, localizePath, useLocale, useT } from "@/lib/i18n";
 
 type SavedAddress = Database["public"]["Tables"]["account_saved_addresses"]["Row"];
 type AccountOrder = {
@@ -25,15 +26,23 @@ const field =
   "h-12 w-full border border-border bg-transparent px-4 text-sm outline-none focus:border-primary";
 
 export const Route = createFileRoute("/account")({
-  head: () =>
-    seo("Account", "Sign in to view your AHAB orders, wishlist and saved addresses.", {
+  head: ({ match }) => {
+    const { t, locale } = headT(match.context);
+    return seo(t("Account"), t("Sign in to view your AHAB orders, wishlist and saved addresses."), {
       path: "/account",
       index: false,
-    }),
+      locale,
+    });
+  },
   component: AccountPage,
 });
 
 function AccountPage() {
+  // Notices are kept as English text and translated when shown.
+  const t = useT();
+  const locale = useLocale();
+  // Auth emails link back to the account page in the visitor's language.
+  const accountUrl = () => `${window.location.origin}${localizePath("/account", locale)}`;
   const [session, setSession] = useState<Session | null>(null);
   const [authInitialized, setAuthInitialized] = useState(false);
   const [mode, setMode] = useState<"sign_in" | "sign_up" | "forgot_password">("sign_in");
@@ -248,7 +257,7 @@ function AccountPage() {
           password,
           options: {
             data: { full_name: name },
-            emailRedirectTo: `${window.location.origin}/account`,
+            emailRedirectTo: accountUrl(),
           },
         });
         if (error) throw error;
@@ -472,7 +481,7 @@ function AccountPage() {
       const { error } = await supabase.auth.resend({
         type: "signup",
         email,
-        options: { emailRedirectTo: `${window.location.origin}/account` },
+        options: { emailRedirectTo: accountUrl() },
       });
       if (error) throw error;
       setVerificationPending(true);
@@ -496,7 +505,7 @@ function AccountPage() {
     setNotice("");
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/account`,
+        redirectTo: accountUrl(),
       });
       if (error) throw error;
       setResetEmailSent(true);
@@ -602,32 +611,33 @@ function AccountPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-5 py-20 md:px-10">
-      <p className="label-xs text-gold">Your account</p>
+      <p className="label-xs text-gold">{t("Your account")}</p>
       <h1 className="mt-4 font-serif text-5xl md:text-6xl">
-        {session ? "Welcome back." : "A little more personal."}
+        {session ? t("Welcome back.") : t("A little more personal.")}
       </h1>
       {notice ? (
         <p role="status" className="mt-6 border border-border p-4 text-sm text-muted-foreground">
-          {notice}
+          {t(notice)}
         </p>
       ) : null}
 
       {!browserAuthConfigured ? (
         <section className="mt-10 max-w-xl border border-border p-6">
-          <h2 className="font-serif text-2xl">Accounts are temporarily unavailable.</h2>
+          <h2 className="font-serif text-2xl">{t("Accounts are temporarily unavailable.")}</h2>
           <p className="mt-3 text-sm text-muted-foreground">
-            The storefront deployment is missing its public Supabase Auth configuration. The shop
-            and guest checkout remain available; please try again later.
+            {t(
+              "The storefront deployment is missing its public Supabase Auth configuration. The shop and guest checkout remain available; please try again later.",
+            )}
           </p>
           <AhabLink to="/shop" className="mt-6">
-            Continue shopping
+            {t("Continue shopping")}
           </AhabLink>
         </section>
       ) : passwordRecovery ? (
         <form onSubmit={updatePassword} className="mt-10 max-w-md space-y-4">
-          <h2 className="font-serif text-3xl">Choose a new password</h2>
+          <h2 className="font-serif text-3xl">{t("Choose a new password")}</h2>
           <p className="text-sm text-muted-foreground">
-            Use at least 12 characters for your new password.
+            {t("Use at least 12 characters for your new password.")}
           </p>
           <input
             required
@@ -635,22 +645,22 @@ function AccountPage() {
             type="password"
             minLength={12}
             autoComplete="new-password"
-            placeholder="New password"
+            placeholder={t("New password")}
             className={field}
           />
           <AhabButton type="submit" size="lg" disabled={busy}>
-            {busy ? "Updating…" : "Update password"}
+            {busy ? t("Updating…") : t("Update password")}
           </AhabButton>
         </form>
       ) : !authInitialized ? (
         <p role="status" className="mt-8 text-sm text-muted-foreground">
-          Checking your account…
+          {t("Checking your account…")}
         </p>
       ) : session && mfaChallenge ? (
         <form onSubmit={verifyMfaChallenge} className="mt-10 max-w-md space-y-4">
-          <h2 className="font-serif text-3xl">Verify your sign-in</h2>
+          <h2 className="font-serif text-3xl">{t("Verify your sign-in")}</h2>
           <p className="text-sm text-muted-foreground">
-            Enter the six-digit code from your authenticator app to continue.
+            {t("Enter the six-digit code from your authenticator app to continue.")}
           </p>
           <input
             required
@@ -666,7 +676,7 @@ function AccountPage() {
             className={field}
           />
           <AhabButton type="submit" size="lg" className="w-full" disabled={busy}>
-            {busy ? "Verifying…" : "Verify and continue"}
+            {busy ? t("Verifying…") : t("Verify and continue")}
           </AhabButton>
           <button
             type="button"
@@ -674,15 +684,16 @@ function AccountPage() {
             onClick={() => void signOut()}
             className="label-xs underline underline-offset-4"
           >
-            Sign out
+            {t("Sign out")}
           </button>
         </form>
       ) : session && !mfaReady ? (
         <section className="mt-10 max-w-md border border-border p-6">
-          <h2 className="font-serif text-2xl">Checking account security</h2>
+          <h2 className="font-serif text-2xl">{t("Checking account security")}</h2>
           <p className="mt-3 text-sm text-muted-foreground">
-            We couldn't complete the security check. Sign out and try again, or contact AHAB support
-            if you no longer have your authenticator.
+            {t(
+              "We couldn't complete the security check. Sign out and try again, or contact AHAB support if you no longer have your authenticator.",
+            )}
           </p>
           <button
             type="button"
@@ -690,17 +701,19 @@ function AccountPage() {
             onClick={() => void signOut()}
             className="label-xs mt-5 underline underline-offset-4"
           >
-            Sign out
+            {t("Sign out")}
           </button>
         </section>
       ) : !session ? (
         <section className="mt-12 grid gap-12 md:grid-cols-[1fr_0.8fr]">
           {mode === "forgot_password" && resetEmailSent ? (
             <div className="space-y-5">
-              <h2 className="font-serif text-3xl">Check your inbox</h2>
+              <h2 className="font-serif text-3xl">{t("Check your inbox")}</h2>
               <p className="text-sm text-muted-foreground">
-                If an account exists for {emailInput.trim()}, you’ll receive a link to reset the
-                password. Check spam if it doesn’t arrive.
+                {t(
+                  "If an account exists for {email}, you’ll receive a link to reset the password. Check spam if it doesn’t arrive.",
+                  { email: emailInput.trim() },
+                )}
               </p>
               <button
                 type="button"
@@ -728,17 +741,17 @@ function AccountPage() {
             >
               <h2 className="font-serif text-3xl">
                 {mode === "sign_in"
-                  ? "Sign in"
+                  ? t("Sign in")
                   : mode === "sign_up"
-                    ? "Create your account"
-                    : "Reset your password"}
+                    ? t("Create your account")
+                    : t("Reset your password")}
               </h2>
               {mode === "sign_up" ? (
                 <input
                   required
                   name="name"
                   autoComplete="name"
-                  placeholder="Full name"
+                  placeholder={t("Full name")}
                   className={field}
                 />
               ) : null}
@@ -747,7 +760,7 @@ function AccountPage() {
                 name="email"
                 type="email"
                 autoComplete="email"
-                placeholder="Email address"
+                placeholder={t("Email address")}
                 value={emailInput}
                 onChange={(event) => setEmailInput(event.currentTarget.value)}
                 className={field}
@@ -761,17 +774,21 @@ function AccountPage() {
                     minLength={mode === "sign_up" ? 12 : undefined}
                     autoComplete={mode === "sign_in" ? "current-password" : "new-password"}
                     placeholder={
-                      mode === "sign_up" ? "Password (at least 12 characters)" : "Password"
+                      mode === "sign_up" ? t("Password (at least 12 characters)") : t("Password")
                     }
                     className={field}
                   />
                   <AhabButton type="submit" size="lg" className="w-full" disabled={busy}>
-                    {busy ? "Please wait…" : mode === "sign_in" ? "Sign in" : "Create account"}
+                    {busy
+                      ? t("Please wait…")
+                      : mode === "sign_in"
+                        ? t("Sign in")
+                        : t("Create account")}
                   </AhabButton>
                 </>
               ) : (
                 <AhabButton type="submit" size="lg" className="w-full" disabled={busy}>
-                  {busy ? "Sending…" : "Send reset link"}
+                  {busy ? t("Sending…") : t("Send reset link")}
                 </AhabButton>
               )}
               {mode === "sign_in" || (mode === "sign_up" && verificationPending) ? (
@@ -785,7 +802,7 @@ function AccountPage() {
                     }}
                     className="label-xs text-muted-foreground underline underline-offset-4"
                   >
-                    Forgot password?
+                    {t("Forgot password?")}
                   </button>
                   <button
                     type="button"
@@ -793,19 +810,20 @@ function AccountPage() {
                     onClick={() => void resendVerificationEmail()}
                     className="label-xs text-muted-foreground underline underline-offset-4"
                   >
-                    Resend verification email
+                    {t("Resend verification email")}
                   </button>
                 </div>
               ) : null}
               {verificationPending ? (
                 <p className="text-sm text-muted-foreground">
-                  This account still needs email verification. Check spam, or resend the
-                  verification email above.
+                  {t(
+                    "This account still needs email verification. Check spam, or resend the verification email above.",
+                  )}
                 </p>
               ) : null}
               {mode !== "forgot_password" ? (
                 <p className="text-sm text-muted-foreground">
-                  {mode === "sign_in" ? "New to AHAB?" : "Already have an account?"}{" "}
+                  {mode === "sign_in" ? t("New to AHAB?") : t("Already have an account?")}{" "}
                   <button
                     type="button"
                     onClick={() => {
@@ -814,7 +832,7 @@ function AccountPage() {
                     }}
                     className="text-foreground underline underline-offset-4"
                   >
-                    {mode === "sign_in" ? "Create an account" : "Sign in"}
+                    {mode === "sign_in" ? t("Create an account") : t("Sign in")}
                   </button>
                 </p>
               ) : (
@@ -832,14 +850,14 @@ function AccountPage() {
             </form>
           )}
           <div className="border-t border-border pt-8 md:border-l md:border-t-0 md:pl-10 md:pt-0">
-            <h2 className="font-serif text-3xl">Made for you</h2>
+            <h2 className="font-serif text-3xl">{t("Made for you")}</h2>
             <ul className="mt-5 space-y-3 text-sm text-muted-foreground">
-              <li>See orders placed while signed in, or saved from their tracking links.</li>
-              <li>Keep your wishlist in sync across devices.</li>
-              <li>Save delivery addresses for a quicker checkout.</li>
+              <li>{t("See orders placed while signed in, or saved from their tracking links.")}</li>
+              <li>{t("Keep your wishlist in sync across devices.")}</li>
+              <li>{t("Save delivery addresses for a quicker checkout.")}</li>
             </ul>
             <AhabLink to="/wishlist" className="mt-8">
-              Continue as a guest
+              {t("Continue as a guest")}
             </AhabLink>
           </div>
         </section>
@@ -849,11 +867,13 @@ function AccountPage() {
             <div>
               <p className="text-sm text-muted-foreground">{session.user.email}</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                {session.user.email_confirmed_at ? "Email verified" : "Email verification pending"}
+                {session.user.email_confirmed_at
+                  ? t("Email verified")
+                  : t("Email verification pending")}
               </p>
               {session.user.app_metadata?.role === "admin" ? (
                 <AhabLink to="/admin/custom-orders" className="mt-3">
-                  Manage custom requests
+                  {t("Manage custom requests")}
                 </AhabLink>
               ) : null}
             </div>
@@ -863,24 +883,24 @@ function AccountPage() {
               onClick={() => void signOut()}
               className="label-xs underline underline-offset-4"
             >
-              Sign out
+              {t("Sign out")}
             </button>
           </div>
 
           <section className="mt-8 max-w-2xl border border-border p-6">
-            <h2 className="font-serif text-2xl">Account security</h2>
+            <h2 className="font-serif text-2xl">{t("Account security")}</h2>
             {mfaEnrollment ? (
               <form onSubmit={verifyMfaEnrollment} className="mt-4 space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  Scan this QR code with an authenticator app, then enter its six-digit code.
+                  {t("Scan this QR code with an authenticator app, then enter its six-digit code.")}
                 </p>
                 <img
                   src={mfaEnrollment.qrCode}
-                  alt="Authenticator setup QR code"
+                  alt={t("Authenticator setup QR code")}
                   className="h-48 w-48 border border-border bg-white p-2"
                 />
                 <p className="break-all text-xs text-muted-foreground">
-                  Setup key: {mfaEnrollment.secret}
+                  {t("Setup key: {secret}", { secret: mfaEnrollment.secret })}
                 </p>
                 <input
                   required
@@ -896,7 +916,7 @@ function AccountPage() {
                   className={field}
                 />
                 <AhabButton type="submit" disabled={busy}>
-                  {busy ? "Verifying…" : "Enable authenticator"}
+                  {busy ? t("Verifying…") : t("Enable authenticator")}
                 </AhabButton>
                 <button
                   type="button"
@@ -904,13 +924,13 @@ function AccountPage() {
                   onClick={() => void cancelMfaEnrollment()}
                   className="label-xs ml-4 underline underline-offset-4"
                 >
-                  Cancel setup
+                  {t("Cancel setup")}
                 </button>
               </form>
             ) : mfaRequired ? (
               <div className="mt-3 space-y-3">
                 <p className="text-sm text-muted-foreground">
-                  Authenticator verification is required when you sign in.
+                  {t("Authenticator verification is required when you sign in.")}
                 </p>
                 <button
                   type="button"
@@ -918,14 +938,15 @@ function AccountPage() {
                   onClick={() => void disableMfa()}
                   className="label-xs underline underline-offset-4"
                 >
-                  {busy ? "Please wait…" : "Disable authenticator sign-in"}
+                  {busy ? t("Please wait…") : t("Disable authenticator sign-in")}
                 </button>
               </div>
             ) : (
               <div className="mt-3 space-y-3">
                 <p className="text-sm text-muted-foreground">
-                  Add an authenticator app for an extra sign-in step. It is optional and can be
-                  disabled later.
+                  {t(
+                    "Add an authenticator app for an extra sign-in step. It is optional and can be disabled later.",
+                  )}
                 </p>
                 <button
                   type="button"
@@ -934,10 +955,10 @@ function AccountPage() {
                   className="label-xs underline underline-offset-4"
                 >
                   {busy
-                    ? "Please wait…"
+                    ? t("Please wait…")
                     : mfaFactorId
-                      ? "Activate authenticator sign-in"
-                      : "Set up an authenticator"}
+                      ? t("Activate authenticator sign-in")
+                      : t("Set up an authenticator")}
                 </button>
               </div>
             )}
@@ -945,17 +966,18 @@ function AccountPage() {
 
           <div className="grid gap-14 py-10 lg:grid-cols-[1.2fr_0.8fr]">
             <section>
-              <h2 className="font-serif text-3xl">Your orders</h2>
+              <h2 className="font-serif text-3xl">{t("Your orders")}</h2>
               {loadingData ? (
-                <p className="mt-5 text-sm text-muted-foreground">Loading your orders…</p>
+                <p className="mt-5 text-sm text-muted-foreground">{t("Loading your orders…")}</p>
               ) : orders.length === 0 ? (
                 <div className="mt-5 border border-border p-6">
                   <p className="text-sm text-muted-foreground">
-                    Orders placed while signed in appear here. For earlier orders, open the tracking
-                    link and choose “Save to my account”.
+                    {t(
+                      "Orders placed while signed in appear here. For earlier orders, open the tracking link and choose “Save to my account”.",
+                    )}
                   </p>
                   <AhabLink to="/shop" className="mt-5">
-                    Discover the collection
+                    {t("Discover the collection")}
                   </AhabLink>
                 </div>
               ) : (
@@ -966,14 +988,14 @@ function AccountPage() {
                         <div>
                           <p className="label-xs">{order.orderNumber}</p>
                           <p className="mt-1 text-xs text-muted-foreground">
-                            {new Date(order.createdAt).toLocaleDateString()}
+                            {formatDate(order.createdAt, locale)}
                           </p>
                         </div>
                         <p className="text-right text-sm">
                           {formatPrice(order.total)}
                           <span className="mt-1 block text-xs text-muted-foreground">
-                            {order.status} ·{" "}
-                            {paymentStatusLabel(order.paymentStatus, order.paymentMethod)}
+                            {t(order.status)} ·{" "}
+                            {t(paymentStatusLabel(order.paymentStatus, order.paymentMethod))}
                           </span>
                         </p>
                       </div>
@@ -987,7 +1009,7 @@ function AccountPage() {
             </section>
 
             <section>
-              <h2 className="font-serif text-3xl">Saved addresses</h2>
+              <h2 className="font-serif text-3xl">{t("Saved addresses")}</h2>
               {addresses.length > 0 ? (
                 <ul className="mt-5 space-y-3">
                   {addresses.map((address) => (
@@ -1007,7 +1029,7 @@ function AccountPage() {
                           onClick={() => void removeAddress(address.id)}
                           className="label-xs text-muted-foreground underline underline-offset-4"
                         >
-                          Remove
+                          {t("Remove")}
                         </button>
                       </div>
                     </li>
@@ -1015,24 +1037,24 @@ function AccountPage() {
                 </ul>
               ) : (
                 <p className="mt-4 text-sm text-muted-foreground">
-                  Save an address to make your next checkout quicker.
+                  {t("Save an address to make your next checkout quicker.")}
                 </p>
               )}
 
               <form onSubmit={addAddress} className="mt-6 space-y-3">
-                <h3 className="label-xs text-gold">Add an address</h3>
+                <h3 className="label-xs text-gold">{t("Add an address")}</h3>
                 <input
                   required
                   maxLength={60}
                   name="label"
-                  placeholder="Label (e.g. Home)"
+                  placeholder={t("Label (e.g. Home)")}
                   className={field}
                 />
                 <input
                   required
                   maxLength={200}
                   name="recipient_name"
-                  placeholder="Recipient name"
+                  placeholder={t("Recipient name")}
                   autoComplete="name"
                   className={field}
                 />
@@ -1041,7 +1063,7 @@ function AccountPage() {
                   maxLength={40}
                   name="phone"
                   type="tel"
-                  placeholder="Phone"
+                  placeholder={t("Phone")}
                   autoComplete="tel"
                   className={field}
                 />
@@ -1050,14 +1072,14 @@ function AccountPage() {
                     required
                     maxLength={100}
                     name="sub_city"
-                    placeholder="Sub-city"
+                    placeholder={t("Sub-city")}
                     className={field}
                   />
                   <input
                     required
                     maxLength={100}
                     name="city"
-                    placeholder="City"
+                    placeholder={t("City")}
                     defaultValue="Addis Ababa"
                     className={field}
                   />
@@ -1066,12 +1088,12 @@ function AccountPage() {
                   required
                   maxLength={500}
                   name="address"
-                  placeholder="Street, building or landmark"
+                  placeholder={t("Street, building or landmark")}
                   autoComplete="street-address"
                   className={field}
                 />
                 <AhabButton type="submit" variant="outline" disabled={busy}>
-                  Save address
+                  {t("Save address")}
                 </AhabButton>
               </form>
             </section>

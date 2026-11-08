@@ -6,15 +6,20 @@ import { AhabButton, Eyebrow } from "@/components/site/ui";
 import { submitCustomCommission } from "@/lib/custom-commissions.functions";
 import { images } from "@/lib/products";
 import { seo } from "@/lib/seo";
+import { headT, useT } from "@/lib/i18n";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/custom")({
-  head: () =>
-    seo(
-      "Custom Commissions",
-      "Commission a made-to-measure AHAB suit or bodycon top, designed with you and sewn in our Addis Ababa atelier.",
-      { path: "/custom" },
-    ),
+  head: ({ match }) => {
+    const { t, locale } = headT(match.context);
+    return seo(
+      t("Custom Commissions"),
+      t(
+        "Commission a made-to-measure AHAB suit or bodycon top, designed with you and sewn in our Addis Ababa atelier.",
+      ),
+      { path: "/custom", locale },
+    );
+  },
   component: Custom,
 });
 
@@ -33,6 +38,13 @@ const suitMeasurements = [
   "Trouser inseam",
   "Height",
 ];
+
+/** "Text before {x} text after" → ["Text before ", " text after"]. */
+function splitAround(text: string, placeholder: string): [string, string] {
+  const index = text.indexOf(placeholder);
+  if (index < 0) return [text, ""];
+  return [text.slice(0, index), text.slice(index + placeholder.length)];
+}
 
 async function fileToBase64(file: File) {
   if (file.size > 20 * 1024 * 1024) {
@@ -83,6 +95,7 @@ function Custom() {
   const [commissionType, setCommissionType] = useState<"top" | "suit">("top");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
+  const t = useT();
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -123,11 +136,13 @@ function Custom() {
 
       if (!result.ok) {
         const messages = {
-          rate_limited: "Too many requests were sent from this email. Please try again later.",
-          invalid_measurements: "Check that measurements contain numbers in centimeters.",
-          invalid_image: "An inspiration image could not be verified. Please choose another image.",
-          upload_failed: "We couldn't upload the inspiration images. Please try again.",
-          save_failed: "We couldn't save your request. Please try again.",
+          rate_limited: t("Too many requests were sent from this email. Please try again later."),
+          invalid_measurements: t("Check that measurements contain numbers in centimeters."),
+          invalid_image: t(
+            "An inspiration image could not be verified. Please choose another image.",
+          ),
+          upload_failed: t("We couldn't upload the inspiration images. Please try again."),
+          save_failed: t("We couldn't save your request. Please try again."),
         };
         setNotice(messages[result.reason]);
         toast.error(messages[result.reason]);
@@ -136,16 +151,21 @@ function Custom() {
 
       formElement.reset();
       setFiles([]);
-      setNotice(`Request saved. Your reference is ${result.id.slice(0, 8).toUpperCase()}.`);
-      toast.success("Your custom request has been sent to AHAB.");
+      setNotice(
+        t("Request saved. Your reference is {reference}.", {
+          reference: result.id.slice(0, 8).toUpperCase(),
+        }),
+      );
+      toast.success(t("Your custom request has been sent to AHAB."));
     } catch (error) {
       console.error("Custom commission submission failed.");
+      // Photo errors from fileToBase64 are English; t() shows them in the page language.
       const message =
         error instanceof Error &&
         (error.message.includes("inspiration photo") ||
           error.message.includes("smaller-resolution"))
-          ? error.message
-          : "We couldn't submit your request. Please check your connection and try again.";
+          ? t(error.message)
+          : t("We couldn't submit your request. Please check your connection and try again.");
       setNotice(message);
       toast.error(message);
     } finally {
@@ -154,30 +174,41 @@ function Custom() {
   };
 
   const measurements = commissionType === "suit" ? suitMeasurements : topMeasurements;
+  // Sentences with a link or emphasis inside: the translation decides where {link}/{lines} go.
+  const madeFor = splitAround(t("Made for {lines}"), "{lines}");
+  const consent = splitAround(
+    t(
+      "I agree that AHAB may store my contact details, measurements, and private inspiration images to respond to this commission, as described in the {link}.",
+    ),
+    "{link}",
+  );
 
   return (
     <div>
       <section className="grid lg:grid-cols-2">
         <img
           src={images.craftStudio}
-          alt="Seamstress fitting a garment on a dress form in the AHAB atelier"
+          alt={t("Seamstress fitting a garment on a dress form in the AHAB atelier")}
           className="aspect-4/5 w-full object-cover lg:aspect-auto lg:h-full"
         />
         <div className="flex flex-col justify-center px-5 py-16 md:px-16">
-          <Eyebrow>The Atelier</Eyebrow>
+          <Eyebrow>{t("The Atelier")}</Eyebrow>
           <h1 className="mt-6 text-5xl leading-[1.02] md:text-7xl">
-            Made for <em className="italic text-gold">your lines.</em>
+            {madeFor[0]}
+            <em className="italic text-gold">{t("your lines.")}</em>
+            {madeFor[1]}
           </h1>
           <p className="mt-6 max-w-md leading-relaxed text-muted-foreground">
-            Commission a made-to-measure suit or bodycon top — designed around your style, colour
-            and fit, then sewn in our Addis Ababa atelier.
+            {t(
+              "Commission a made-to-measure suit or bodycon top — designed around your style, colour and fit, then sewn in our Addis Ababa atelier.",
+            )}
           </p>
           <ol className="mt-10 space-y-5">
             {[
-              "Share your vision below",
-              "Consultation with a designer",
-              "Fabric, colour & fit selection",
-              "Fitting, alterations & delivery",
+              t("Share your vision below"),
+              t("Consultation with a designer"),
+              t("Fabric, colour & fit selection"),
+              t("Fitting, alterations & delivery"),
             ].map((step, index) => (
               <li key={step} className="flex items-baseline gap-5">
                 <span className="font-serif text-2xl text-gold">0{index + 1}</span>
@@ -189,7 +220,7 @@ function Custom() {
       </section>
 
       <section className="mx-auto max-w-3xl px-5 py-24">
-        <h2 className="text-center text-4xl md:text-5xl">Begin your commission</h2>
+        <h2 className="text-center text-4xl md:text-5xl">{t("Begin your commission")}</h2>
         {notice ? (
           <p role="status" className="mt-6 border border-border p-4 text-sm">
             {notice}
@@ -197,11 +228,11 @@ function Custom() {
         ) : null}
         <form onSubmit={submit} className="mt-14 grid gap-10 sm:grid-cols-2">
           <label className="grid gap-1">
-            <span className={label}>Full name</span>
+            <span className={label}>{t("Full name")}</span>
             <input required name="name" autoComplete="name" className={field} />
           </label>
           <label className="grid gap-1">
-            <span className={label}>Phone</span>
+            <span className={label}>{t("Phone")}</span>
             <input
               required
               name="phone"
@@ -212,11 +243,11 @@ function Custom() {
             />
           </label>
           <label className="grid gap-1">
-            <span className={label}>Email</span>
+            <span className={label}>{t("Email")}</span>
             <input required name="email" type="email" autoComplete="email" className={field} />
           </label>
           <label className="grid gap-1">
-            <span className={label}>What would you like made?</span>
+            <span className={label}>{t("What would you like made?")}</span>
             <select
               name="commission"
               className={field}
@@ -225,64 +256,68 @@ function Custom() {
                 setCommissionType(event.currentTarget.value === "suit" ? "suit" : "top");
               }}
             >
-              <option value="top">Custom top</option>
-              <option value="suit">Custom suit</option>
+              <option value="top">{t("Custom top")}</option>
+              <option value="suit">{t("Custom suit")}</option>
             </select>
           </label>
           <label className="grid gap-1">
-            <span className={label}>Occasion</span>
+            <span className={label}>{t("Occasion")}</span>
             <select name="occasion" className={field}>
-              <option>Everyday</option>
-              <option>Wedding</option>
-              <option>Engagement</option>
-              <option>Holiday / Meskel / Timket</option>
-              <option>Graduation</option>
-              <option>Work / formal</option>
-              <option>Other</option>
+              <option value="Everyday">{t("Everyday")}</option>
+              <option value="Wedding">{t("Wedding")}</option>
+              <option value="Engagement">{t("Engagement")}</option>
+              <option value="Holiday / Meskel / Timket">{t("Holiday / Meskel / Timket")}</option>
+              <option value="Graduation">{t("Graduation")}</option>
+              <option value="Work / formal">{t("Work / formal")}</option>
+              <option value="Other">{t("Other")}</option>
             </select>
           </label>
           <label className="grid gap-1">
-            <span className={label}>{commissionType === "suit" ? "Suit style" : "Top style"}</span>
+            <span className={label}>
+              {commissionType === "suit" ? t("Suit style") : t("Top style")}
+            </span>
             {commissionType === "suit" ? (
               <select name="type" className={field}>
-                <option>Two-piece suit</option>
-                <option>Single-breasted suit</option>
-                <option>Double-breasted suit</option>
-                <option>Tuxedo suit</option>
-                <option>Wide-leg suit</option>
-                <option>Other / full custom design</option>
+                <option value="Two-piece suit">{t("Two-piece suit")}</option>
+                <option value="Single-breasted suit">{t("Single-breasted suit")}</option>
+                <option value="Double-breasted suit">{t("Double-breasted suit")}</option>
+                <option value="Tuxedo suit">{t("Tuxedo suit")}</option>
+                <option value="Wide-leg suit">{t("Wide-leg suit")}</option>
+                <option value="Other / full custom design">
+                  {t("Other / full custom design")}
+                </option>
               </select>
             ) : (
               <select name="type" className={field}>
-                <option>One-shoulder top</option>
-                <option>Square neck top</option>
-                <option>Cowl neck top</option>
-                <option>Corset-style top</option>
-                <option>Cutout top</option>
-                <option>Full custom design</option>
+                <option value="One-shoulder top">{t("One-shoulder top")}</option>
+                <option value="Square neck top">{t("Square neck top")}</option>
+                <option value="Cowl neck top">{t("Cowl neck top")}</option>
+                <option value="Corset-style top">{t("Corset-style top")}</option>
+                <option value="Cutout top">{t("Cutout top")}</option>
+                <option value="Full custom design">{t("Full custom design")}</option>
               </select>
             )}
           </label>
           <label className="grid gap-1">
-            <span className={label}>Preferred colour</span>
+            <span className={label}>{t("Preferred colour")}</span>
             <input
               name="color"
               placeholder={
-                commissionType === "suit" ? "Burgundy, navy, or a reference" : "Deep burgundy"
+                commissionType === "suit" ? t("Burgundy, navy, or a reference") : t("Deep burgundy")
               }
               className={field}
             />
           </label>
           <label className="grid gap-1">
-            <span className={label}>Preferred fabric</span>
+            <span className={label}>{t("Preferred fabric")}</span>
             <input
               name="fabric"
-              placeholder="Optional — we can recommend fabrics"
+              placeholder={t("Optional — we can recommend fabrics")}
               className={field}
             />
           </label>
           <label className="grid gap-1 sm:col-span-2">
-            <span className={label}>Budget</span>
+            <span className={label}>{t("Budget")}</span>
             <select name="budget" className={field}>
               {commissionType === "suit" ? (
                 <>
@@ -304,16 +339,18 @@ function Custom() {
           <div className="sm:col-span-2">
             <span className={label}>
               {commissionType === "suit"
-                ? "Suit measurements (cm) — optional, we can take them at your fitting"
-                : "Measurements (cm) — optional, we can take them at your fitting"}
+                ? t("Suit measurements (cm) — optional, we can take them at your fitting")
+                : t("Measurements (cm) — optional, we can take them at your fitting")}
             </span>
             <div className="mt-2 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">
               {measurements.map((measurement) => (
                 <input
                   key={measurement}
                   name={`measurement_${measurement.toLowerCase().replaceAll(" ", "_")}`}
-                  aria-label={`${measurement} measurement in centimeters`}
-                  placeholder={measurement}
+                  aria-label={t("{measurement} measurement in centimeters", {
+                    measurement: t(measurement),
+                  })}
+                  placeholder={t(measurement)}
                   inputMode="decimal"
                   className={field}
                 />
@@ -322,23 +359,27 @@ function Custom() {
           </div>
           {commissionType === "suit" ? (
             <label className="grid gap-1 sm:col-span-2">
-              <span className={label}>Fit or alteration preferences</span>
+              <span className={label}>{t("Fit or alteration preferences")}</span>
               <select name="fit_preferences" className={field}>
-                <option>No preference yet — advise me</option>
-                <option>Close / tailored fit</option>
-                <option>Relaxed fit</option>
-                <option>Room for later alterations</option>
-                <option>Discuss at fitting</option>
+                <option value="No preference yet — advise me">
+                  {t("No preference yet — advise me")}
+                </option>
+                <option value="Close / tailored fit">{t("Close / tailored fit")}</option>
+                <option value="Relaxed fit">{t("Relaxed fit")}</option>
+                <option value="Room for later alterations">
+                  {t("Room for later alterations")}
+                </option>
+                <option value="Discuss at fitting">{t("Discuss at fitting")}</option>
               </select>
             </label>
           ) : null}
           <label className="sm:col-span-2 flex cursor-pointer flex-col items-center justify-center gap-3 border border-dashed border-border px-6 py-10 text-center transition-colors hover:border-gold">
             <Upload className="h-5 w-5 text-gold" strokeWidth={1.25} />
-            <span className={label}>Upload inspiration images</span>
+            <span className={label}>{t("Upload inspiration images")}</span>
             <span className="text-xs text-muted-foreground">
               {files.length
                 ? files.map((file) => file.name).join(", ")
-                : "JPG, PNG or WebP, up to 3 images. Uploaded privately."}
+                : t("JPG, PNG or WebP, up to 3 images. Uploaded privately.")}
             </span>
             <input
               type="file"
@@ -348,12 +389,12 @@ function Custom() {
               onChange={(event) => {
                 const selected = Array.from(event.currentTarget.files ?? []);
                 if (selected.length > 3) {
-                  setNotice("Please choose no more than 3 inspiration images.");
+                  setNotice(t("Please choose no more than 3 inspiration images."));
                   setFiles(selected.slice(0, 3));
                   return;
                 }
                 if (selected.some((file) => file.size > 20 * 1024 * 1024)) {
-                  setNotice("Each inspiration image must be smaller than 20 MB.");
+                  setNotice(t("Each inspiration image must be smaller than 20 MB."));
                   setFiles([]);
                   return;
                 }
@@ -362,7 +403,7 @@ function Custom() {
                     (file) => !["image/jpeg", "image/png", "image/webp"].includes(file.type),
                   )
                 ) {
-                  setNotice("Choose JPG, PNG, or WebP inspiration images.");
+                  setNotice(t("Choose JPG, PNG, or WebP inspiration images."));
                   setFiles([]);
                   return;
                 }
@@ -372,7 +413,7 @@ function Custom() {
             />
           </label>
           <label className="grid gap-1 sm:col-span-2">
-            <span className={label}>Additional notes</span>
+            <span className={label}>{t("Additional notes")}</span>
             <textarea
               name="notes"
               rows={4}
@@ -382,16 +423,19 @@ function Custom() {
           <label className="flex items-start gap-3 text-sm text-muted-foreground sm:col-span-2">
             <input required type="checkbox" name="privacyConsent" className="mt-1 accent-gold" />
             <span>
-              I agree that AHAB may store my contact details, measurements, and private inspiration
-              images to respond to this commission, as described in the{" "}
+              {consent[0]}
               <Link to="/privacy" className="underline underline-offset-2">
-                privacy policy
+                {t("privacy policy")}
               </Link>
-              .
+              {consent[1]}
             </span>
           </label>
           <AhabButton type="submit" size="lg" className="sm:col-span-2">
-            {busy ? "Sending request…" : `Send my ${commissionType} request`}
+            {busy
+              ? t("Sending request…")
+              : commissionType === "suit"
+                ? t("Send my suit request")
+                : t("Send my top request")}
           </AhabButton>
         </form>
       </section>

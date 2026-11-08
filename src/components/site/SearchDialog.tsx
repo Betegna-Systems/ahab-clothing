@@ -5,24 +5,35 @@ import { formatPrice } from "@/lib/products";
 import { useAllProducts } from "@/lib/firestore-products";
 import { useShop } from "@/lib/shop-store";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n";
+import { useProductText } from "@/lib/i18n/product";
 
 export function SearchDialog() {
   const { searchOpen, setSearchOpen } = useShop();
   const { products } = useAllProducts();
   const [q, setQ] = useState("");
+  const t = useT();
+  const text = useProductText();
 
   const results = useMemo(() => {
     const term = q.trim().toLowerCase();
     if (!term) return [];
     return products
       .filter((p) =>
-        [p.name, ...p.categories, ...p.colors.map((c) => c.name), p.fabric]
+        [
+          p.name,
+          text(p).name,
+          ...p.categories,
+          ...p.categories.map((c) => t(c)),
+          ...p.colors.flatMap((c) => [c.name, text(p).color(c.name)]),
+          p.fabric,
+        ]
           .join(" ")
           .toLowerCase()
           .includes(term),
       )
       .slice(0, 6);
-  }, [q, products]);
+  }, [q, products, t, text]);
 
   return (
     <div
@@ -42,10 +53,10 @@ export function SearchDialog() {
             autoFocus={searchOpen}
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search suits, tops, colours, fabrics…"
+            placeholder={t("Search suits, tops, colours, fabrics…")}
             className="w-full bg-transparent font-serif text-2xl outline-hidden placeholder:text-muted-foreground/70"
           />
-          <button type="button" onClick={() => setSearchOpen(false)} aria-label="Close search">
+          <button type="button" onClick={() => setSearchOpen(false)} aria-label={t("Close search")}>
             <X className="h-5 w-5" strokeWidth={1.25} />
           </button>
         </div>
@@ -60,10 +71,12 @@ export function SearchDialog() {
                 onClick={() => setSearchOpen(false)}
                 className="flex items-center gap-4 py-3 transition-colors hover:bg-secondary/40"
               >
-                <img src={p.images[0]} alt={p.name} className="h-16 w-12 object-cover" />
+                <img src={p.images[0]} alt={text(p).name} className="h-16 w-12 object-cover" />
                 <div className="flex-1">
-                  <h4 className="font-serif text-lg">{p.name}</h4>
-                  <p className="label-xs text-muted-foreground">{p.categories.join(" · ")}</p>
+                  <h4 className="font-serif text-lg">{text(p).name}</h4>
+                  <p className="label-xs text-muted-foreground">
+                    {p.categories.map((c) => t(c)).join(" · ")}
+                  </p>
                 </div>
                 <p className="label-xs">{formatPrice(p.price)}</p>
               </Link>
@@ -71,7 +84,7 @@ export function SearchDialog() {
           </div>
         ) : q.trim() ? (
           <p className="py-12 text-center text-sm text-muted-foreground">
-            No pieces found matching “{q}”.
+            {t("No pieces found matching “{q}”.", { q })}
           </p>
         ) : null}
       </div>

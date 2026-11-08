@@ -1,0 +1,131 @@
+{
+  "_note": "Draft Amharic for the catalog. Reviewers: edit the Amharic values only, then run scripts/apply-product-translations.mjs. Only empty Amharic fields in Firestore are filled; anything already entered in the admin app is kept.",
+  "colors": {
+    "Black": "ጥቁር",
+    "Ivory": "ክሬም ነጭ",
+    "Burgundy": "ቡርጋንዲ",
+    "Crimson": "ደማቅ ቀይ",
+    "Dusty Rose": "ደብዛዛ ሮዝ",
+    "Sand": "የአሸዋ ቀለም",
+    "Chocolate": "ቸኮሌት",
+    "Chocolate Pinstripe": "ቸኮሌት ባለ ቀጭን መስመር",
+    "Olive": "የወይራ አረንጓዴ",
+    "Camel": "ካሜል",
+    "Soft Gold": "ለስላሳ ወርቃማ"
+  },
+  "fabric": {
+    "Sculpting ponte with wrap front": "ቅርጽ የሚሰጥ ፖንቴ ጨርቅ፣ የሚጠቀለል ፊት",
+    "Brushed rib knit with fluid drape": "ለስላሳ የተቦረሸ ባለ መስመር ሹራብ፣ በቀላሉ የሚወርድ",
+    "Two-piece suit · pinstripe wool-blend suiting, fully lined jacket": "ባለ ሁለት ክፍል ሱፍ ልብስ · ባለ ቀጭን መስመር የሱፍ ቅልቅል ጨርቅ፣ ሙሉ በሙሉ ሽፋን ያለው ጃኬት",
+    "Two-piece suit · stretch wool-blend suiting, fully lined jacket": "ባለ ሁለት ክፍል ሱፍ ልብስ · የሚለጠጥ የሱፍ ቅልቅል ጨርቅ፣ ሙሉ በሙሉ ሽፋን ያለው ጃኬት",
+    "Seamless stretch jersey, bonded edges": "ስፌት አልባ የሚለጠጥ ጀርሲ፣ የተጣበቁ ጠርዞች",
+    "Two-piece suit · wool-blend suiting with velvet collar, fully lined jacket": "ባለ ሁለት ክፍል ሱፍ ልብስ · የሱፍ ቅልቅል ጨርቅ ከቬልቬት ኮሌታ ጋር፣ ሙሉ በሙሉ ሽፋን ያለው ጃኬት",
+    "Bonded stretch crepe with internal boning": "የተጣበቀ የሚለጠጥ ክሬፕ ከውስጥ ደጋፊ አጥንቶች ጋር",
+    "Two-piece suit · breathable linen blend, unstructured blazer": "ባለ ሁለት ክፍል ሱፍ ልብስ · አየር የሚያስተላልፍ የሊነን ቅልቅል፣ ለስላሳ ቅርጽ ያለው ብሌዘር",
+    "Sculpting stretch jersey": "ቅርጽ የሚሰጥ የሚለጠጥ ጀርሲ",
+    "Two-piece suit · wool-blend suiting with satin lapels, fully lined jacket": "ባለ ሁለት ክፍል ሱፍ ልብስ · የሱፍ ቅልቅል ጨርቅ ከሳቲን ላፔል ጋር፣ ሙሉ በሙሉ ሽፋን ያለው ጃኬት",
+    "Ribbed stretch knit, viscose-spandex blend": "ባለ መስመር የሚለጠጥ ሹራብ፣ የቪስኮስ እና ስፓንዴክስ ቅልቅል",
+    "Ribbed stretch knit with soft elastic neckline": "ባለ መስመር የሚለጠጥ ሹራብ ከለስላሳ ላስቲክ አንገት ጋር",
+    "Premium stretch knit with bonded seams": "ከፍተኛ ጥራት ያለው የሚለጠጥ ሹራብ ከተጣበቁ ስፌቶች ጋር",
+    "Second-skin rib knit": "እንደ ቆዳ የሚገጥም ባለ መስመር ሹራብ",
+    "Two-piece suit · lustrous suiting with a subtle sheen, fully lined jacket": "ባለ ሁለት ክፍል ሱፍ ልብስ · ቀለል ያለ ብልጭታ ያለው ጨርቅ፣ ሙሉ በሙሉ ሽፋን ያለው ጃኬት",
+    "Stretch jersey with self-tie neck": "የሚለጠጥ ጀርሲ ከሚታሰር አንገት ጋር"
+  },
+  "care": {
+    "Hand wash cold. Dry flat.": "በቀዝቃዛ ውሃ በእጅ ይጠቡ። ተዘርግቶ ይድረቅ።",
+    "Machine wash cold, gentle cycle. Dry flat.": "በቀዝቃዛ ውሃ በማሽን፣ በለስላሳ ዙር ይጠቡ። ተዘርግቶ ይድረቅ።",
+    "Dry clean recommended. Steam to refresh; do not tumble dry.": "በደረቅ እጥበት ቢያሳጥቡት ይመከራል። ለማደስ በእንፋሎት ይጠቀሙ፤ በማድረቂያ ማሽን አያድርቁ።",
+    "Machine wash cold. Dry flat to keep the shape.": "በቀዝቃዛ ውሃ በማሽን ይጠቡ። ቅርጹን ለመጠበቅ ተዘርግቶ ይድረቅ።",
+    "Dry clean only. Steam the velvet gently; never press it flat.": "በደረቅ እጥበት ብቻ። ቬልቬቱን በጥንቃቄ በእንፋሎት ያድሱ፤ በፍጹም ተጭነው አይተኩሱት።",
+    "Dry clean recommended. Store flat, never folded at the boning.": "በደረቅ እጥበት ቢያሳጥቡት ይመከራል። ተዘርግቶ ያስቀምጡት፤ በደጋፊ አጥንቶቹ ላይ በፍጹም አያጥፉት።",
+    "Dry clean recommended. Linen softens beautifully with wear.": "በደረቅ እጥበት ቢያሳጥቡት ይመከራል። ሊነን በለበሱት ቁጥር ይበልጥ ይለሰልሳል።",
+    "Hand wash cold. Do not wring the cutout seams.": "በቀዝቃዛ ውሃ በእጅ ይጠቡ። የክፍት ዲዛይኑን ስፌቶች አይጠምዝዙ።",
+    "Dry clean only. Steam the lapels gently; never iron the satin.": "በደረቅ እጥበት ብቻ። ላፔሎቹን በጥንቃቄ በእንፋሎት ያድሱ፤ ሳቲኑን በፍጹም በካውያ አይተኩሱ።",
+    "Machine wash cold. Dry flat.": "በቀዝቃዛ ውሃ በማሽን ይጠቡ። ተዘርግቶ ይድረቅ።",
+    "Machine wash cold. Dry flat to protect the neckline.": "በቀዝቃዛ ውሃ በማሽን ይጠቡ። አንገቱን ለመጠበቅ ተዘርግቶ ይድረቅ።",
+    "Hand wash cold. Dry flat in shade.": "በቀዝቃዛ ውሃ በእጅ ይጠቡ። በጥላ ስር ተዘርግቶ ይድረቅ።",
+    "Hand wash cold. Untie the neck strap before washing.": "በቀዝቃዛ ውሃ በእጅ ይጠቡ። ከማጠብዎ በፊት የአንገት ማሰሪያውን ይፍቱ።"
+  },
+  "products": {
+    "abyssinia-wrap-top": {
+      "name": "አቢሲኒያ የሚጠቀለል ቶፕ",
+      "description": "እንደ ብሩሽ ምት በሰውነት ላይ የሚጠቀለል ፊት፣ በጥልቅ ቡርጋንዲ ቀለማችን። ልዩ መግቢያ ለሚገባቸው ምሽቶች የተሰራ።"
+    },
+    "addis-cowl-knit": {
+      "name": "አዲስ ካውል ሹራብ ቶፕ",
+      "description": "ለስለስ ያለ ገጽታ ያለው ሰውነትን የሚገጥም ቁርጥ። የሚወርደው ካውል አንገት በትክክለኛው ቦታ ይወድቃል፣ የተቦረሸው ሹራብ ደግሞ ሞቃት ምሽቶችን ሞቃት ያደርጋል።"
+    },
+    "almaz-pinstripe-suit": {
+      "name": "አልማዝ ባለ ቀጭን መስመር ሱፍ ልብስ",
+      "description": "ወገብ ላይ የሚጠብ ባለ ቀጭን መስመር ብሌዘር ከቀጭን ከፍ ያለ ወገብ ሱሪ ጋር፣ በመለያ ቸኮሌት ቀለማችን። ጎልቶ መታየት ለሚጠይቁ ቀናት የተሳሉ መስመሮች።"
+    },
+    "aster-belted-wrap-suit": {
+      "name": "አስቴር ቀበቶ ያለው የሚጠቀለል ሱፍ ልብስ",
+      "description": "በራሱ ቀበቶ የሚጠብቅ የሚጠቀለል ፊት ያለው ብሌዘር፣ እንደ ውሃ ከሚንቀሳቀስ ሰፊ እግር ሱሪ ጋር። የተዋበ እንጂ ፈጽሞ የደረቀ አይደለም።"
+    },
+    "bete-seamless-crew": {
+      "name": "ቤቴ ስፌት አልባ ክብ አንገት ቶፕ",
+      "description": "ደንበኞቻችን በሁሉም ቀለም የሚገዙት ቶፕ። እንደ ቆዳ የሚገጥም ስፌት አልባ ክብ አንገት — ከብሌዘር ስር የማይታይ፣ ለብቻውም የሚያምር።"
+    },
+    "birtukan-velvet-collar-suit": {
+      "name": "ብርቱካን ቬልቬት ኮሌታ ሱፍ ልብስ",
+      "description": "እስከ ወገብ ድረስ የተሰፋ ጥልቅ ቡርጋንዲ፣ በተቃራኒ ቀለም ቬልቬት ኮሌታ የተጠናቀቀ። ልዩ መግቢያ ለሚገባቸው ምሽቶች የሚሆን ሱፍ ልብስ።"
+    },
+    "entoto-corset-top": {
+      "name": "እንጦጦ ኮርሴት ቶፕ",
+      "description": "ከሁሉም በላይ ቅርጽ የሚሰጠው ልብሳችን። የውስጥ ደጋፊ አጥንቶችና የተዋቀሩ ስፌቶች ቅርጹን ይይዛሉ፤ የሚለጠጠው ክሬፕ ደግሞ ምሽቱን ሙሉ ምቹ ያደርገዋል።"
+    },
+    "genet-linen-suit": {
+      "name": "ገነት የሊነን ሱፍ ልብስ",
+      "description": "ለስላሳ ቅርጽ ያለው የሊነን ብሌዘርና አጠር ያለ ሱሪ በሞቃት የአሸዋ ቀለም። በካፌ ጀምረው በሥነ ሥርዓት ለሚያበቁ የአዲስ አበባ ጠዋቶች የተሰራ።"
+    },
+    "hana-cutout-top": {
+      "name": "ሃና ክፍት ዲዛይን ቶፕ",
+      "description": "ብርሃንንም ዓይንንም እንዲስብ ወገብ ላይ የተቀመጠ አንድ ክፍት ዲዛይን። ቅርጽ የሚሰጠው ጀርሲ ቀሪውን ሁሉ በትክክል ይይዛል።"
+    },
+    "makeda-tuxedo-suit": {
+      "name": "ማክዳ ቱክሰዶ ሱፍ ልብስ",
+      "description": "የሳቲን ሻል ላፔሎች በሚገጥም ጥቁር ብሌዘር ላይ፣ ከቀጥ ያለ እግር ሱሪ ጋር። በክፍሉ ውስጥ ከሁሉም ጎልቶ የሚታይ የምሽት ሱፍ ልብስ።"
+    },
+    "menen-single-breasted-suit": {
+      "name": "መነን ባለ አንድ ረድፍ ቁልፍ ሱፍ ልብስ",
+      "description": "ንጹህ ባለ አንድ ቁልፍ ብሌዘርና ቀጥ ያለ እግር ሱሪ በለስላሳ ክሬም ነጭ። ለሥነ ሥርዓቶች፣ ለቢሮና በመካከላቸው ላሉ ሁሉም አጋጣሚዎች የተሰራ።"
+    },
+    "meri-ribbed-square-neck": {
+      "name": "ሜሪ ባለ መስመር ካሬ አንገት ቶፕ",
+      "description": "ንጹህ ካሬ አንገትና እያንዳንዱን መስመር የሚከተል ለስላሳ ባለ መስመር ሹራብ። ሰውነትን ሳይጣበቅ እንዲከተል የተቆረጠ — ልብስ ሳይቀይሩ ከቢሮ እስከ እራት።"
+    },
+    "meron-off-shoulder-top": {
+      "name": "ሜሮን ትከሻ የሚያሳይ ቶፕ",
+      "description": "ከትከሻ ወርዶ ይቀመጣል፣ እዚያው ይቆያልም። ለስላሳ ላስቲክ ሳይጨምቅ አንገቱን በቦታው ይይዛል — ሰዓት ከሰዓት።"
+    },
+    "saba-one-shoulder-top": {
+      "name": "ሳባ አንድ ትከሻ ቶፕ",
+      "description": "አንድ ትከሻ፣ ሙሉ ግርማ። ሰያፉ አንገት ይናገራል፤ የተጣበቁ ስፌቶች ደግሞ ከስር ያለውን መስመር ፍጹም ንጹህ ያደርጋሉ።"
+    },
+    "selam-cropped-suit": {
+      "name": "ሰላም አጭር ብሌዘር ሱፍ ልብስ",
+      "description": "አጠር ያለ ብሌዘር ከፍ ያለ ወገብና ፕሊት ካለው እግርን የሚያረዝም ሱሪ ጋር። ዘመናዊ፣ ቀላልና በቀላሉ የሚዋሃድ።"
+    },
+    "selam-mock-neck": {
+      "name": "ሰላም ከፍ ያለ አንገት ቶፕ",
+      "description": "ጸጥተኛው። ቀጭን ከፍ ያለ አንገትና እንደ ቆዳ የሚገጥም ሹራብ — ከሁሉም ልብስ ስር ይሆናል፣ ለብቻውም ሆን ተብሎ የተመረጠ ይመስላል።"
+    },
+    "senait-wide-leg-suit": {
+      "name": "ሰናይት ሰፊ እግር ሱፍ ልብስ",
+      "description": "ቀለል ያለ ብልጭታ ያለው የሻምፓኝ ወርቃማ፣ በሚገጥም ብሌዘርና እስከ መሬት በሚደርስ ሰፊ እግር ሱሪ የተቆረጠ። ለመድመቅ ለስላሳው መንገዳችን።"
+    },
+    "taitu-double-breasted-suit": {
+      "name": "ጣይቱ ባለ ሁለት ረድፍ ቁልፍ ሱፍ ልብስ",
+      "description": "የተሳለ ትከሻና የጠበበ ወገብ ያለው ባለ ሁለት ረድፍ ቁልፍ ብሌዘር፣ ከፍ ካለ ወገብ ሰፊ እግር ሱሪ ጋር። የAHAB መለያ ሱፍ ልብስ — በአዲስ አበባ የተሰፋ።"
+    },
+    "tsion-halter-top": {
+      "name": "ጽዮን ሃልተር ቶፕ",
+      "description": "ትከሻዎችን የሚያጎላ ሃልተርና በፈለጉት መንገድ የሚያስሩት ማሰሪያ። በጎን አካባቢ የሚገጥም፣ በአመለካከት ግን ዘና ያለ።"
+    },
+    "zewditu-oversized-suit": {
+      "name": "ዘውዲቱ ሰፊ ብሌዘር ሱፍ ልብስ",
+      "description": "ዘና ያለ ሰፊ ብሌዘር በሚፈስ ሰፊ እግር ሱሪ ላይ። ያለ ጥረት የሚገኝ ኃያል አለባበስ በክላሲክ ጥቁር።"
+    }
+  }
+}

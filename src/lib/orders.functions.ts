@@ -55,6 +55,8 @@ const orderSchema = z.object({
   accountAccessToken: z.string().min(1).max(4096).optional(),
   paymentMethod: z.enum(["Cash on delivery", "Telebirr", "CBE bank transfer"]),
   notes: z.string().max(1000),
+  /** Checkout language; the confirmation email is written in it. */
+  locale: z.enum(["en", "am"]).optional(),
 });
 
 const orderResultSchema = z.discriminatedUnion("ok", [
@@ -158,23 +160,42 @@ async function sendOrderConfirmationEmail(
   priced: Extract<ReturnType<typeof priceOrder>, { ok: true }>,
 ) {
   try {
-    const [{ getRequest }, { buildOrderConfirmationEmail }, { sendEmail }, { PAYMENT_METHODS }] =
-      await Promise.all([
-        import("@tanstack/react-start/server"),
-        import("@/lib/order-email"),
-        import("@/lib/email.server"),
-        import("@/lib/payment-methods"),
-      ]);
+    const [
+      { getRequest },
+      { buildOrderConfirmationEmail },
+      { sendEmail },
+      { PAYMENT_METHODS },
+      { localizePath },
+      { getAllProductsCached },
+    ] = await Promise.all([
+      import("@tanstack/react-start/server"),
+      import("@/lib/order-email"),
+      import("@/lib/email.server"),
+      import("@/lib/payment-methods"),
+      import("@/lib/i18n/locale"),
+      import("@/lib/firestore-products"),
+    ]);
+    const locale = data.locale ?? "en";
     // The site the customer ordered from, so links work before and after a domain change.
     const origin = new URL(getRequest().url).origin;
     const query = `?token=${encodeURIComponent(data.paymentAccessToken)}`;
     const number = encodeURIComponent(data.orderNumber);
     const payByTransfer = RECEIPT_PAYMENT_METHODS.includes(data.paymentMethod);
+    // Item names and colours as the shopper saw them (the admin app's optional Amharic text).
+    const catalog = locale === "am" ? getAllProductsCached() : [];
+    const items = priced.items.map((item) => {
+      const am = catalog.find((product) => product.slug === item.slug)?.am;
+      return {
+        ...item,
+        name: am?.name || item.name,
+        color: am?.colors?.[item.color] || item.color,
+      };
+    });
 
     const email = buildOrderConfirmationEmail({
       orderNumber: data.orderNumber,
       customerName: data.customer.name,
-      items: priced.items,
+      items,
       subtotal: priced.subtotal,
       discount: priced.discount,
       shipping: priced.shipping,
@@ -182,8 +203,11 @@ async function sendOrderConfirmationEmail(
       paymentMethod: data.paymentMethod,
       paymentAccount:
         PAYMENT_METHODS.find((method) => method.label === data.paymentMethod)?.account ?? "",
-      trackingUrl: `${origin}/tracking/${number}${query}`,
-      paymentUrl: payByTransfer ? `${origin}/payment/${number}${query}` : null,
+      trackingUrl: `${origin}${localizePath(`/tracking/${number}`, locale)}${query}`,
+      paymentUrl: payByTransfer
+        ? `${origin}${localizePath(`/payment/${number}`, locale)}${query}`
+        : null,
+      locale,
     });
     await sendEmail({ to: data.customer.email, ...email });
   } catch (error) {

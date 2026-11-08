@@ -20,6 +20,8 @@ import {
 import { cn } from "@/lib/utils";
 import { getApprovedProductReviews } from "@/lib/orders.functions";
 import { getProductVariantAvailability } from "@/lib/inventory.functions";
+import { headT, useT } from "@/lib/i18n";
+import { productText, useProductText } from "@/lib/i18n/product";
 
 export const Route = createFileRoute("/product/$slug")({
   loader: async ({ params }) => {
@@ -45,11 +47,14 @@ export const Route = createFileRoute("/product/$slug")({
       reviews,
     };
   },
-  head: ({ loaderData }) => {
+  head: ({ loaderData, match }) => {
     const p = loaderData?.product;
     if (!p) return {};
-    return seo(p.name, p.description.slice(0, 155), {
+    const { locale } = headT(match.context);
+    const text = productText(p, locale);
+    return seo(text.name, text.description.slice(0, 155), {
       path: `/product/${p.slug}`,
+      locale,
       image: p.images[0],
       type: "product",
       jsonLd: [
@@ -62,16 +67,21 @@ export const Route = createFileRoute("/product/$slug")({
       ],
     });
   },
-  notFoundComponent: () => (
-    <div className="py-32 text-center">
-      <h1 className="text-4xl">This piece is no longer available.</h1>
-      <Link to="/shop" className="label-xs link-underline mt-8 inline-block">
-        Back to the shop
-      </Link>
-    </div>
-  ),
+  notFoundComponent: ProductNotFound,
   component: ProductPage,
 });
+
+function ProductNotFound() {
+  const t = useT();
+  return (
+    <div className="py-32 text-center">
+      <h1 className="text-4xl">{t("This piece is no longer available.")}</h1>
+      <Link to="/shop" className="label-xs link-underline mt-8 inline-block">
+        {t("Back to the shop")}
+      </Link>
+    </div>
+  );
+}
 
 const suitFitNotes: Record<string, string> = {
   "taitu-double-breasted-suit":
@@ -91,6 +101,8 @@ const suitFitNotes: Record<string, string> = {
 function ProductPage() {
   const { product, reviews } = Route.useLoaderData();
   const navigate = useNavigate();
+  const t = useT();
+  const text = useProductText()(product);
   const {
     products: allProducts,
     addToCart,
@@ -122,21 +134,21 @@ function ProductPage() {
 
   useEffect(() => {
     if (!spinning) return;
-    const t = setInterval(() => setActive((a) => (a + 1) % product.images.length), 700);
-    return () => clearInterval(t);
+    const timer = setInterval(() => setActive((a) => (a + 1) % product.images.length), 700);
+    return () => clearInterval(timer);
   }, [spinning, product.images.length]);
 
   const add = (open = true) => {
     if (!size) {
-      toast.error("Please choose a size");
+      toast.error(t("Please choose a size"));
       return false;
     }
     if (inventoryStatus !== "ready") {
-      toast.error("Stock availability couldn't be checked. Please try again later.");
+      toast.error(t("Stock availability couldn't be checked. Please try again later."));
       return false;
     }
     if (!variantAvailable) {
-      toast.error("That size and color are currently unavailable.");
+      toast.error(t("That size and color are currently unavailable."));
       return false;
     }
     addToCart({ slug: product.slug, size, color, qty: 1 });
@@ -170,9 +182,9 @@ function ProductPage() {
     <div className="mx-auto max-w-[1500px] px-5 py-10 md:px-10 md:py-16">
       <nav className="label-xs text-muted-foreground">
         <Link to="/shop" className="link-underline">
-          Shop
+          {t("Shop")}
         </Link>{" "}
-        / <span className="text-foreground">{product.name}</span>
+        / <span className="text-foreground">{text.name}</span>
       </nav>
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:gap-16">
@@ -197,7 +209,10 @@ function ProductPage() {
               >
                 <img
                   src={src}
-                  alt={`${product.name} in ${product.colors[i]?.name ?? ""}`}
+                  alt={t("{name} in {color}", {
+                    name: text.name,
+                    color: text.color(product.colors[i]?.name ?? ""),
+                  })}
                   loading="lazy"
                   className="aspect-3/4 w-full object-cover"
                 />
@@ -218,7 +233,7 @@ function ProductPage() {
             <img
               key={active}
               src={product.images[active]}
-              alt={`${product.name} in ${color}`}
+              alt={t("{name} in {color}", { name: text.name, color: text.color(color) })}
               className="fade-in-slow aspect-3/4 w-full object-cover transition-transform duration-300"
               style={
                 zoom
@@ -236,7 +251,7 @@ function ProductPage() {
                   className={cn("h-3.5 w-3.5", spinning && "animate-spin")}
                   strokeWidth={1.5}
                 />{" "}
-                {spinning ? "Stop" : "360° view"}
+                {spinning ? t("Stop") : t("360° view")}
               </button>
             ) : null}
           </div>
@@ -247,13 +262,13 @@ function ProductPage() {
           {product.badge ? (
             <p className="label-xs text-gold">
               {product.badge === "bestseller"
-                ? "Best Seller"
+                ? t("Best Seller")
                 : product.badge === "new"
-                  ? "New Arrival"
-                  : "On Sale"}
+                  ? t("New Arrival")
+                  : t("On Sale")}
             </p>
           ) : null}
-          <h1 className="mt-3 text-4xl leading-tight md:text-5xl">{product.name}</h1>
+          <h1 className="mt-3 text-4xl leading-tight md:text-5xl">{text.name}</h1>
           <div className="mt-4 flex items-center gap-4">
             <p className="text-lg">{formatPrice(product.price)}</p>
             {product.compareAt ? (
@@ -263,7 +278,10 @@ function ProductPage() {
           <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
             {reviews.length ? (
               <>
-                <span className="flex" aria-label={`${product.rating.toFixed(1)} out of 5 stars`}>
+                <span
+                  className="flex"
+                  aria-label={t("{rating} out of 5 stars", { rating: product.rating.toFixed(1) })}
+                >
                   {Array.from({ length: 5 }).map((_, index) => (
                     <Star
                       key={index}
@@ -274,17 +292,19 @@ function ProductPage() {
                     />
                   ))}
                 </span>
-                {reviews.length} verified {reviews.length === 1 ? "review" : "reviews"}
+                {reviews.length === 1
+                  ? t("{count} verified review", { count: reviews.length })
+                  : t("{count} verified reviews", { count: reviews.length })}
               </>
             ) : (
-              "No verified reviews yet"
+              t("No verified reviews yet")
             )}
           </div>
-          <p className="mt-6 leading-relaxed text-muted-foreground">{product.description}</p>
+          <p className="mt-6 leading-relaxed text-muted-foreground">{text.description}</p>
 
           <div className="mt-8">
             <p className="label-xs">
-              Colour — <span className="text-muted-foreground">{color}</span>
+              {t("Colour")} — <span className="text-muted-foreground">{text.color(color)}</span>
             </p>
             <div className="mt-3 flex gap-3">
               {product.colors.map((c, i) => (
@@ -297,7 +317,7 @@ function ProductPage() {
                     setSpinning(false);
                     setActive(i);
                   }}
-                  aria-label={c.name}
+                  aria-label={text.color(c.name)}
                   className={cn(
                     "h-9 w-9 rounded-full border-2",
                     colorIndex === i ? "border-gold" : "border-border",
@@ -310,7 +330,7 @@ function ProductPage() {
           </div>
 
           <div className="mt-8">
-            <p className="label-xs">Size</p>
+            <p className="label-xs">{t("Size")}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {product.sizes.map((s) => (
                 <button
@@ -333,14 +353,14 @@ function ProductPage() {
             </div>
             <p className="mt-3 text-xs text-muted-foreground">
               {inventoryStatus === "loading"
-                ? "Checking size and color availability…"
+                ? t("Checking size and color availability…")
                 : inventoryStatus === "error"
-                  ? "Availability couldn't be checked. Please try again later."
+                  ? t("Availability couldn't be checked. Please try again later.")
                   : size && !variantAvailable
-                    ? "This size and color are currently unavailable."
+                    ? t("This size and color are currently unavailable.")
                     : variantAvailable
-                      ? "In stock"
-                      : "Select an available size and color."}
+                      ? t("In stock")
+                      : t("Select an available size and color.")}
             </p>
           </div>
 
@@ -352,12 +372,12 @@ function ProductPage() {
                 onClick={() => add()}
                 disabled={inventoryStatus !== "ready" || (size !== null && !variantAvailable)}
               >
-                Add to Cart
+                {t("Add to Cart")}
               </AhabButton>
               <button
                 type="button"
                 onClick={() => toggleWishlist(product.slug)}
-                aria-label="Wishlist"
+                aria-label={t("Wishlist")}
                 className="grid h-14 w-14 place-items-center border border-border hover:border-primary"
               >
                 <Heart
@@ -376,22 +396,24 @@ function ProductPage() {
                 }
               }}
             >
-              Buy Now
+              {t("Buy Now")}
             </AhabButton>
-            <p className="label-xs mt-2 text-center text-muted-foreground">Or order by chat</p>
+            <p className="label-xs mt-2 text-center text-muted-foreground">
+              {t("Or order by chat")}
+            </p>
             <ChatOrderButtons
               message={chatMessage}
               onBeforeOpen={() => {
                 if (!size) {
-                  toast.error("Please choose a size");
+                  toast.error(t("Please choose a size"));
                   return false;
                 }
                 if (inventoryStatus !== "ready") {
-                  toast.error("Stock availability couldn't be checked. Please try again later.");
+                  toast.error(t("Stock availability couldn't be checked. Please try again later."));
                   return false;
                 }
                 if (!variantAvailable) {
-                  toast.error("That size and color are currently unavailable.");
+                  toast.error(t("That size and color are currently unavailable."));
                   return false;
                 }
                 return true;
@@ -401,29 +423,32 @@ function ProductPage() {
 
           <Accordion type="single" collapsible className="mt-10 border-t border-border">
             <AccordionItem value="fabric">
-              <AccordionTrigger className="label-xs">Fabric</AccordionTrigger>
-              <AccordionContent className="text-muted-foreground">
-                {product.fabric}
-              </AccordionContent>
+              <AccordionTrigger className="label-xs">{t("Fabric")}</AccordionTrigger>
+              <AccordionContent className="text-muted-foreground">{text.fabric}</AccordionContent>
             </AccordionItem>
             <AccordionItem value="care">
-              <AccordionTrigger className="label-xs">Care</AccordionTrigger>
-              <AccordionContent className="text-muted-foreground">{product.care}</AccordionContent>
+              <AccordionTrigger className="label-xs">{t("Care")}</AccordionTrigger>
+              <AccordionContent className="text-muted-foreground">{text.care}</AccordionContent>
             </AccordionItem>
             <AccordionItem value="size">
               <AccordionTrigger className="label-xs">
-                {product.categories.includes("suits") ? "Suit size & fit" : "Size guide"}
+                {product.categories.includes("suits") ? t("Suit size & fit") : t("Size guide")}
               </AccordionTrigger>
               <AccordionContent>
                 {product.categories.includes("suits") ? (
                   <>
                     <p className="mb-4 text-sm text-muted-foreground">
-                      {suitFitNotes[product.slug] ?? "For a suit-specific fit note, contact AHAB."}{" "}
-                      The size chart shows body measurements, not finished garment measurements.
+                      {t(
+                        suitFitNotes[product.slug] ?? "For a suit-specific fit note, contact AHAB.",
+                      )}{" "}
+                      {t(
+                        "The size chart shows body measurements, not finished garment measurements.",
+                      )}
                     </p>
                     <p className="mb-4 text-sm text-muted-foreground">
-                      For jacket or trouser measurements and possible alterations, contact AHAB
-                      before ordering so the team can confirm options for this suit.
+                      {t(
+                        "For jacket or trouser measurements and possible alterations, contact AHAB before ordering so the team can confirm options for this suit.",
+                      )}
                     </p>
                   </>
                 ) : null}
@@ -431,19 +456,19 @@ function ProductPage() {
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="delivery">
-              <AccordionTrigger className="label-xs">Delivery</AccordionTrigger>
+              <AccordionTrigger className="label-xs">{t("Delivery")}</AccordionTrigger>
               <AccordionContent className="space-y-2 text-muted-foreground">
                 <p>
-                  <strong className="text-foreground">Addis Ababa:</strong> 1–2 days, free over ETB
-                  5,000.
+                  <strong className="text-foreground">{t("Addis Ababa:")}</strong>{" "}
+                  {t("1–2 days, free over ETB 5,000.")}
                 </p>
                 <p>
-                  <strong className="text-foreground">Across Ethiopia:</strong> 3–6 days via trusted
-                  courier.
+                  <strong className="text-foreground">{t("Across Ethiopia:")}</strong>{" "}
+                  {t("3–6 days via trusted courier.")}
                 </p>
                 <p>
-                  <strong className="text-foreground">International:</strong> coming soon — message
-                  us to arrange.
+                  <strong className="text-foreground">{t("International:")}</strong>{" "}
+                  {t("coming soon — message us to arrange.")}
                 </p>
               </AccordionContent>
             </AccordionItem>
@@ -452,12 +477,15 @@ function ProductPage() {
       </div>
 
       <section className="mt-28">
-        <h2 className="text-4xl">Verified customer reviews</h2>
+        <h2 className="text-4xl">{t("Verified customer reviews")}</h2>
         {reviews.length ? (
           <div className="mt-10 grid gap-6 md:grid-cols-2">
             {reviews.map((review, index) => (
               <article key={`${review.createdAt}-${index}`} className="border-t border-border pt-6">
-                <span className="flex" aria-label={`${review.rating} out of 5 stars`}>
+                <span
+                  className="flex"
+                  aria-label={t("{rating} out of 5 stars", { rating: review.rating })}
+                >
                   {Array.from({ length: 5 }).map((_, starIndex) => (
                     <Star
                       key={starIndex}
@@ -470,32 +498,34 @@ function ProductPage() {
                 </span>
                 <p className="mt-4 font-serif text-xl leading-snug">{review.reviewText}</p>
                 {review.fitFeedback ? (
-                  <p className="mt-3 text-sm text-muted-foreground">Fit: {review.fitFeedback}</p>
+                  <p className="mt-3 text-sm text-muted-foreground">
+                    {t("Fit: {fit}", { fit: review.fitFeedback })}
+                  </p>
                 ) : null}
                 {review.photoUrl ? (
                   <img
                     src={review.photoUrl}
-                    alt={`Customer photo for ${product.name}`}
+                    alt={t("Customer photo for {name}", { name: text.name })}
                     loading="lazy"
                     className="mt-4 max-h-80 object-cover"
                   />
                 ) : null}
                 <p className="label-xs mt-4 text-muted-foreground">
-                  {review.reviewerName} · Verified purchase
+                  {t("{name} · Verified purchase", { name: review.reviewerName })}
                 </p>
               </article>
             ))}
           </div>
         ) : (
           <p className="mt-4 max-w-xl text-muted-foreground">
-            No customer reviews have been published for this piece yet.
+            {t("No customer reviews have been published for this piece yet.")}
           </p>
         )}
       </section>
 
       {related.length ? (
         <section className="mt-28">
-          <h2 className="text-4xl">You may also love</h2>
+          <h2 className="text-4xl">{t("You may also love")}</h2>
           <div className="mt-10 grid grid-cols-2 gap-x-4 gap-y-12 lg:grid-cols-4">
             {related.map((p) => (
               <ProductCard key={p.slug} product={p} />
@@ -506,7 +536,7 @@ function ProductPage() {
 
       {viewed.length ? (
         <section className="mt-28">
-          <h2 className="text-4xl">Recently viewed</h2>
+          <h2 className="text-4xl">{t("Recently viewed")}</h2>
           <div className="mt-10 grid grid-cols-2 gap-x-4 gap-y-12 lg:grid-cols-4">
             {viewed.map((p) => p && <ProductCard key={p.slug} product={p} />)}
           </div>

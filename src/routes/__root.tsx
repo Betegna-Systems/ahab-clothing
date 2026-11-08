@@ -16,18 +16,21 @@ import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { Toaster } from "@/components/ui/sonner";
 import { DEFAULT_DESCRIPTION, DEFAULT_TITLE, jsonLdScript, siteGraphJsonLd } from "@/lib/seo";
+import { useLocale, useT, type I18nContext } from "@/lib/i18n";
+import { LOCALE_TAGS } from "@/lib/i18n/locale";
 
 function NotFoundComponent() {
+  const t = useT();
   return (
     <div className="flex min-h-[60vh] items-center justify-center px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl">404</h1>
-        <p className="mt-4 text-sm text-muted-foreground">This page has wandered off.</p>
+        <p className="mt-4 text-sm text-muted-foreground">{t("This page has wandered off.")}</p>
         <Link
           to="/"
           className="label-xs mt-8 inline-block bg-primary px-8 py-4 text-primary-foreground"
         >
-          Return home
+          {t("Return home")}
         </Link>
       </div>
     </div>
@@ -37,10 +40,11 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: ErrorComponentProps) {
   console.error(error);
   const router = useRouter();
+  const t = useT();
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-3xl">This page didn't load</h1>
+        <h1 className="text-3xl">{t("This page didn't load")}</h1>
         <button
           onClick={() => {
             router.invalidate();
@@ -48,14 +52,14 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
           }}
           className="label-xs mt-6 bg-primary px-8 py-4 text-primary-foreground"
         >
-          Try again
+          {t("Try again")}
         </button>
       </div>
     </div>
   );
 }
 
-export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+export const Route = createRootRouteWithContext<{ queryClient: QueryClient; i18n: I18nContext }>()({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -74,11 +78,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&family=Noto+Sans+Ethiopic:wght@300;400;500&family=Noto+Serif+Ethiopic:wght@400;500&display=swap",
       },
     ],
     scripts: [jsonLdScript(siteGraphJsonLd())],
   }),
+  // Load the live catalog once with the first page (server-side), so product names and
+  // translations are in the initial HTML instead of swapping in after load. Polling in
+  // useAllProducts keeps it fresh afterwards; client navigations don't refetch it here.
+  loader: async () => {
+    const { fetchAllFirestoreProducts } = await import("@/lib/firestore-products");
+    return { catalog: await fetchAllFirestoreProducts() };
+  },
+  staleTime: Infinity,
+  shouldReload: false,
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
@@ -87,7 +100,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang={LOCALE_TAGS[useLocale()]}>
       <head>
         <HeadContent />
       </head>

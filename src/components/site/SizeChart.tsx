@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n";
 
 const rows = [
   { size: "XS", bust: [80, 84], waist: [62, 66], hips: [86, 90] },
@@ -11,6 +12,7 @@ const rows = [
 
 export function SizeChart({ compact }: { compact?: boolean }) {
   const [unit, setUnit] = useState<"cm" | "in">("cm");
+  const t = useT();
   const [picked, setPicked] = useState<string | null>(null);
   const f = (n: number) => (unit === "cm" ? n : Math.round(n / 2.54));
   const fmt = ([a = 0, b = 0]: number[]) => `${f(a)}–${f(b)}`;
@@ -35,10 +37,10 @@ export function SizeChart({ compact }: { compact?: boolean }) {
       <table className="mt-4 w-full text-left text-sm">
         <thead className="label-xs text-muted-foreground">
           <tr>
-            <th className="py-2">Size</th>
-            <th>Bust</th>
-            <th>Waist</th>
-            <th>Hips</th>
+            <th className="py-2">{t("Size")}</th>
+            <th>{t("Bust")}</th>
+            <th>{t("Waist")}</th>
+            <th>{t("Hips")}</th>
           </tr>
         </thead>
         <tbody>
@@ -68,10 +70,10 @@ export function SizeChart({ compact }: { compact?: boolean }) {
             ],
             ["Waist", "Measure around your natural waistline — the narrowest part of your torso."],
             ["Hips", "Stand with feet together and measure around the fullest part of your hips."],
-          ].map(([t, d]) => (
-            <div key={t}>
-              <h3 className="font-serif text-2xl">{t}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{d}</p>
+          ].map(([title = "", description = ""]) => (
+            <div key={title}>
+              <h3 className="font-serif text-2xl">{t(title)}</h3>
+              <p className="mt-2 text-sm text-muted-foreground">{t(description)}</p>
             </div>
           ))}
         </div>

@@ -56,4 +56,25 @@ describe("order confirmation email", () => {
     assert.ok(!email.html.includes("<b>Red</b>"));
     assert.ok(email.html.includes("&lt;b&gt;Red&lt;/b&gt;"));
   });
+
+  it("writes Amharic emails with /am/ links when the shopper checked out in Amharic", () => {
+    const email = buildOrderConfirmationEmail({
+      ...base,
+      customerName: "<b>ሰላም</b> ተስፋዬ",
+      trackingUrl: "https://example.com/am/tracking/AHAB-7K2M9QXP?token=t",
+      paymentUrl: "https://example.com/am/payment/AHAB-7K2M9QXP?token=t",
+      locale: "am",
+    });
+    const ethiopic = /[ሀ-፿]/;
+    assert.ok(ethiopic.test(email.subject), "subject is not in Amharic");
+    assert.ok(email.subject.includes("AHAB-7K2M9QXP"));
+    assert.ok(email.text.includes("ጠቅላላ: ETB 8,820"));
+    assert.ok(email.text.includes("https://example.com/am/payment/AHAB-7K2M9QXP?token=t"));
+    assert.ok(email.html.includes('href="https://example.com/am/tracking/AHAB-7K2M9QXP?token=t"'));
+    assert.ok(!email.text.includes("Track your order"));
+    assert.ok(!email.html.includes("Upload receipt"));
+    assert.ok(!email.html.includes("Thank you"));
+    assert.ok(email.html.includes("&lt;b&gt;ሰላም&lt;/b&gt;"));
+    assert.ok(!email.html.includes("<b>ሰላም</b>"));
+  });
 });

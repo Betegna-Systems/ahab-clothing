@@ -1,4 +1,5 @@
 import { products as staticCatalog, type Product } from "@/lib/products";
+import { LOCALE_TAGS, LOCALES, OG_LOCALES, localizePath, type Locale } from "@/lib/i18n/locale";
 import { INSTAGRAM_URL, TIKTOK_URL } from "@/lib/social";
 
 export const SITE_NAME = "AHAB Clothing";
@@ -28,6 +29,8 @@ export function absoluteUrl(path = "/", origin = SITE_URL) {
 
 export type SeoOptions = {
   path?: string;
+  /** Page language; sets the canonical /am/ address, og:locale and hreflang alternates. */
+  locale?: Locale;
   image?: string | undefined;
   type?: "website" | "product" | "article";
   index?: boolean;
@@ -37,7 +40,7 @@ export type SeoOptions = {
 
 type HeadResult = {
   meta: Array<Record<string, string>>;
-  links: Array<{ rel: string; href: string }>;
+  links: Array<{ rel: string; href: string; hrefLang?: string }>;
   scripts: Array<{ type: string; children: string }>;
 };
 
@@ -56,10 +59,11 @@ export function seo(title: string, description: string, options: SeoOptions = {}
     index = true,
     jsonLd,
     titleTemplate = true,
+    locale = "en",
   } = options;
 
   const full = titleTemplate ? `${title} — ${SITE_NAME}` : title;
-  const url = absoluteUrl(path);
+  const url = absoluteUrl(localizePath(path, locale));
   const ogImage = absoluteUrl(image);
   const jsonLdItems = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 
@@ -76,13 +80,34 @@ export function seo(title: string, description: string, options: SeoOptions = {}
       { property: "og:image", content: ogImage },
       { property: "og:image:alt", content: full },
       { property: "og:site_name", content: SITE_NAME },
-      { property: "og:locale", content: "en_ET" },
+      { property: "og:locale", content: OG_LOCALES[locale] },
+      {
+        property: "og:locale:alternate",
+        content: OG_LOCALES[locale === "en" ? "am" : "en"],
+      },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: full },
       { name: "twitter:description", content: description },
       { name: "twitter:image", content: ogImage },
     ],
-    links: [{ rel: "canonical", href: url }],
+    links: [
+      { rel: "canonical", href: url },
+      // Tell search engines each page exists in both languages.
+      ...(index
+        ? [
+            ...LOCALES.map((l) => ({
+              rel: "alternate",
+              hrefLang: LOCALE_TAGS[l],
+              href: absoluteUrl(localizePath(path, l)),
+            })),
+            {
+              rel: "alternate",
+              hrefLang: "x-default",
+              href: absoluteUrl(localizePath(path, "en")),
+            },
+          ]
+        : []),
+    ],
     scripts: jsonLdItems.map(jsonLdScript),
   };
 }
@@ -252,43 +277,64 @@ function xmlEscape(value: string) {
     .replaceAll("'", "&apos;");
 }
 
+/** One <url> per page per language, each listing its translations (hreflang). */
+function sitemapEntry(path: string, origin: string, extra: string) {
+  const alternates = [...LOCALES, "x-default" as const]
+    .map((l) => {
+      const href = absoluteUrl(localizePath(path, l === "x-default" ? "en" : l), origin);
+      return `    <xhtml:link rel="alternate" hreflang="${l === "x-default" ? l : LOCALE_TAGS[l]}" href="${xmlEscape(href)}"/>`;
+    })
+    .join("\n");
+  return LOCALES.map(
+    (locale) => `  <url>
+    <loc>${xmlEscape(absoluteUrl(localizePath(path, locale), origin))}</loc>
+${alternates}
+${extra}
+  </url>`,
+  );
+}
+
 export function buildSitemapXml(
   origin = SITE_URL,
   products: readonly CatalogEntry[] = staticCatalog,
 ) {
-  const staticUrls = PUBLIC_SITEMAP_PAGES.map(
-    (page) => `  <url>
-    <loc>${xmlEscape(absoluteUrl(page.path, origin))}</loc>
-    <changefreq>${page.changefreq}</changefreq>
-    <priority>${page.priority}</priority>
-  </url>`,
+  const staticUrls = PUBLIC_SITEMAP_PAGES.flatMap((page) =>
+    sitemapEntry(
+      page.path,
+      origin,
+      `    <changefreq>${page.changefreq}</changefreq>
+    <priority>${page.priority}</priority>`,
+    ),
   );
 
-  const productUrls = products.map(
-    (product) => `  <url>
-    <loc>${xmlEscape(absoluteUrl(`/product/${product.slug}`, origin))}</loc>
-    <lastmod>${product.createdAt}</lastmod>
+  const productUrls = products.flatMap((product) =>
+    sitemapEntry(
+      `/product/${product.slug}`,
+      origin,
+      `    <lastmod>${product.createdAt}</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>`,
+    <priority>0.8</priority>`,
+    ),
   );
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 ${[...staticUrls, ...productUrls].join("\n")}
 </urlset>
 `;
 }
 
+const PRIVATE_PATHS = ["/checkout", "/account", "/wishlist", "/payment/", "/tracking/"];
+
 export function buildRobotsTxt(origin = SITE_URL) {
+  // Private pages are hidden in both languages; /admin/ has no Amharic version.
+  const disallow = [
+    ...PRIVATE_PATHS.flatMap((path) => LOCALES.map((locale) => localizePath(path, locale))),
+    "/admin/",
+  ];
   return `User-agent: *
 Allow: /
-Disallow: /checkout
-Disallow: /account
-Disallow: /wishlist
-Disallow: /payment/
-Disallow: /tracking/
-Disallow: /admin/
+${disallow.map((path) => `Disallow: ${path}`).join("\n")}
 
 Sitemap: ${origin}/sitemap.xml
 `;

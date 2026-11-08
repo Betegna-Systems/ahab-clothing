@@ -10,6 +10,8 @@ import {
 import { ProductCard } from "@/components/site/ProductCard";
 import { collectionJsonLd, seo } from "@/lib/seo";
 import { cn } from "@/lib/utils";
+import { headT, useT } from "@/lib/i18n";
+import { useProductText } from "@/lib/i18n/product";
 
 const CATS: Category[] = [
   "suits",
@@ -46,15 +48,20 @@ export const Route = createFileRoute("/shop")({
       catalog: getAllProductsCached().map(({ slug, name }) => ({ slug, name })),
     };
   },
-  head: ({ loaderData }) =>
-    seo(
-      "Shop",
-      "Shop AHAB Suits and bodycon tops — tailored women's suits and sculpted tops, made in Addis Ababa.",
+  head: ({ loaderData, match }) => {
+    const { t, locale } = headT(match.context);
+    return seo(
+      t("Shop"),
+      t(
+        "Shop AHAB Suits and bodycon tops — tailored women's suits and sculpted tops, made in Addis Ababa.",
+      ),
       {
         path: "/shop",
+        locale,
         jsonLd: collectionJsonLd(undefined, loaderData?.catalog),
       },
-    ),
+    );
+  },
   component: Shop,
 });
 
@@ -62,8 +69,21 @@ const allSizes = ["XS", "S", "M", "L", "XL"];
 
 function Shop() {
   const { products } = useAllProducts();
+  const t = useT();
+  const text = useProductText();
+  // One swatch per English colour name; the label is the first translated name found.
   const allColors = Array.from(
-    new Map(products.flatMap((p) => p.colors).map((c) => [c.name, c])).values(),
+    products
+      .reduce((map, p) => {
+        for (const c of p.colors) {
+          const label = text(p).color(c.name);
+          const seen = map.get(c.name);
+          if (!seen || (seen.label === c.name && label !== c.name))
+            map.set(c.name, { ...c, label });
+        }
+        return map;
+      }, new Map<string, { name: string; hex: string; label: string }>())
+      .values(),
   );
   const { category } = Route.useSearch();
   const navigate = useNavigate({ from: "/shop" });
@@ -97,7 +117,7 @@ function Shop() {
   const Filters = (
     <div className="space-y-10">
       <div>
-        <h3 className="label-xs text-muted-foreground">Size</h3>
+        <h3 className="label-xs text-muted-foreground">{t("Size")}</h3>
         <div className="mt-4 flex flex-wrap gap-2">
           {allSizes.map((s) => (
             <button
@@ -117,15 +137,15 @@ function Shop() {
         </div>
       </div>
       <div>
-        <h3 className="label-xs text-muted-foreground">Colour</h3>
+        <h3 className="label-xs text-muted-foreground">{t("Colour")}</h3>
         <div className="mt-4 flex flex-wrap gap-3">
           {allColors.map((c) => (
             <button
               key={c.name}
               type="button"
               onClick={() => toggle(colors, setColors, c.name)}
-              title={c.name}
-              aria-label={c.name}
+              title={c.label}
+              aria-label={c.label}
               className={cn(
                 "h-8 w-8 rounded-full border-2 transition-all",
                 colors.includes(c.name) ? "border-gold scale-110" : "border-border",
@@ -136,7 +156,9 @@ function Shop() {
         </div>
       </div>
       <div>
-        <h3 className="label-xs text-muted-foreground">Up to ETB {maxPrice.toLocaleString()}</h3>
+        <h3 className="label-xs text-muted-foreground">
+          {t("Up to ETB {amount}", { amount: maxPrice.toLocaleString() })}
+        </h3>
         <input
           type="range"
           min={1500}
@@ -157,7 +179,7 @@ function Shop() {
           navigate({ search: {} });
         }}
       >
-        Clear all
+        {t("Clear all")}
       </button>
     </div>
   );
@@ -165,9 +187,9 @@ function Shop() {
   return (
     <div className="mx-auto max-w-[1500px] px-5 py-16 md:px-10 md:py-20">
       <header className="text-center">
-        <p className="label-xs text-gold">The Collection</p>
+        <p className="label-xs text-gold">{t("The Collection")}</p>
         <h1 className="mt-4 text-5xl capitalize md:text-7xl">
-          {category ? LABEL[category] : "All pieces"}
+          {category ? t(LABEL[category]) : t("All pieces")}
         </h1>
       </header>
 
@@ -184,7 +206,7 @@ function Shop() {
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
-            {c ? LABEL[c] : "All"}
+            {c ? t(LABEL[c]) : t("All")}
           </button>
         ))}
       </nav>
@@ -195,20 +217,22 @@ function Shop() {
           onClick={() => setFiltersOpen(true)}
           className="label-xs flex items-center gap-2 lg:hidden"
         >
-          <SlidersHorizontal className="h-4 w-4" strokeWidth={1.25} /> Filter
+          <SlidersHorizontal className="h-4 w-4" strokeWidth={1.25} /> {t("Filter")}
         </button>
-        <p className="label-xs hidden text-muted-foreground lg:block">{list.length} pieces</p>
+        <p className="label-xs hidden text-muted-foreground lg:block">
+          {t("{count} pieces", { count: list.length })}
+        </p>
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value as Sort)}
           className="label-xs bg-transparent outline-hidden"
-          aria-label="Sort by"
+          aria-label={t("Sort by")}
         >
-          <option value="newest">Newest</option>
-          <option value="popular">Popular</option>
-          <option value="price-asc">Price: low to high</option>
-          <option value="price-desc">Price: high to low</option>
-          <option value="rated">Best rated</option>
+          <option value="newest">{t("Newest")}</option>
+          <option value="popular">{t("Popular")}</option>
+          <option value="price-asc">{t("Price: low to high")}</option>
+          <option value="price-desc">{t("Price: high to low")}</option>
+          <option value="rated">{t("Best rated")}</option>
         </select>
       </div>
 
@@ -220,7 +244,7 @@ function Shop() {
           ))}
           {list.length === 0 ? (
             <p className="col-span-full py-20 text-center font-serif text-2xl text-muted-foreground">
-              No pieces match — try clearing a filter.
+              {t("No pieces match — try clearing a filter.")}
             </p>
           ) : null}
         </div>
@@ -233,8 +257,12 @@ function Shop() {
         )}
       >
         <div className="mb-10 flex items-center justify-between">
-          <h2 className="font-serif text-3xl">Filter</h2>
-          <button type="button" onClick={() => setFiltersOpen(false)} aria-label="Close filters">
+          <h2 className="font-serif text-3xl">{t("Filter")}</h2>
+          <button
+            type="button"
+            onClick={() => setFiltersOpen(false)}
+            aria-label={t("Close filters")}
+          >
             <X className="h-5 w-5" strokeWidth={1.25} />
           </button>
         </div>
@@ -244,7 +272,7 @@ function Shop() {
           onClick={() => setFiltersOpen(false)}
           className="label-xs mt-12 h-14 w-full bg-primary text-primary-foreground"
         >
-          Show {list.length} pieces
+          {t("Show {count} pieces", { count: list.length })}
         </button>
       </div>
     </div>

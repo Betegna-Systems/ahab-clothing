@@ -9,6 +9,8 @@ import { MAX_CART_QUANTITY } from "@/lib/order-limits";
 import { useShop } from "@/lib/shop-store";
 import { cn } from "@/lib/utils";
 import { AhabLink } from "./ui";
+import { useT } from "@/lib/i18n";
+import { useProductText } from "@/lib/i18n/product";
 
 const FREE_SHIPPING = 5000;
 
@@ -29,6 +31,8 @@ export function CartDrawer() {
     refreshInventory,
   } = useShop();
   const [promo, setPromo] = useState("");
+  const t = useT();
+  const text = useProductText();
 
   const shipping = subtotal === 0 || subtotal >= FREE_SHIPPING ? 0 : 250;
   const discountAmount = Math.round(subtotal * discount);
@@ -37,11 +41,11 @@ export function CartDrawer() {
   const applyPromo = () => {
     const rate = applyPromoCode(promo);
     if (rate !== null) {
-      toast.success("Promo applied", {
-        description: `${Math.round(rate * 100)}% off your order.`,
+      toast.success(t("Promo applied"), {
+        description: t("{percent}% off your order.", { percent: Math.round(rate * 100) }),
       });
     } else {
-      toast.error("Invalid promo code");
+      toast.error(t("Invalid promo code"));
     }
   };
 
@@ -82,20 +86,20 @@ export function CartDrawer() {
         )}
       >
         <div className="flex items-center justify-between border-b border-border px-6 py-5">
-          <h2 className="font-serif text-2xl">Your bag</h2>
-          <button type="button" onClick={() => setCartOpen(false)} aria-label="Close cart">
+          <h2 className="font-serif text-2xl">{t("Your bag")}</h2>
+          <button type="button" onClick={() => setCartOpen(false)} aria-label={t("Close cart")}>
             <X className="h-5 w-5" strokeWidth={1.25} />
           </button>
         </div>
 
         {lineItems.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-6 px-8 text-center">
-            <p className="font-serif text-2xl">Your bag is empty.</p>
+            <p className="font-serif text-2xl">{t("Your bag is empty.")}</p>
             <p className="text-sm text-muted-foreground">
-              Begin with the pieces our customers return for.
+              {t("Begin with the pieces our customers return for.")}
             </p>
             <AhabLink to="/shop" onClick={() => setCartOpen(false)}>
-              Shop the collection
+              {t("Shop the collection")}
             </AhabLink>
           </div>
         ) : (
@@ -103,7 +107,9 @@ export function CartDrawer() {
             <div className="flex-1 overflow-y-auto px-6">
               {subtotal < FREE_SHIPPING ? (
                 <p className="border-b border-border py-4 text-xs text-muted-foreground">
-                  Add {formatPrice(FREE_SHIPPING - subtotal)} for free Addis Ababa delivery.
+                  {t("Add {amount} for free Addis Ababa delivery.", {
+                    amount: formatPrice(FREE_SHIPPING - subtotal),
+                  })}
                 </p>
               ) : null}
               <ul className="divide-y divide-border">
@@ -117,7 +123,7 @@ export function CartDrawer() {
                     <li key={`${line.slug}-${line.size}-${line.color}`} className="flex gap-4 py-5">
                       <img
                         src={itemImage}
-                        alt={product.name}
+                        alt={text(product).name}
                         loading="lazy"
                         className="h-28 w-22 object-cover"
                       />
@@ -129,23 +135,23 @@ export function CartDrawer() {
                             onClick={() => setCartOpen(false)}
                             className="font-serif text-lg leading-tight"
                           >
-                            {product.name}
+                            {text(product).name}
                           </Link>
                           <button
                             type="button"
                             onClick={() => removeLine(i)}
-                            aria-label="Remove item"
+                            aria-label={t("Remove item")}
                           >
                             <X className="h-4 w-4 text-muted-foreground" strokeWidth={1.25} />
                           </button>
                         </div>
                         <p className="label-xs mt-1 text-muted-foreground">
-                          {line.color} · {line.size}
+                          {text(product).color(line.color)} · {line.size}
                         </p>
                         {inventoryStatus === "ready" &&
                         !isVariantAvailable(line.slug, line.color, line.size) ? (
                           <p className="mt-2 text-xs text-destructive">
-                            This size and color are unavailable. Remove it to continue.
+                            {t("This size and color are unavailable. Remove it to continue.")}
                           </p>
                         ) : null}
                         <p className="label-xs mt-2 text-foreground">
@@ -156,7 +162,7 @@ export function CartDrawer() {
                             type="button"
                             onClick={() => setQty(i, line.qty - 1)}
                             disabled={line.qty <= 1}
-                            aria-label="Decrease quantity"
+                            aria-label={t("Decrease quantity")}
                             className="grid h-8 w-8 place-items-center border border-border disabled:opacity-40"
                           >
                             <Minus className="h-3 w-3" strokeWidth={1.5} />
@@ -165,7 +171,7 @@ export function CartDrawer() {
                           <button
                             type="button"
                             onClick={() => setQty(i, line.qty + 1)}
-                            aria-label="Increase quantity"
+                            aria-label={t("Increase quantity")}
                             disabled={line.qty >= MAX_CART_QUANTITY}
                             className="grid h-8 w-8 place-items-center border border-border disabled:cursor-not-allowed disabled:opacity-40"
                           >
@@ -183,7 +189,7 @@ export function CartDrawer() {
               <div className="mb-4 flex gap-2">
                 <input
                   type="text"
-                  placeholder="Promo code (AHAB10)"
+                  placeholder={t("Promo code (AHAB10)")}
                   value={promo}
                   onChange={(e) => setPromo(e.target.value)}
                   className="h-10 flex-1 border border-border bg-transparent px-3 text-xs tracking-wider uppercase outline-none focus:border-primary"
@@ -193,27 +199,27 @@ export function CartDrawer() {
                   onClick={applyPromo}
                   className="label-xs border border-primary px-4 hover:bg-primary hover:text-primary-foreground"
                 >
-                  Apply
+                  {t("Apply")}
                 </button>
               </div>
 
               <div className="space-y-1.5 text-xs text-muted-foreground">
                 <div className="flex justify-between">
-                  <span>Subtotal</span>
+                  <span>{t("Subtotal")}</span>
                   <span className="text-foreground">{formatPrice(subtotal)}</span>
                 </div>
                 {discount > 0 ? (
                   <div className="flex justify-between text-gold">
-                    <span>Promo discount {promoCode}</span>
+                    <span>{t("Promo discount {code}", { code: promoCode ?? "" })}</span>
                     <span>-{formatPrice(discountAmount)}</span>
                   </div>
                 ) : null}
                 <div className="flex justify-between">
-                  <span>Delivery</span>
-                  <span>{shipping === 0 ? "Free" : formatPrice(shipping)}</span>
+                  <span>{t("Delivery")}</span>
+                  <span>{shipping === 0 ? t("Free") : formatPrice(shipping)}</span>
                 </div>
                 <div className="flex justify-between pt-2 text-base font-serif text-foreground">
-                  <span>Total</span>
+                  <span>{t("Total")}</span>
                   <span>{formatPrice(total)}</span>
                 </div>
               </div>
@@ -225,7 +231,7 @@ export function CartDrawer() {
                     if (hasUnavailableCartLines) {
                       event.preventDefault();
                       if (inventoryStatus === "error") void refreshInventory();
-                      toast.error("Check stock for every item before continuing to checkout.");
+                      toast.error(t("Check stock for every item before continuing to checkout."));
                       return;
                     }
                     setCartOpen(false);
@@ -236,13 +242,13 @@ export function CartDrawer() {
                     hasUnavailableCartLines && "cursor-not-allowed opacity-50",
                   )}
                 >
-                  Proceed to Checkout
+                  {t("Proceed to Checkout")}
                 </Link>
                 <ChatOrderButtons
                   message={chatMessage}
                   onBeforeOpen={() => {
                     if (hasUnavailableCartLines) {
-                      toast.error("Some selected size and color combinations are unavailable.");
+                      toast.error(t("Some selected size and color combinations are unavailable."));
                       return false;
                     }
                     return true;

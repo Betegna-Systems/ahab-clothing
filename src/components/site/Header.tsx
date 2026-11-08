@@ -1,4 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
+import { localizePath, splitLocale, useLocale, useT, type Locale } from "@/lib/i18n";
 import { useEffect, useState } from "react";
 import { Heart, Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import { useShop } from "@/lib/shop-store";
@@ -21,6 +22,7 @@ const leftNav = nav.slice(0, 4);
 const rightNav = nav.slice(4);
 
 function NavLinks({ items }: { items: readonly (typeof nav)[number][] }) {
+  const t = useT();
   return (
     <nav className="hidden items-center gap-7 xl:flex 2xl:gap-9">
       {items.map((item) => (
@@ -30,15 +32,50 @@ function NavLinks({ items }: { items: readonly (typeof nav)[number][] }) {
           {...("search" in item ? { search: item.search } : {})}
           className="label-xs link-underline whitespace-nowrap text-foreground/80 hover:text-foreground"
         >
-          {item.label}
+          {t(item.label)}
         </Link>
       ))}
     </nav>
   );
 }
 
+/** EN | አማ — the same page in the other language (a full page load re-renders server-side). */
+function LanguageSwitcher({ className }: { className?: string }) {
+  const t = useT();
+  const locale = useLocale();
+  const publicHref = useRouterState({ select: (state) => state.location.publicHref });
+  const [path = "/", rest = ""] = publicHref.split(/(?=[?#])/);
+  const bare = splitLocale(path).pathname;
+  const option = (target: Locale, short: string, label: string) =>
+    target === locale ? (
+      <span aria-current="true" className="text-foreground">
+        {short}
+      </span>
+    ) : (
+      <a
+        href={localizePath(bare, target) + rest}
+        hrefLang={target}
+        lang={target}
+        aria-label={label}
+        className="text-foreground/50 transition-colors hover:text-foreground"
+      >
+        {short}
+      </a>
+    );
+  return (
+    <span className={cn("label-xs flex items-center gap-1.5", className)}>
+      {option("en", "EN", t("View this page in English"))}
+      <span aria-hidden className="text-foreground/30">
+        |
+      </span>
+      {option("am", "አማ", t("View this page in Amharic"))}
+    </span>
+  );
+}
+
 export function Header() {
   const { cartCount, wishlist, setCartOpen, setSearchOpen } = useShop();
+  const t = useT();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -55,9 +92,9 @@ export function Header() {
   return (
     <>
       <div className="label-xs bg-primary px-4 py-2.5 text-center text-primary-foreground">
-        <span className="sm:hidden">Free Addis delivery over ETB 5,000</span>
+        <span className="sm:hidden">{t("Free Addis delivery over ETB 5,000")}</span>
         <span className="hidden sm:inline">
-          Free delivery in Addis Ababa on orders over ETB 5,000
+          {t("Free delivery in Addis Ababa on orders over ETB 5,000")}
         </span>
       </div>
 
@@ -73,7 +110,7 @@ export function Header() {
             <button
               type="button"
               onClick={() => setMenuOpen(true)}
-              aria-label="Open menu"
+              aria-label={t("Open menu")}
               className="xl:hidden"
             >
               <Menu className="h-5 w-5" strokeWidth={1.25} />
@@ -84,7 +121,7 @@ export function Header() {
           <Link to="/" className="flex items-center gap-1.5 text-center sm:gap-3">
             <img
               src="/ahab-logo.png"
-              alt="AHAB Clothing"
+              alt={t("AHAB Clothing")}
               className="hidden h-10 w-10 rounded-full object-contain sm:block"
             />
             <div className="flex flex-col items-start leading-none">
@@ -92,17 +129,18 @@ export function Header() {
                 AHAB
               </span>
               <span className="label-xs hidden text-[0.52rem] tracking-[0.38em] text-gold sm:block">
-                Made With Love
+                {t("Made With Love")}
               </span>
             </div>
           </Link>
 
           <div className="flex items-center justify-end gap-2 sm:gap-5 xl:gap-7 2xl:gap-9">
             <NavLinks items={rightNav} />
-            <button type="button" onClick={() => setSearchOpen(true)} aria-label="Search">
+            <LanguageSwitcher className="hidden sm:flex" />
+            <button type="button" onClick={() => setSearchOpen(true)} aria-label={t("Search")}>
               <Search className="h-5 w-5" strokeWidth={1.25} />
             </button>
-            <Link to="/wishlist" aria-label="Wishlist" className="relative">
+            <Link to="/wishlist" aria-label={t("Wishlist")} className="relative">
               <Heart className="h-5 w-5" strokeWidth={1.25} />
               {wishlist.length > 0 ? (
                 <span className="absolute -right-2 -top-2 grid h-4 w-4 place-items-center rounded-full bg-gold text-[0.6rem] text-gold-foreground">
@@ -110,13 +148,13 @@ export function Header() {
                 </span>
               ) : null}
             </Link>
-            <Link to="/account" aria-label="Account">
+            <Link to="/account" aria-label={t("Account")}>
               <User className="h-5 w-5" strokeWidth={1.25} />
             </Link>
             <button
               type="button"
               onClick={() => setCartOpen(true)}
-              aria-label="Open cart"
+              aria-label={t("Open cart")}
               className="relative"
             >
               <ShoppingBag className="h-5 w-5" strokeWidth={1.25} />
@@ -139,7 +177,7 @@ export function Header() {
       >
         <div className="flex h-20 items-center justify-between px-5">
           <span className="font-serif text-2xl tracking-[0.3em]">AHAB</span>
-          <button type="button" onClick={() => setMenuOpen(false)} aria-label="Close menu">
+          <button type="button" onClick={() => setMenuOpen(false)} aria-label={t("Close menu")}>
             <X className="h-5 w-5" strokeWidth={1.25} />
           </button>
         </div>
@@ -151,16 +189,17 @@ export function Header() {
               className="border-b border-border py-5 font-serif text-3xl"
               style={{ animationDelay: `${i * 60}ms` }}
             >
-              {item.label}
+              {t(item.label)}
             </Link>
           ))}
-          <div className="mt-8 flex gap-6">
+          <div className="mt-8 flex items-center gap-6">
             <Link to="/wishlist" className="label-xs">
-              Wishlist
+              {t("Wishlist")}
             </Link>
             <Link to="/account" className="label-xs">
-              Account
+              {t("Account")}
             </Link>
+            <LanguageSwitcher className="ml-auto" />
           </div>
         </nav>
       </div>

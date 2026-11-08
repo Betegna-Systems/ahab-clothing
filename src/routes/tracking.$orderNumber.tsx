@@ -5,6 +5,9 @@ import { AhabLink } from "@/components/site/ui";
 import { claimAccountOrder, getTrackedOrder, submitVerifiedReview } from "@/lib/orders.functions";
 import { isPaymentConfirmed, isWellFormedOrderLink } from "@/lib/order-access";
 import { initializeSupabaseBrowser, supabase } from "@/integrations/supabase/client";
+import { getProductCached } from "@/lib/firestore-products";
+import { formatDate, headT, useLocale, useT, type Translator } from "@/lib/i18n";
+import { productText } from "@/lib/i18n/product";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/tracking/$orderNumber")({
@@ -15,30 +18,64 @@ export const Route = createFileRoute("/tracking/$orderNumber")({
     isWellFormedOrderLink(params.orderNumber, deps.token)
       ? getTrackedOrder({ data: { orderNumber: params.orderNumber, token: deps.token } })
       : null,
-  head: () => ({
-    meta: [
-      { title: "Track Your Order | AHAB" },
-      { name: "robots", content: "noindex,nofollow" },
-      { name: "referrer", content: "no-referrer" },
-    ],
-  }),
+  head: ({ match }) => {
+    const { t } = headT(match.context);
+    return {
+      meta: [
+        { title: t("Track Your Order | AHAB") },
+        { name: "robots", content: "noindex,nofollow" },
+        { name: "referrer", content: "no-referrer" },
+      ],
+    };
+  },
   component: OrderTrackingPage,
 });
 
-function trackingMessage(status: string) {
+// Order statuses are stored in English by the admin app; compare on English, display translated.
+function trackingMessage(status: string, t: Translator) {
   const normalized = status.trim().toLowerCase();
-  if (normalized === "new") return "Your order has been received.";
+  if (normalized === "new") return t("Your order has been received.");
   if (["confirmed", "processing", "preparing", "being prepared"].includes(normalized)) {
-    return "Your order is being prepared.";
+    return t("Your order is being prepared.");
   }
   if (["shipped", "out for delivery", "in transit"].includes(normalized)) {
-    return "Your order is on its way.";
+    return t("Your order is on its way.");
   }
-  if (normalized === "delivered") return "Your order has been delivered.";
+  if (normalized === "delivered") return t("Your order has been delivered.");
   if (normalized === "cancelled" || normalized === "canceled") {
-    return "This order has been cancelled. Contact AHAB if you need assistance.";
+    return t("This order has been cancelled. Contact AHAB if you need assistance.");
   }
-  return `Current status: ${status}`;
+  return t("Current status: {status}", { status: statusLabel(status, t) });
+}
+
+/** The stored status in the page language; unknown statuses are shown as stored. */
+function statusLabel(status: string, t: Translator) {
+  switch (status.trim().toLowerCase()) {
+    case "new":
+      return t("New");
+    case "confirmed":
+      return t("Confirmed");
+    case "processing":
+      return t("Processing");
+    case "preparing":
+    case "being prepared":
+      return t("Being prepared");
+    case "packed":
+      return t("Packed");
+    case "shipped":
+      return t("Shipped");
+    case "out for delivery":
+      return t("Out for delivery");
+    case "in transit":
+      return t("In transit");
+    case "delivered":
+      return t("Delivered");
+    case "cancelled":
+    case "canceled":
+      return t("Cancelled");
+    default:
+      return status;
+  }
 }
 
 async function fileToBase64(file: File) {
@@ -66,6 +103,7 @@ function ReviewForm({
   submitted: boolean;
 }) {
   const router = useRouter();
+  const t = useT();
   const [sending, setSending] = useState(false);
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -74,7 +112,7 @@ function ReviewForm({
     const photo = form.get("photo");
     const file = photo instanceof File && photo.size > 0 ? photo : null;
     if (file && (file.size > 3 * 1024 * 1024 || !isReviewPhotoType(file.type))) {
-      toast.error("Choose a JPG, PNG, or WebP photo smaller than 3 MB.");
+      toast.error(t("Choose a JPG, PNG, or WebP photo smaller than 3 MB."));
       return;
     }
 
@@ -100,22 +138,22 @@ function ReviewForm({
 
       if (!result.ok) {
         const messages = {
-          order_not_found: "We couldn't verify this order.",
-          not_delivered: "Reviews can be submitted after delivery.",
-          product_not_ordered: "This product isn't part of this order.",
-          invalid_photo: "Choose a valid JPG, PNG, or WebP photo smaller than 3 MB.",
-          photo_upload_failed: "We couldn't upload your photo. Please try again.",
-          already_submitted: "A review has already been submitted for this product.",
-          save_failed: "We couldn't save your review. Please try again.",
+          order_not_found: t("We couldn't verify this order."),
+          not_delivered: t("Reviews can be submitted after delivery."),
+          product_not_ordered: t("This product isn't part of this order."),
+          invalid_photo: t("Choose a valid JPG, PNG, or WebP photo smaller than 3 MB."),
+          photo_upload_failed: t("We couldn't upload your photo. Please try again."),
+          already_submitted: t("A review has already been submitted for this product."),
+          save_failed: t("We couldn't save your review. Please try again."),
         };
         toast.error(messages[result.reason]);
         return;
       }
 
-      toast.success("Review submitted for verification.");
+      toast.success(t("Review submitted for verification."));
       await router.invalidate();
     } catch {
-      toast.error("We couldn't submit your review. Please try again.");
+      toast.error(t("We couldn't submit your review. Please try again."));
     } finally {
       setSending(false);
     }
@@ -124,7 +162,7 @@ function ReviewForm({
   if (submitted) {
     return (
       <p className="mt-4 text-sm text-muted-foreground">
-        Review received. It will appear after AHAB verifies and approves it.
+        {t("Review received. It will appear after AHAB verifies and approves it.")}
       </p>
     );
   }
@@ -135,26 +173,26 @@ function ReviewForm({
         name="reviewerName"
         required
         maxLength={80}
-        placeholder="Name to show with your review"
+        placeholder={t("Name to show with your review")}
         className="h-11 w-full border border-border bg-transparent px-3 text-sm"
       />
       <select
         name="rating"
         required
         defaultValue="5"
-        aria-label={`Rating for ${product.name}`}
+        aria-label={t("Rating for {name}", { name: product.name })}
         className="h-11 w-full border border-border bg-transparent px-3 text-sm"
       >
         {[5, 4, 3, 2, 1].map((rating) => (
           <option key={rating} value={rating}>
-            {rating} {rating === 1 ? "star" : "stars"}
+            {rating === 1 ? t("1 star") : t("{count} stars", { count: rating })}
           </option>
         ))}
       </select>
       <input
         name="fitFeedback"
         maxLength={500}
-        placeholder="How did the fit feel? (optional)"
+        placeholder={t("How did the fit feel? (optional)")}
         className="h-11 w-full border border-border bg-transparent px-3 text-sm"
       />
       <textarea
@@ -162,14 +200,14 @@ function ReviewForm({
         required
         minLength={10}
         maxLength={1200}
-        placeholder="Share your experience"
+        placeholder={t("Share your experience")}
         className="min-h-24 w-full border border-border bg-transparent p-3 text-sm"
       />
       <input
         name="photo"
         type="file"
         accept="image/jpeg,image/png,image/webp"
-        aria-label={`Optional customer photo for ${product.name}`}
+        aria-label={t("Optional customer photo for {name}", { name: product.name })}
         className="block w-full text-sm"
       />
       <button
@@ -177,13 +215,14 @@ function ReviewForm({
         disabled={sending}
         className="label-xs bg-primary px-5 py-3 text-primary-foreground disabled:opacity-50"
       >
-        {sending ? "Submitting…" : "Submit verified review"}
+        {sending ? t("Submitting…") : t("Submit verified review")}
       </button>
     </form>
   );
 }
 
 function SaveToAccount({ orderNumber, token }: { orderNumber: string; token: string }) {
+  const t = useT();
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [state, setState] = useState<"idle" | "saving" | "saved">("idle");
 
@@ -209,29 +248,29 @@ function SaveToAccount({ orderNumber, token }: { orderNumber: string; token: str
       const result = await claimAccountOrder({ data: { orderNumber, token, accessToken } });
       if (result.ok) {
         setState("saved");
-        toast.success("Order saved to your account.");
+        toast.success(t("Order saved to your account."));
         return;
       }
       setState("idle");
       toast.error(
         result.reason === "mfa_required"
-          ? "Complete two-step verification in your account first."
+          ? t("Complete two-step verification in your account first.")
           : result.reason === "email_not_verified"
-            ? "Verify your account email first."
+            ? t("Verify your account email first.")
             : result.reason === "claimed_by_other"
-              ? "This order is already linked to another account."
-              : "We couldn't save this order to your account.",
+              ? t("This order is already linked to another account.")
+              : t("We couldn't save this order to your account."),
       );
     } catch (error) {
       console.error("Order claim failed:", error);
       setState("idle");
-      toast.error("We couldn't save this order to your account.");
+      toast.error(t("We couldn't save this order to your account."));
     }
   };
 
   return state === "saved" ? (
     <Link to="/account" className="label-xs border border-border px-5 py-3 hover:border-primary">
-      View in account
+      {t("View in account")}
     </Link>
   ) : (
     <button
@@ -240,7 +279,7 @@ function SaveToAccount({ orderNumber, token }: { orderNumber: string; token: str
       disabled={state === "saving"}
       className="label-xs border border-border px-5 py-3 hover:border-primary"
     >
-      {state === "saving" ? "Saving…" : "Save to my account"}
+      {state === "saving" ? t("Saving…") : t("Save to my account")}
     </button>
   );
 }
@@ -252,6 +291,8 @@ function OrderTrackingPage() {
   const [order, setOrder] = useState(loadedOrder);
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
+  const t = useT();
+  const locale = useLocale();
 
   useEffect(() => {
     setOrder(loadedOrder);
@@ -263,14 +304,14 @@ function OrderTrackingPage() {
       const latestOrder = await getTrackedOrder({ data: { orderNumber, token } });
       if (!latestOrder) {
         setOrder(null);
-        toast.error("This tracking link is no longer available.");
+        toast.error(t("This tracking link is no longer available."));
         return;
       }
       setOrder(latestOrder);
-      toast.success("Order status updated.");
+      toast.success(t("Order status updated."));
     } catch (error) {
       console.error("Order status refresh failed:", error);
-      toast.error("We couldn't refresh your order status. Please try again.");
+      toast.error(t("We couldn't refresh your order status. Please try again."));
     } finally {
       setRefreshing(false);
     }
@@ -279,10 +320,12 @@ function OrderTrackingPage() {
   if (!order) {
     return (
       <div className="mx-auto max-w-xl px-5 py-28 text-center">
-        <h1 className="text-4xl">Tracking link unavailable.</h1>
-        <p className="mt-4 text-muted-foreground">Check the order link or contact AHAB for help.</p>
+        <h1 className="text-4xl">{t("Tracking link unavailable.")}</h1>
+        <p className="mt-4 text-muted-foreground">
+          {t("Check the order link or contact AHAB for help.")}
+        </p>
         <AhabLink to="/shop" className="mt-8">
-          Return to the shop
+          {t("Return to the shop")}
         </AhabLink>
       </div>
     );
@@ -294,43 +337,51 @@ function OrderTrackingPage() {
   return (
     <div className="mx-auto max-w-2xl px-5 py-20 md:py-28">
       <div className="text-center">
-        <p className="label-xs text-gold">Order {order.orderNumber}</p>
-        <h1 className="mt-4 text-5xl">Order tracking</h1>
-        <p className="mt-4 text-muted-foreground">Placed {order.createdAt.slice(0, 10)}</p>
+        <p className="label-xs text-gold">{t("Order {number}", { number: order.orderNumber })}</p>
+        <h1 className="mt-4 text-5xl">{t("Order tracking")}</h1>
+        <p className="mt-4 text-muted-foreground">
+          {t("Placed {date}", { date: formatDate(order.createdAt, locale) })}
+        </p>
       </div>
 
       <section className="mt-12 border border-border bg-secondary p-6 text-center md:p-10">
-        <p className="label-xs text-gold">Current status</p>
-        <h2 className="mt-3 font-serif text-3xl">{order.status}</h2>
-        <p className="mt-3 text-muted-foreground">{trackingMessage(order.status)}</p>
+        <p className="label-xs text-gold">{t("Current status")}</p>
+        <h2 className="mt-3 font-serif text-3xl">{statusLabel(order.status, t)}</h2>
+        <p className="mt-3 text-muted-foreground">{trackingMessage(order.status, t)}</p>
         {paymentReceiptSubmitted || paymentConfirmed ? (
           <p className="mt-6 border-t border-border pt-5 text-sm text-muted-foreground">
             {paymentConfirmed
-              ? "Payment confirmed."
-              : "Payment receipt received and awaiting verification."}
+              ? t("Payment confirmed.")
+              : t("Payment receipt received and awaiting verification.")}
           </p>
         ) : null}
       </section>
 
       {order.status.trim().toLowerCase() === "delivered" && order.items.length > 0 ? (
         <section className="mt-12">
-          <h2 className="font-serif text-3xl">Share your experience</h2>
+          <h2 className="font-serif text-3xl">{t("Share your experience")}</h2>
           <p className="mt-3 text-sm text-muted-foreground">
-            Reviews are linked to delivered orders and published only after AHAB approval. Customer
-            photos stay private until approved.
+            {t(
+              "Reviews are linked to delivered orders and published only after AHAB approval. Customer photos stay private until approved.",
+            )}
           </p>
           <div className="mt-6 space-y-8">
-            {order.items.map((item, index) => (
-              <article key={`${item.slug}-${index}`} className="border-t border-border pt-5">
-                <h3 className="font-serif text-xl">{item.name}</h3>
-                <ReviewForm
-                  orderNumber={orderNumber}
-                  token={token}
-                  product={item}
-                  submitted={order.reviewedProductSlugs.includes(item.slug)}
-                />
-              </article>
-            ))}
+            {order.items.map((item, index) => {
+              // Show the catalog's Amharic name when there is one; the order keeps English.
+              const catalogProduct = getProductCached(item.slug);
+              const name = catalogProduct ? productText(catalogProduct, locale).name : item.name;
+              return (
+                <article key={`${item.slug}-${index}`} className="border-t border-border pt-5">
+                  <h3 className="font-serif text-xl">{name}</h3>
+                  <ReviewForm
+                    orderNumber={orderNumber}
+                    token={token}
+                    product={{ slug: item.slug, name }}
+                    submitted={order.reviewedProductSlugs.includes(item.slug)}
+                  />
+                </article>
+              );
+            })}
           </div>
         </section>
       ) : null}
@@ -342,20 +393,19 @@ function OrderTrackingPage() {
           disabled={refreshing}
           className="label-xs border border-border px-5 py-3 hover:border-primary"
         >
-          {refreshing ? "Refreshing…" : "Refresh status"}
+          {refreshing ? t("Refreshing…") : t("Refresh status")}
         </button>
         <SaveToAccount orderNumber={orderNumber} token={token} />
         <Link to="/shop" className="label-xs border border-border px-5 py-3 hover:border-primary">
-          Continue shopping
+          {t("Continue shopping")}
         </Link>
       </div>
 
       <p className="mt-8 text-center text-sm text-muted-foreground">
-        Need help? Share order {orderNumber} with AHAB through{" "}
+        {t("Need help? Share order {number} with AHAB.", { number: orderNumber })}{" "}
         <Link to="/contact" className="underline underline-offset-4">
-          customer care
+          {t("Contact customer care")}
         </Link>
-        .
       </p>
     </div>
   );

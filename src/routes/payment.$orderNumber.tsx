@@ -9,6 +9,7 @@ import { isPaymentConfirmed, isWellFormedOrderLink } from "@/lib/order-access";
 import { PAYMENT_METHODS } from "@/lib/payment-methods";
 import { formatPrice } from "@/lib/products";
 import { toast } from "sonner";
+import { headT, useT, type Translator } from "@/lib/i18n";
 
 export const Route = createFileRoute("/payment/$orderNumber")({
   // A missing or mangled link shows "unavailable" rather than a server error.
@@ -18,33 +19,37 @@ export const Route = createFileRoute("/payment/$orderNumber")({
     isWellFormedOrderLink(params.orderNumber, deps.token)
       ? getPaymentOrder({ data: { orderNumber: params.orderNumber, token: deps.token } })
       : null,
-  head: () => ({
-    meta: [
-      { title: "Complete Your Payment | AHAB" },
-      { name: "robots", content: "noindex,nofollow" },
-      { name: "referrer", content: "no-referrer" },
-    ],
-  }),
+  head: ({ match }) => {
+    const { t } = headT(match.context);
+    return {
+      meta: [
+        { title: t("Complete Your Payment | AHAB") },
+        { name: "robots", content: "noindex,nofollow" },
+        { name: "referrer", content: "no-referrer" },
+      ],
+    };
+  },
   component: PaymentPage,
 });
 
-function readImageAsBase64(file: File) {
+function readImageAsBase64(file: File, t: Translator) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
-    reader.onerror = () => reject(new Error("Unable to read this image."));
+    reader.onerror = () => reject(new Error(t("Unable to read this image.")));
     reader.onload = () => {
       const result = String(reader.result ?? "");
       const separator = result.indexOf(",");
-      if (separator < 0) reject(new Error("Unable to read this image."));
+      if (separator < 0) reject(new Error(t("Unable to read this image.")));
       else resolve(result.slice(separator + 1));
     };
     reader.readAsDataURL(file);
   });
 }
 
-async function prepareReceiptImage(file: File) {
+/** Errors carry customer-facing text in the page language (`t`). */
+async function prepareReceiptImage(file: File, t: Translator) {
   if (file.size > 20 * 1024 * 1024) {
-    throw new Error("Choose a photo smaller than 20 MB.");
+    throw new Error(t("Choose a photo smaller than 20 MB."));
   }
 
   const imageUrl = URL.createObjectURL(file);
@@ -53,7 +58,7 @@ async function prepareReceiptImage(file: File) {
     await new Promise<void>((resolve, reject) => {
       image.onload = () => resolve();
       image.onerror = () =>
-        reject(new Error("This photo format can't be read. Choose a JPG, PNG, or WebP image."));
+        reject(new Error(t("This photo format can't be read. Choose a JPG, PNG, or WebP image.")));
       image.src = imageUrl;
     });
   } catch (error) {
@@ -74,13 +79,13 @@ async function prepareReceiptImage(file: File) {
       canvas.width = width;
       canvas.height = height;
       const context = canvas.getContext("2d");
-      if (!context) throw new Error("This photo can't be prepared on your device.");
+      if (!context) throw new Error(t("This photo can't be prepared on your device."));
       context.drawImage(image, 0, 0, width, height);
 
       const blob = await new Promise<Blob | null>((resolve) =>
         canvas.toBlob(resolve, "image/jpeg", 0.82),
       );
-      if (!blob) throw new Error("This photo can't be prepared on your device.");
+      if (!blob) throw new Error(t("This photo can't be prepared on your device."));
       if (blob.size <= 3 * 1024 * 1024) {
         const name = file.name.replace(/\.[^.]+$/, "") || "receipt";
         return new File([blob], `${name}.jpg`, { type: "image/jpeg" });
@@ -90,7 +95,7 @@ async function prepareReceiptImage(file: File) {
       height = Math.round(height * 0.8);
     }
 
-    throw new Error("This photo is too large to prepare. Choose a smaller image.");
+    throw new Error(t("This photo is too large to prepare. Choose a smaller image."));
   } finally {
     URL.revokeObjectURL(imageUrl);
   }
@@ -102,6 +107,7 @@ function PaymentPage() {
   const loadedOrder = Route.useLoaderData();
   const [order, setOrder] = useState(loadedOrder);
   const router = useRouter();
+  const t = useT();
   const [file, setFile] = useState<File | null>(null);
   const [sending, setSending] = useState(false);
   const [preparing, setPreparing] = useState(false);
@@ -117,18 +123,18 @@ function PaymentPage() {
       const latestOrder = await getPaymentOrder({ data: { orderNumber, token } });
       if (!latestOrder) {
         setOrder(null);
-        toast.error("This payment link is no longer available.");
+        toast.error(t("This payment link is no longer available."));
         return;
       }
       setOrder(latestOrder);
       toast.success(
         isPaymentConfirmed(latestOrder.paymentStatus)
-          ? "Payment confirmed."
-          : "Payment is still awaiting verification.",
+          ? t("Payment confirmed.")
+          : t("Payment is still awaiting verification."),
       );
     } catch (error) {
       console.error("Payment status refresh failed:", error);
-      toast.error("We couldn't check your payment status. Please try again.");
+      toast.error(t("We couldn't check your payment status. Please try again."));
     } finally {
       setCheckingStatus(false);
     }
@@ -137,12 +143,12 @@ function PaymentPage() {
   if (!order) {
     return (
       <div className="mx-auto max-w-xl px-5 py-28 text-center">
-        <h1 className="text-4xl">Payment link unavailable.</h1>
+        <h1 className="text-4xl">{t("Payment link unavailable.")}</h1>
         <p className="mt-4 text-muted-foreground">
-          Check the link from your order confirmation or contact AHAB for help.
+          {t("Check the link from your order confirmation or contact AHAB for help.")}
         </p>
         <AhabLink to="/shop" className="mt-8">
-          Return to the shop
+          {t("Return to the shop")}
         </AhabLink>
       </div>
     );
@@ -152,14 +158,18 @@ function PaymentPage() {
   if (!payment?.account) {
     return (
       <div className="mx-auto max-w-xl px-5 py-28 text-center">
-        <h1 className="text-4xl">Payment details unavailable.</h1>
-        <p className="mt-4 text-muted-foreground">Please contact AHAB with order {orderNumber}.</p>
+        <h1 className="text-4xl">{t("Payment details unavailable.")}</h1>
+        <p className="mt-4 text-muted-foreground">
+          {t("Please contact AHAB with order {number}.", { number: orderNumber })}
+        </p>
       </div>
     );
   }
 
+  // Sent to AHAB staff on chat, so it stays in English.
   const chatMessage = `Hello AHAB, I paid for order ${orderNumber} via ${payment.label}. Amount: ${formatPrice(order.total)}. I will attach my payment screenshot here.`;
   const receiptSubmitted = order.paymentStatus !== "pending";
+  const methodLabel = t(payment.label);
   const paymentConfirmed = isPaymentConfirmed(order.paymentStatus);
 
   const onFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -171,9 +181,9 @@ function PaymentPage() {
     setFile(null);
     setPreparing(true);
     try {
-      setFile(await prepareReceiptImage(selected));
+      setFile(await prepareReceiptImage(selected, t));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "We couldn't prepare this photo.");
+      toast.error(error instanceof Error ? error.message : t("We couldn't prepare this photo."));
       event.target.value = "";
     } finally {
       setPreparing(false);
@@ -183,29 +193,29 @@ function PaymentPage() {
   const submitReceipt = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!file) {
-      toast.error("Choose your payment screenshot first.");
+      toast.error(t("Choose your payment screenshot first."));
       return;
     }
     setSending(true);
     try {
-      const imageBase64 = await readImageAsBase64(file);
+      const imageBase64 = await readImageAsBase64(file, t);
       const result = await submitPaymentProof({
         data: { orderNumber, token, mimeType: "image/jpeg", imageBase64 },
       });
       if (!result.ok) {
         toast.error(
           result.reason === "already_submitted"
-            ? "A screenshot has already been submitted for this order."
-            : "We couldn't submit your screenshot. Please try again or send it by chat.",
+            ? t("A screenshot has already been submitted for this order.")
+            : t("We couldn't submit your screenshot. Please try again or send it by chat."),
         );
         await router.invalidate();
         return;
       }
       setFile(null);
-      toast.success("Payment screenshot received.");
+      toast.success(t("Payment screenshot received."));
       await router.invalidate();
     } catch {
-      toast.error("We couldn't submit your screenshot. Please try again or send it by chat.");
+      toast.error(t("We couldn't submit your screenshot. Please try again or send it by chat."));
     } finally {
       setSending(false);
     }
@@ -214,20 +224,20 @@ function PaymentPage() {
   return (
     <div className="mx-auto max-w-3xl px-5 py-20 md:py-28">
       <div className="text-center">
-        <p className="label-xs text-gold">Order {orderNumber}</p>
-        <h1 className="mt-4 text-5xl">Complete your payment.</h1>
+        <p className="label-xs text-gold">{t("Order {number}", { number: orderNumber })}</p>
+        <h1 className="mt-4 text-5xl">{t("Complete your payment.")}</h1>
         <p className="mt-4 text-muted-foreground">
-          Transfer the exact total, then upload a screenshot of your receipt.
+          {t("Transfer the exact total, then upload a screenshot of your receipt.")}
         </p>
       </div>
 
       <section
         className="mt-12 border border-border bg-secondary p-6 md:p-10"
-        aria-label="Payment instructions"
+        aria-label={t("Payment instructions")}
       >
         <div className="flex flex-wrap items-start justify-between gap-4 border-b border-border pb-6">
           <div>
-            <p className="label-xs text-gold">Pay with {payment.label}</p>
+            <p className="label-xs text-gold">{t("Pay with {method}", { method: methodLabel })}</p>
             <p className="mt-2 font-mono text-xl md:text-2xl">{payment.account}</p>
           </div>
           <button
@@ -235,27 +245,31 @@ function PaymentPage() {
             onClick={async () => {
               try {
                 await navigator.clipboard.writeText(payment.account);
-                toast.success("Payment details copied.");
+                toast.success(t("Payment details copied."));
               } catch {
-                toast.error("Copy is unavailable in this browser.");
+                toast.error(t("Copy is unavailable in this browser."));
               }
             }}
             className="label-xs inline-flex h-10 items-center gap-2 border border-border px-4 hover:border-primary"
           >
-            <Copy className="h-4 w-4" /> Copy details
+            <Copy className="h-4 w-4" /> {t("Copy details")}
           </button>
         </div>
         <div className="flex items-end justify-between gap-4 py-6">
-          <span className="text-sm text-muted-foreground">Amount to transfer</span>
+          <span className="text-sm text-muted-foreground">{t("Amount to transfer")}</span>
           <strong className="font-serif text-3xl">{formatPrice(order.total)}</strong>
         </div>
         <ol className="space-y-3 border-t border-border pt-6 text-sm leading-relaxed text-muted-foreground">
-          <li>1. Send the amount above to the {payment.label} account.</li>
+          <li>1. {t("Send the amount above to the {method} account.", { method: methodLabel })}</li>
           <li>
-            2. Keep your payment receipt screenshot. Make sure the amount and transaction reference
-            are visible.
+            2.{" "}
+            {t(
+              "Keep your payment receipt screenshot. Make sure the amount and transaction reference are visible.",
+            )}
           </li>
-          <li>3. Upload the screenshot below. AHAB will review it and confirm your order.</li>
+          <li>
+            3. {t("Upload the screenshot below. AHAB will review it and confirm your order.")}
+          </li>
         </ol>
       </section>
 
@@ -263,12 +277,12 @@ function PaymentPage() {
         <div className="mt-8 border border-gold/50 p-6 text-center">
           <Check className="mx-auto h-6 w-6 text-gold" strokeWidth={1.5} />
           <h2 className="mt-3 font-serif text-2xl">
-            {paymentConfirmed ? "Payment confirmed" : "Screenshot received"}
+            {paymentConfirmed ? t("Payment confirmed") : t("Screenshot received")}
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
             {paymentConfirmed
-              ? "Your payment has been verified. AHAB will contact you to confirm delivery."
-              : "We’ll verify your payment and contact you to confirm delivery."}
+              ? t("Your payment has been verified. AHAB will contact you to confirm delivery.")
+              : t("We’ll verify your payment and contact you to confirm delivery.")}
           </p>
           {!paymentConfirmed ? (
             <button
@@ -277,14 +291,14 @@ function PaymentPage() {
               disabled={checkingStatus}
               className="label-xs mt-5 border border-border px-4 py-3 hover:border-primary disabled:opacity-50"
             >
-              {checkingStatus ? "Checking…" : "Check payment status"}
+              {checkingStatus ? t("Checking…") : t("Check payment status")}
             </button>
           ) : null}
         </div>
       ) : (
         <form onSubmit={submitReceipt} className="mt-8 space-y-4">
           <label className="label-xs block text-gold" htmlFor="payment-screenshot">
-            Payment screenshot
+            {t("Payment screenshot")}
           </label>
           <input
             id="payment-screenshot"
@@ -295,10 +309,11 @@ function PaymentPage() {
             className="block w-full border border-border bg-transparent p-4 text-sm file:mr-4 file:border-0 file:bg-primary file:px-4 file:py-2 file:text-xs file:uppercase file:tracking-wider file:text-primary-foreground disabled:opacity-50"
           />
           <p className="text-xs text-muted-foreground">
-            Choose a photo from your phone or take one now. We’ll convert it to JPG and resize it
-            for upload. Your receipt is stored privately with this order.
+            {t(
+              "Choose a photo from your phone or take one now. We’ll convert it to JPG and resize it for upload. Your receipt is stored privately with this order.",
+            )}
           </p>
-          {file ? <p className="text-sm">Selected: {file.name}</p> : null}
+          {file ? <p className="text-sm">{t("Selected: {name}", { name: file.name })}</p> : null}
           <button
             type="submit"
             disabled={!file || sending || preparing}
@@ -306,10 +321,10 @@ function PaymentPage() {
           >
             <Upload className="h-4 w-4" />{" "}
             {preparing
-              ? "Preparing photo…"
+              ? t("Preparing photo…")
               : sending
-                ? "Sending screenshot…"
-                : "Send payment screenshot"}
+                ? t("Sending screenshot…")
+                : t("Send payment screenshot")}
           </button>
         </form>
       )}
@@ -322,16 +337,16 @@ function PaymentPage() {
             search={{ token }}
             className="label-xs underline underline-offset-4"
           >
-            Track this order
+            {t("Track this order")}
           </Link>
         </p>
         <p className="mb-4 text-sm text-muted-foreground">
-          Need help? You can also send the screenshot to AHAB in chat.
+          {t("Need help? You can also send the screenshot to AHAB in chat.")}
         </p>
         <ChatOrderButtons message={chatMessage} />
         <p className="mt-8">
           <Link to="/shop" className="label-xs text-muted-foreground underline underline-offset-4">
-            Continue shopping
+            {t("Continue shopping")}
           </Link>
         </p>
       </div>

@@ -2,27 +2,29 @@ import { createFileRoute } from "@tanstack/react-router";
 import { SITE_URL, seo } from "@/lib/seo";
 import { AhabLink, Eyebrow } from "@/components/site/ui";
 import { cloudinaryAssets } from "@/lib/cloudinary";
+import { headT, useT } from "@/lib/i18n";
 const founder = cloudinaryAssets.founderPortrait.optimizedUrl;
 const craftStudio = cloudinaryAssets.craftStudio.optimizedUrl;
 
+const ABOUT_DESCRIPTION =
+  "The story of AHAB — an independent house in Addis Ababa designing and sewing women's suits and tops by hand.";
+
 export const Route = createFileRoute("/about")({
-  head: () =>
-    seo(
-      "About",
-      "The story of AHAB — an independent house in Addis Ababa designing and sewing women's suits and tops by hand.",
-      {
-        path: "/about",
-        image: founder,
-        jsonLd: {
-          "@context": "https://schema.org",
-          "@type": "AboutPage",
-          name: "About AHAB Clothing",
-          url: `${SITE_URL}/about`,
-          description:
-            "The story of AHAB — an independent house in Addis Ababa designing and sewing women's suits and tops by hand.",
-        },
+  head: ({ match }) => {
+    const { t, locale } = headT(match.context);
+    return seo(t("About"), t(ABOUT_DESCRIPTION), {
+      path: "/about",
+      locale,
+      image: founder,
+      jsonLd: {
+        "@context": "https://schema.org",
+        "@type": "AboutPage",
+        name: "About AHAB Clothing",
+        url: `${SITE_URL}/about`,
+        description: ABOUT_DESCRIPTION,
       },
-    ),
+    });
+  },
   component: About,
 });
 
@@ -46,32 +48,33 @@ const sections = [
 ];
 
 function About() {
+  const t = useT();
   return (
     <div>
       <section className="mx-auto grid max-w-[1500px] items-center gap-12 px-5 py-20 md:px-10 lg:grid-cols-2">
         <img
           src={founder}
-          alt="AHAB founder in her Addis Ababa atelier"
+          alt={t("AHAB founder in her Addis Ababa atelier")}
           className="aspect-4/5 w-full object-cover"
         />
         <div className="lg:pl-10">
-          <Eyebrow>The Founder</Eyebrow>
+          <Eyebrow>{t("The Founder")}</Eyebrow>
           <h1 className="mt-6 text-5xl leading-[1.02] md:text-7xl">
-            A house built on <em className="italic text-gold">fit.</em>
+            {t("A house built on")} <em className="italic text-gold">{t("fit.")}</em>
           </h1>
           <p className="mt-6 max-w-lg leading-relaxed text-muted-foreground">
-            AHAB began at a single sewing table in Addis Ababa with one belief: that a fitted top,
-            cut properly, can carry a whole outfit. Today we sew that top — one style, one body, one
-            stitch at a time.
+            {t(
+              "AHAB began at a single sewing table in Addis Ababa with one belief: that a fitted top, cut properly, can carry a whole outfit. Today we sew that top — one style, one body, one stitch at a time.",
+            )}
           </p>
         </div>
       </section>
       <section className="bg-secondary py-24">
         <div className="mx-auto grid max-w-[1500px] gap-12 px-5 md:grid-cols-2 md:px-10">
-          {sections.map(([t, d]) => (
-            <div key={t} className="border-t border-border pt-6">
-              <h2 className="text-3xl">{t}</h2>
-              <p className="mt-4 text-muted-foreground">{d}</p>
+          {sections.map(([title = "", detail = ""]) => (
+            <div key={title} className="border-t border-border pt-6">
+              <h2 className="text-3xl">{t(title)}</h2>
+              <p className="mt-4 text-muted-foreground">{t(detail)}</p>
             </div>
           ))}
         </div>
@@ -80,9 +83,9 @@ function About() {
         <img src={craftStudio} alt="" loading="lazy" className="h-[60vh] w-full object-cover" />
         <div className="absolute inset-0 grid place-items-center bg-foreground/45 text-center">
           <div>
-            <h2 className="text-5xl text-cream md:text-6xl">Made With Love.</h2>
+            <h2 className="text-5xl text-cream md:text-6xl">{t("Made With Love.")}</h2>
             <AhabLink to="/shop" variant="gold" className="mt-8">
-              Shop the tops
+              {t("Shop the tops")}
             </AhabLink>
           </div>
         </div>
