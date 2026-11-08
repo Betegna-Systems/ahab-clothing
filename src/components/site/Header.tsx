@@ -40,7 +40,7 @@ function NavLinks({ items }: { items: readonly (typeof nav)[number][] }) {
 }
 
 /** EN | አማ — the same page in the other language (a full page load re-renders server-side). */
-function LanguageSwitcher({ className }: { className?: string }) {
+function LanguageSwitcher({ className, compact }: { className?: string; compact?: boolean }) {
   const t = useT();
   const locale = useLocale();
   const publicHref = useRouterState({ select: (state) => state.location.publicHref });
@@ -62,6 +62,26 @@ function LanguageSwitcher({ className }: { className?: string }) {
         {short}
       </a>
     );
+  if (compact) {
+    // Phones: one tap target showing the other language (አማ on English pages, EN on Amharic).
+    const target: Locale = locale === "en" ? "am" : "en";
+    return (
+      <a
+        href={localizePath(bare, target) + rest}
+        hrefLang={target}
+        lang={target}
+        aria-label={
+          target === "am" ? t("View this page in Amharic") : t("View this page in English")
+        }
+        className={cn(
+          "label-xs grid h-8 min-w-9 place-items-center border border-foreground/25 px-2 text-foreground",
+          className,
+        )}
+      >
+        {target === "am" ? "አማ" : "EN"}
+      </a>
+    );
+  }
   return (
     <span className={cn("label-xs flex items-center gap-1.5", className)}>
       {option("en", "EN", t("View this page in English"))}
@@ -115,6 +135,7 @@ export function Header() {
             >
               <Menu className="h-5 w-5" strokeWidth={1.25} />
             </button>
+            <LanguageSwitcher compact className="ml-3 sm:hidden" />
             <NavLinks items={leftNav} />
           </div>
 
