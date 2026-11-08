@@ -68,26 +68,28 @@ export function Header() {
 
           <Link
             to="/"
-            className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3 text-center"
+            className="absolute left-1/2 flex -translate-x-1/2 items-center gap-1.5 text-center sm:gap-3"
           >
             <img
               src="/ahab-logo.png"
               alt="AHAB Clothing"
-              className="h-10 w-10 rounded-full object-contain"
+              className="hidden h-10 w-10 rounded-full object-contain sm:block"
             />
             <div className="flex flex-col items-start leading-none">
-              <span className="font-serif text-2xl tracking-[0.25em] md:text-[1.85rem]">AHAB</span>
-              <span className="label-xs block text-[0.52rem] tracking-[0.38em] text-gold">
+              <span className="font-serif text-xl tracking-[0.18em] sm:text-2xl sm:tracking-[0.25em] md:text-[1.85rem]">
+                AHAB
+              </span>
+              <span className="label-xs hidden text-[0.52rem] tracking-[0.38em] text-gold sm:block">
                 Made With Love
               </span>
             </div>
           </Link>
 
-          <div className="flex items-center gap-5">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-5">
             <button type="button" onClick={() => setSearchOpen(true)} aria-label="Search">
               <Search className="h-5 w-5" strokeWidth={1.25} />
             </button>
-            <Link to="/wishlist" aria-label="Wishlist" className="relative hidden sm:block">
+            <Link to="/wishlist" aria-label="Wishlist" className="relative">
               <Heart className="h-5 w-5" strokeWidth={1.25} />
               {wishlist.length > 0 ? (
                 <span className="absolute -right-2 -top-2 grid h-4 w-4 place-items-center rounded-full bg-gold text-[0.6rem] text-gold-foreground">
@@ -95,7 +97,7 @@ export function Header() {
                 </span>
               ) : null}
             </Link>
-            <Link to="/account" aria-label="Account" className="hidden sm:block">
+            <Link to="/account" aria-label="Account">
               <User className="h-5 w-5" strokeWidth={1.25} />
             </Link>
             <button
