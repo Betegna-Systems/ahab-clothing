@@ -224,5 +224,6 @@ export function useAllProducts() {
     };
   }, []);
 
-  return { products: catalogFrom(remoteProducts), loading };
+  // live: the catalog came from Firestore, so a missing product really was deleted.
+  return { products: catalogFrom(remoteProducts), loading, live: remoteProducts !== null };
 }

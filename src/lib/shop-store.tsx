@@ -44,7 +44,10 @@ type ShopState = {
   toggleWishlist: (slug: string) => void;
   isWished: (slug: string) => boolean;
   markViewed: (slug: string) => void;
+  /** Pieces in the bag that still exist in the catalog (what the bag shows). */
   cartCount: number;
+  /** Saved pieces that still exist in the catalog (what the wishlist page shows). */
+  wishlistCount: number;
   subtotal: number;
   lineItems: { line: CartLine; product: Product }[];
   inventoryStatus: "loading" | "ready" | "error";
@@ -75,7 +78,7 @@ function read<T>(key: string, fallback: T): T {
 }
 
 export function ShopProvider({ children }: { children: ReactNode }) {
-  const { products: allProducts } = useAllProducts();
+  const { products: allProducts, live: catalogIsLive } = useAllProducts();
   const [cart, setCart] = useState<CartLine[]>([]);
   // Persisting before the saved state is read would overwrite it with the empty defaults.
   const [storageLoaded, setStorageLoaded] = useState(false);
@@ -316,6 +319,17 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     [inventoryStatus, isVariantAvailable],
   );
 
+  // Once the live catalog is known, drop bag lines for products deleted in the admin app.
+  // Otherwise they'd be invisible in the bag yet still block checkout, and the bag's
+  // remove/quantity buttons (which use positions) could act on the wrong line.
+  useEffect(() => {
+    if (!catalogIsLive || !storageLoaded) return;
+    setCart((prev) => {
+      const kept = prev.filter((line) => allProducts.some((p) => p.slug === line.slug));
+      return kept.length === prev.length ? prev : kept;
+    });
+  }, [allProducts, catalogIsLive, storageLoaded]);
+
   const removeLine = useCallback((index: number) => {
     setCart((prev) => prev.filter((_, i) => i !== index));
   }, []);
@@ -399,7 +413,10 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     toggleWishlist,
     isWished: (slug) => wishlist.includes(slug),
     markViewed,
-    cartCount: cart.reduce((n, l) => n + l.qty, 0),
+    // Count only products that still exist: a piece deleted in the admin app stays saved
+    // (it reappears if re-added) but must not inflate the badges.
+    cartCount: lineItems.reduce((n, { line }) => n + line.qty, 0),
+    wishlistCount: wishlist.filter((slug) => allProducts.some((p) => p.slug === slug)).length,
     subtotal: lineItems.reduce((n, { line, product }) => n + product.price * line.qty, 0),
     lineItems,
     inventoryStatus,

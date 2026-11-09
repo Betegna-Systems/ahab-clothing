@@ -94,7 +94,7 @@ function LanguageSwitcher({ className, compact }: { className?: string; compact?
 }
 
 export function Header() {
-  const { cartCount, wishlist, setCartOpen, setSearchOpen } = useShop();
+  const { cartCount, wishlistCount, setCartOpen, setSearchOpen } = useShop();
   const t = useT();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -163,9 +163,9 @@ export function Header() {
             </button>
             <Link to="/wishlist" aria-label={t("Wishlist")} className="relative">
               <Heart className="h-5 w-5" strokeWidth={1.25} />
-              {wishlist.length > 0 ? (
+              {wishlistCount > 0 ? (
                 <span className="absolute -right-2 -top-2 grid h-4 w-4 place-items-center rounded-full bg-gold text-[0.6rem] text-gold-foreground">
-                  {wishlist.length}
+                  {wishlistCount}
                 </span>
               ) : null}
             </Link>
