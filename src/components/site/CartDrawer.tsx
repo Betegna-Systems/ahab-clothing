@@ -6,13 +6,14 @@ import { Minus, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/products";
 import { MAX_CART_QUANTITY } from "@/lib/order-limits";
+import { FREE_SHIPPING_THRESHOLD, orderTotals } from "@/lib/order-pricing";
 import { useShop } from "@/lib/shop-store";
 import { cn } from "@/lib/utils";
 import { AhabLink } from "./ui";
 import { useT } from "@/lib/i18n";
 import { useProductText } from "@/lib/i18n/product";
 
-const FREE_SHIPPING = 5000;
+const FREE_SHIPPING = FREE_SHIPPING_THRESHOLD;
 
 export function CartDrawer() {
   const {
@@ -22,30 +23,49 @@ export function CartDrawer() {
     removeLine,
     setQty,
     subtotal,
-    promoCode,
-    discount,
+    promo,
     applyPromoCode,
+    clearPromo,
     inventoryStatus,
     isVariantAvailable,
     hasUnavailableCartLines,
     refreshInventory,
   } = useShop();
-  const [promo, setPromo] = useState("");
+  const [promoInput, setPromoInput] = useState("");
+  const [checkingPromo, setCheckingPromo] = useState(false);
   const t = useT();
   const text = useProductText();
 
-  const shipping = subtotal === 0 || subtotal >= FREE_SHIPPING ? 0 : 250;
-  const discountAmount = Math.round(subtotal * discount);
-  const total = subtotal - discountAmount + shipping;
+  const { discount: discountAmount, shipping, total, promoCode } = orderTotals(subtotal, promo);
+  const promoShortfall = promo && !promoCode ? promo.minSubtotal - subtotal : 0;
 
-  const applyPromo = () => {
-    const rate = applyPromoCode(promo);
-    if (rate !== null) {
-      toast.success(t("Promo applied"), {
-        description: t("{percent}% off your order.", { percent: Math.round(rate * 100) }),
-      });
-    } else {
-      toast.error(t("Invalid promo code"));
+  const applyPromo = async () => {
+    if (!promoInput.trim() || checkingPromo) return;
+    setCheckingPromo(true);
+    try {
+      const result = await applyPromoCode(promoInput);
+      if (result.ok) {
+        setPromoInput("");
+        toast.success(t("Promo applied"), {
+          description: t("{percent}% off your order.", { percent: result.promo.percentOff }),
+        });
+        return;
+      }
+      toast.error(
+        result.reason === "expired"
+          ? t("This promo code has expired.")
+          : result.reason === "used_up"
+            ? t("This promo code has been fully used.")
+            : result.reason === "not_started"
+              ? t("This promo code isn't active yet.")
+              : result.reason === "failed"
+                ? t("We couldn't check this code. Please try again.")
+                : t("Invalid promo code"),
+      );
+    } catch {
+      toast.error(t("We couldn't check this code. Please try again."));
+    } finally {
+      setCheckingPromo(false);
     }
   };
 
@@ -186,29 +206,63 @@ export function CartDrawer() {
             </div>
 
             <div className="border-t border-border bg-cream p-6">
-              <div className="mb-4 flex gap-2">
-                <input
-                  type="text"
-                  placeholder={t("Promo code (AHAB10)")}
-                  value={promo}
-                  onChange={(e) => setPromo(e.target.value)}
-                  className="h-10 flex-1 border border-border bg-transparent px-3 text-xs tracking-wider uppercase outline-none focus:border-primary"
-                />
-                <button
-                  type="button"
-                  onClick={applyPromo}
-                  className="label-xs border border-primary px-4 hover:bg-primary hover:text-primary-foreground"
+              {promo ? (
+                <div className="mb-4 flex items-center justify-between gap-3 border border-gold/40 px-3 py-2 text-xs">
+                  <span>
+                    {t("Code {code} · {percent}% off", {
+                      code: promo.code,
+                      percent: promo.percentOff,
+                    })}
+                    {promoShortfall > 0 ? (
+                      <span className="mt-0.5 block text-muted-foreground">
+                        {t("Add {amount} more to use this code.", {
+                          amount: formatPrice(promoShortfall),
+                        })}
+                      </span>
+                    ) : null}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={clearPromo}
+                    className="label-xs text-muted-foreground hover:text-foreground"
+                  >
+                    {t("Remove")}
+                  </button>
+                </div>
+              ) : (
+                <form
+                  className="mb-4 flex gap-2"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    void applyPromo();
+                  }}
                 >
-                  {t("Apply")}
-                </button>
-              </div>
+                  <input
+                    type="text"
+                    placeholder={t("Promo code")}
+                    aria-label={t("Promo code")}
+                    value={promoInput}
+                    onChange={(e) => setPromoInput(e.target.value)}
+                    maxLength={20}
+                    autoCapitalize="characters"
+                    className="h-10 flex-1 border border-border bg-transparent px-3 text-xs tracking-wider uppercase outline-none focus:border-primary"
+                  />
+                  <button
+                    type="submit"
+                    disabled={checkingPromo || !promoInput.trim()}
+                    className="label-xs border border-primary px-4 hover:bg-primary hover:text-primary-foreground disabled:opacity-50"
+                  >
+                    {checkingPromo ? t("Checking…") : t("Apply")}
+                  </button>
+                </form>
+              )}
 
               <div className="space-y-1.5 text-xs text-muted-foreground">
                 <div className="flex justify-between">
                   <span>{t("Subtotal")}</span>
                   <span className="text-foreground">{formatPrice(subtotal)}</span>
                 </div>
-                {discount > 0 ? (
+                {discountAmount > 0 ? (
                   <div className="flex justify-between text-gold">
                     <span>{t("Promo discount {code}", { code: promoCode ?? "" })}</span>
                     <span>-{formatPrice(discountAmount)}</span>

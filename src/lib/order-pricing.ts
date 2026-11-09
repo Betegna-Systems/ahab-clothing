@@ -3,19 +3,67 @@ import type { Product } from "@/lib/products";
 // Shared by checkout (display) and placeOrder (authoritative). Keep runtime imports out of
 // this module so its rules can be unit-tested without the app's path aliases.
 
-export const PROMOS: Record<string, number> = { AHAB10: 0.1, MADEWITHLOVE: 0.15 };
 export const FREE_SHIPPING_THRESHOLD = 5000;
 export const SHIPPING_FEE = 250;
 
-export function promoRate(code: string | null | undefined) {
-  if (!code) return 0;
-  return Object.prototype.hasOwnProperty.call(PROMOS, code) ? PROMOS[code]! : 0;
+/** A promo code as validated by the server (from the promo_codes table). */
+export type Promo = { code: string; percentOff: number; minSubtotal: number };
+
+/** promo_codes row fields the rules need. */
+export type PromoRow = {
+  code: string;
+  percent_off: number;
+  active: boolean;
+  starts_at: string | null;
+  expires_at: string | null;
+  max_uses: number | null;
+  min_subtotal: number;
+};
+
+export type PromoStatus = "ok" | "not_found" | "inactive" | "not_started" | "expired" | "used_up";
+
+export const PROMO_CODE_PATTERN = /^[A-Z0-9]{3,20}$/;
+
+/** Uppercases and validates a typed code; null when it can't be a code at all. */
+export function normalizePromoCode(code: string | null | undefined) {
+  const normalized = (code ?? "").trim().toUpperCase();
+  return PROMO_CODE_PATTERN.test(normalized) ? normalized : null;
 }
 
-export function orderTotals(subtotal: number, promoCode: string | null | undefined) {
-  const discount = Math.round(subtotal * promoRate(promoCode));
+/** Whether a code can be used right now. `uses` counts its non-cancelled orders. */
+export function promoStatus(
+  row: PromoRow | null | undefined,
+  now: Date,
+  uses: number,
+): PromoStatus {
+  if (!row) return "not_found";
+  if (!row.active) return "inactive";
+  if (row.starts_at && new Date(row.starts_at) > now) return "not_started";
+  if (row.expires_at && new Date(row.expires_at) <= now) return "expired";
+  if (row.max_uses !== null && uses >= row.max_uses) return "used_up";
+  return "ok";
+}
+
+export function promoFromRow(row: PromoRow): Promo {
+  return { code: row.code, percentOff: row.percent_off, minSubtotal: row.min_subtotal };
+}
+
+/** A code only takes effect once the bag reaches its minimum order. */
+export function promoApplies(promo: Promo | null | undefined, subtotal: number): promo is Promo {
+  return Boolean(promo) && subtotal > 0 && subtotal >= promo!.minSubtotal;
+}
+
+export function orderTotals(subtotal: number, promo: Promo | null | undefined) {
+  const applied = promoApplies(promo, subtotal) ? promo : null;
+  const discount = applied ? Math.round((subtotal * applied.percentOff) / 100) : 0;
   const shipping = subtotal === 0 || subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
-  return { subtotal, discount, shipping, total: subtotal - discount + shipping };
+  return {
+    subtotal,
+    discount,
+    shipping,
+    total: subtotal - discount + shipping,
+    promoCode: applied?.code ?? null,
+  };
 }
 
 export type RequestedLine = { slug: string; color: string; size: string; qty: number };
@@ -30,19 +78,18 @@ export type PricedOrder =
       discount: number;
       shipping: number;
       total: number;
+      /** The code that was applied (null when none, or below its minimum order). */
       promoCode: string | null;
+      promoPercent: number | null;
     }
-  | { ok: false; reason: "unavailable" | "invalid_promo" };
+  | { ok: false; reason: "unavailable" };
 
 /** Prices requested lines from the catalog; browser-supplied prices are never used. */
 export function priceOrder(
   lines: RequestedLine[],
   catalog: Pick<Product, "slug" | "name" | "price" | "colors" | "sizes" | "images" | "inStock">[],
-  promoCode: string | null | undefined,
+  promo: Promo | null,
 ): PricedOrder {
-  const code = promoCode ? promoCode.trim().toUpperCase() : null;
-  if (code && !promoRate(code)) return { ok: false, reason: "invalid_promo" };
-
   const items: PricedLine[] = [];
   for (const line of lines) {
     const product = catalog.find((candidate) => candidate.slug === line.slug);
@@ -67,5 +114,11 @@ export function priceOrder(
   }
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.qty, 0);
-  return { ok: true, items, promoCode: code, ...orderTotals(subtotal, code) };
+  const totals = orderTotals(subtotal, promo);
+  return {
+    ok: true,
+    items,
+    ...totals,
+    promoPercent: totals.promoCode && promo ? promo.percentOff : null,
+  };
 }

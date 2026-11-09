@@ -60,12 +60,25 @@ type Inventory = {
   updated_at: string;
 };
 type Security = { user_id: string; mfa_required: boolean; updated_at: string };
+type PromoCode = {
+  code: string;
+  percent_off: number;
+  active: boolean;
+  starts_at: string | null;
+  expires_at: string | null;
+  max_uses: number | null;
+  min_subtotal: number;
+  note: string;
+  created_at: string;
+  updated_at: string;
+};
 type LiveOrders = Database["public"]["Tables"]["orders"];
-// 202611060001_order_ownership.sql adds customer_user_id (not yet in the generated types).
-type OrderOwnership = { customer_user_id?: string | null };
+// 202611060001_order_ownership.sql adds customer_user_id and 202611090001_promo_codes.sql adds
+// promo_code (not yet in the generated types).
+type OrderOwnership = { customer_user_id?: string | null; promo_code?: string | null };
 type FeatureTables = {
   orders: {
-    Row: LiveOrders["Row"] & { customer_user_id: string | null };
+    Row: LiveOrders["Row"] & { customer_user_id: string | null; promo_code: string | null };
     Insert: LiveOrders["Insert"] & OrderOwnership;
     Update: LiveOrders["Update"] & OrderOwnership;
     Relationships: [];
@@ -88,6 +101,10 @@ type FeatureTables = {
   product_variant_inventory: Table<
     Inventory,
     Omit<Inventory, "quantity" | "updated_at"> & Partial<Pick<Inventory, "quantity" | "updated_at">>
+  >;
+  promo_codes: Table<
+    PromoCode,
+    Pick<PromoCode, "code" | "percent_off"> & Partial<Omit<PromoCode, "code" | "percent_off">>
   >;
   account_security_settings: Table<
     Security,

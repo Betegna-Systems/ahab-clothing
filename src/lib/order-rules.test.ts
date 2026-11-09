@@ -1,6 +1,13 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { orderTotals, priceOrder } from "./order-pricing.ts";
+import {
+  normalizePromoCode,
+  orderTotals,
+  priceOrder,
+  promoStatus,
+  type Promo,
+  type PromoRow,
+} from "./order-pricing.ts";
 import {
   canClaimOrder,
   canSubmitReceipt,
@@ -46,6 +53,8 @@ const catalog = [
   },
 ];
 
+const AHAB10: Promo = { code: "AHAB10", percentOff: 10, minSubtotal: 0 };
+
 describe("order pricing", () => {
   it("charges delivery below the free-shipping threshold", () => {
     assert.deepEqual(orderTotals(4200, null), {
@@ -53,15 +62,17 @@ describe("order pricing", () => {
       discount: 0,
       shipping: 250,
       total: 4450,
+      promoCode: null,
     });
   });
 
   it("gives free delivery from 5000 ETB, based on the pre-discount subtotal", () => {
-    assert.deepEqual(orderTotals(5400, "AHAB10"), {
+    assert.deepEqual(orderTotals(5400, AHAB10), {
       subtotal: 5400,
       discount: 540,
       shipping: 0,
       total: 4860,
+      promoCode: "AHAB10",
     });
   });
 
@@ -79,15 +90,34 @@ describe("order pricing", () => {
     assert.equal(priced.total, 2650);
   });
 
-  it("normalizes valid promo codes and rejects unknown ones", () => {
+  it("applies a validated promo and reports its percent for the database check", () => {
     const line = { slug: "taitu-double-breasted-suit", color: "Chocolate", size: "M", qty: 1 };
-    const valid = priceOrder([line], catalog, " madewithlove ");
-    assert.equal(valid.ok && valid.promoCode, "MADEWITHLOVE");
-    assert.equal(valid.ok && valid.discount, 630);
-    assert.deepEqual(priceOrder([line], catalog, "FREE100"), {
-      ok: false,
-      reason: "invalid_promo",
+    const priced = priceOrder([line], catalog, {
+      code: "MADEWITHLOVE",
+      percentOff: 15,
+      minSubtotal: 0,
     });
+    assert.equal(priced.ok && priced.promoCode, "MADEWITHLOVE");
+    assert.equal(priced.ok && priced.promoPercent, 15);
+    assert.equal(priced.ok && priced.discount, 630);
+  });
+
+  it("does not apply a promo below its minimum order (and records no code)", () => {
+    const line = { slug: "bete-seamless-crew", color: "Black", size: "M", qty: 1 };
+    const priced = priceOrder([line], catalog, {
+      code: "BIG20",
+      percentOff: 20,
+      minSubtotal: 3000,
+    });
+    assert.equal(priced.ok && priced.discount, 0);
+    assert.equal(priced.ok && priced.promoCode, null);
+    assert.equal(priced.ok && priced.promoPercent, null);
+    const two = priceOrder([{ ...line, qty: 3 }], catalog, {
+      code: "BIG20",
+      percentOff: 20,
+      minSubtotal: 3000,
+    });
+    assert.equal(two.ok && two.discount, 720);
   });
 
   for (const [label, line] of [
@@ -226,5 +256,38 @@ describe("payment status", () => {
     );
     assert.equal(paymentStatusLabel("pending", "Telebirr"), "Awaiting payment");
     assert.equal(paymentStatusLabel("pending", "Cash on delivery"), "Pay on delivery");
+  });
+});
+
+describe("promo codes", () => {
+  const row: PromoRow = {
+    code: "LAUNCH20",
+    percent_off: 20,
+    active: true,
+    starts_at: "2026-11-01T00:00:00Z",
+    expires_at: "2026-12-01T00:00:00Z",
+    max_uses: 2,
+    min_subtotal: 0,
+  };
+  const now = new Date("2026-11-15T12:00:00Z");
+
+  it("normalizes typed codes and rejects impossible ones", () => {
+    assert.equal(normalizePromoCode(" launch20 "), "LAUNCH20");
+    assert.equal(normalizePromoCode("ab"), null);
+    assert.equal(normalizePromoCode("NO SPACES"), null);
+    assert.equal(normalizePromoCode(undefined), null);
+  });
+
+  it("allows an active code inside its dates and under its limit", () => {
+    assert.equal(promoStatus(row, now, 1), "ok");
+    assert.equal(promoStatus({ ...row, max_uses: null }, now, 999), "ok");
+  });
+
+  it("rejects missing, paused, early, expired and used-up codes", () => {
+    assert.equal(promoStatus(null, now, 0), "not_found");
+    assert.equal(promoStatus({ ...row, active: false }, now, 0), "inactive");
+    assert.equal(promoStatus(row, new Date("2026-10-31T23:59:59Z"), 0), "not_started");
+    assert.equal(promoStatus(row, new Date("2026-12-01T00:00:00Z"), 0), "expired");
+    assert.equal(promoStatus(row, now, 2), "used_up");
   });
 });

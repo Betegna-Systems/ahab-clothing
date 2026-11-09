@@ -64,7 +64,8 @@ function CheckoutPage() {
   const {
     lineItems,
     subtotal,
-    promoCode,
+    promo,
+    clearPromo,
     clearCart,
     inventoryStatus,
     isVariantAvailable,
@@ -80,7 +81,8 @@ function CheckoutPage() {
   const [sending, setSending] = useState(false);
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState("");
-  const { discount: discountAmount, shipping, total } = orderTotals(subtotal, promoCode);
+  // promoCode is set only when the bag's code applies (it may be below its minimum order).
+  const { discount: discountAmount, shipping, total, promoCode } = orderTotals(subtotal, promo);
 
   const setInputValue = useCallback((name: string, value: string) => {
     const input = formRef.current?.elements.namedItem(name);
@@ -216,14 +218,19 @@ function CheckoutPage() {
             ? t(
                 "There isn't enough stock for the requested quantity. Update your bag and try again.",
               )
-            : result.reason === "price_changed"
-              ? t("Prices or delivery charges have changed. Review your bag and try again.")
-              : result.reason === "rate_limited"
-                ? t(
-                    "Several orders were just placed with this phone number. Please contact AHAB on chat to place another.",
-                  )
-                : t("We couldn't send your order. Please try again."),
+            : result.reason === "promo_unavailable"
+              ? t(
+                  "Your promo code is no longer available, so it has been removed. Review your new total and place the order again.",
+                )
+              : result.reason === "price_changed"
+                ? t("Prices or delivery charges have changed. Review your bag and try again.")
+                : result.reason === "rate_limited"
+                  ? t(
+                      "Several orders were just placed with this phone number. Please contact AHAB on chat to place another.",
+                    )
+                  : t("We couldn't send your order. Please try again."),
       );
+      if (result.reason === "promo_unavailable") clearPromo();
       await refreshInventory();
       return;
     }

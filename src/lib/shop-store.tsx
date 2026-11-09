@@ -10,7 +10,8 @@ import {
 import { type Product } from "@/lib/products";
 import { useAllProducts, getProductCached } from "@/lib/firestore-products";
 import { MAX_CART_QUANTITY } from "@/lib/order-limits";
-import { PROMOS, promoRate } from "@/lib/order-pricing";
+import type { Promo } from "@/lib/order-pricing";
+import { checkPromoCode } from "@/lib/orders.functions";
 import { getVariantAvailability } from "@/lib/inventory.functions";
 import { initializeSupabaseBrowser } from "@/integrations/supabase/client";
 import { featureClient as supabase } from "@/lib/feature-client";
@@ -28,13 +29,14 @@ type ShopState = {
   cart: CartLine[];
   wishlist: string[];
   recentlyViewed: string[];
-  promoCode: string | null;
-  discount: number;
+  /** The validated promo code in the bag (it may still be below its minimum order). */
+  promo: Promo | null;
   cartOpen: boolean;
   searchOpen: boolean;
   setCartOpen: (open: boolean) => void;
   setSearchOpen: (open: boolean) => void;
-  applyPromoCode: (code: string) => number | null;
+  /** Checks a code with the server and puts it in the bag when usable. */
+  applyPromoCode: (code: string) => Promise<PromoCheck>;
   clearPromo: () => void;
   addToCart: (line: CartLine) => void;
   removeLine: (index: number) => void;
@@ -53,6 +55,8 @@ type ShopState = {
   refreshInventory: () => Promise<void>;
   clearCart: () => void;
 };
+
+export type PromoCheck = Awaited<ReturnType<typeof checkPromoCode>>;
 
 const ShopContext = createContext<ShopState | null>(null);
 
@@ -82,7 +86,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   const [recentlyViewed, setRecentlyViewed] = useState<string[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [promoCode, setPromoCode] = useState<string | null>(null);
+  const [promo, setPromo] = useState<Promo | null>(null);
   const [inventoryStatus, setInventoryStatus] = useState<"loading" | "ready" | "error">("loading");
   const [availableVariants, setAvailableVariants] = useState<Set<string>>(() => new Set());
 
@@ -123,10 +127,13 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     setWishlist(read<string[]>(WISH_KEY, []));
     setWishlistLoaded(true);
     setRecentlyViewed(read<string[]>(VIEWED_KEY, []));
+    // A code saved on an earlier visit is re-checked; paused/expired/used-up codes are dropped.
     const savedPromo = read<string | null>(PROMO_KEY, null);
-    setPromoCode(
-      savedPromo && Object.prototype.hasOwnProperty.call(PROMOS, savedPromo) ? savedPromo : null,
-    );
+    if (typeof savedPromo === "string" && savedPromo) {
+      checkPromoCode({ data: { code: savedPromo } })
+        .then((result) => setPromo(result.ok ? result.promo : null))
+        .catch(() => setPromo(null));
+    }
     setStorageLoaded(true);
   }, []);
 
@@ -260,9 +267,9 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   }, [recentlyViewed, storageLoaded]);
   useEffect(() => {
     if (!storageLoaded) return;
-    if (promoCode) localStorage.setItem(PROMO_KEY, promoCode);
+    if (promo) localStorage.setItem(PROMO_KEY, JSON.stringify(promo.code));
     else localStorage.removeItem(PROMO_KEY);
-  }, [promoCode, storageLoaded]);
+  }, [promo, storageLoaded]);
 
   const isVariantAvailable = useCallback(
     (slug: string, color: string, size: string) =>
@@ -321,14 +328,13 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
-  const applyPromoCode = useCallback((code: string) => {
-    const normalizedCode = code.trim().toUpperCase();
-    if (!Object.prototype.hasOwnProperty.call(PROMOS, normalizedCode)) return null;
-    setPromoCode(normalizedCode);
-    return PROMOS[normalizedCode]!;
+  const applyPromoCode = useCallback(async (code: string) => {
+    const result = await checkPromoCode({ data: { code } });
+    if (result.ok) setPromo(result.promo);
+    return result;
   }, []);
 
-  const clearPromo = useCallback(() => setPromoCode(null), []);
+  const clearPromo = useCallback(() => setPromo(null), []);
 
   const toggleWishlist = useCallback(
     (slug: string) => {
@@ -380,8 +386,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     cart,
     wishlist,
     recentlyViewed,
-    promoCode,
-    discount: promoRate(promoCode),
+    promo,
     cartOpen,
     searchOpen,
     setCartOpen,

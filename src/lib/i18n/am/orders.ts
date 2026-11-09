@@ -29,6 +29,8 @@ export const orders: Record<string, string> = {
     "ለጠየቁት ብዛት በቂ ክምችት የለም። ቦርሳዎን አስተካክለው እንደገና ይሞክሩ።",
   "Prices or delivery charges have changed. Review your bag and try again.":
     "ዋጋዎች ወይም የማድረሻ ክፍያዎች ተቀይረዋል። ቦርሳዎን ተመልክተው እንደገና ይሞክሩ።",
+  "Your promo code is no longer available, so it has been removed. Review your new total and place the order again.":
+    "የቅናሽ ኮድዎ ከአሁን በኋላ አይሰራም፤ ስለዚህ ተወግዷል። አዲሱን ጠቅላላ ዋጋ ተመልክተው ትዕዛዙን እንደገና ያስገቡ።",
   "Several orders were just placed with this phone number. Please contact AHAB on chat to place another.":
     "በዚህ ስልክ ቁጥር በቅርቡ በርካታ ትዕዛዞች ተሰጥተዋል። ሌላ ትዕዛዝ ለማስገባት እባክዎ AHABን በቻት ያግኙ።",
   "Thank you": "እናመሰግናለን",

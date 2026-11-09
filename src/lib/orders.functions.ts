@@ -5,7 +5,14 @@ import { hasValidImageSignature } from "@/lib/image-validation";
 import type { Json } from "@/integrations/supabase/types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { FeatureDatabase } from "@/lib/feature-database";
-import { priceOrder } from "@/lib/order-pricing";
+import {
+  normalizePromoCode,
+  priceOrder,
+  promoFromRow,
+  promoStatus,
+  type Promo,
+  type PromoStatus,
+} from "@/lib/order-pricing";
 import {
   canClaimOrder,
   canSubmitReceipt,
@@ -63,7 +70,7 @@ const orderResultSchema = z.discriminatedUnion("ok", [
   z.object({ ok: z.literal(true) }),
   z.object({
     ok: z.literal(false),
-    reason: z.enum(["unavailable", "insufficient_stock", "failed"]),
+    reason: z.enum(["unavailable", "insufficient_stock", "promo_unavailable", "failed"]),
   }),
 ]);
 
@@ -74,15 +81,66 @@ async function loadOrderCatalog() {
   return getAllProductsCached();
 }
 
+type PromoLookup =
+  | { ok: true; promo: Promo }
+  | { ok: false; reason: Exclude<PromoStatus, "ok"> | "invalid" | "failed" };
+
+/**
+ * Loads a promo code and checks it can be used now. Uses are the code's non-cancelled
+ * orders; place_order_with_inventory re-checks everything (with a lock) when saving.
+ */
+async function lookupPromo(rawCode: string): Promise<PromoLookup> {
+  const code = normalizePromoCode(rawCode);
+  if (!code) return { ok: false, reason: "invalid" };
+
+  const supabaseAdmin = await getFeatureAdmin();
+  const { data: row, error } = await supabaseAdmin
+    .from("promo_codes")
+    .select("code, percent_off, active, starts_at, expires_at, max_uses, min_subtotal")
+    .eq("code", code)
+    .maybeSingle();
+  if (error) {
+    console.error("Promo code lookup failed:", error.message);
+    return { ok: false, reason: "failed" };
+  }
+
+  let uses = 0;
+  if (row?.max_uses != null) {
+    const { count, error: countError } = await supabaseAdmin
+      .from("orders")
+      .select("order_number", { count: "exact", head: true })
+      .eq("promo_code", code)
+      .not("status", "ilike", "cancel%");
+    if (countError) {
+      console.error("Promo code usage count failed:", countError.message);
+      return { ok: false, reason: "failed" };
+    }
+    uses = count ?? 0;
+  }
+
+  const status = promoStatus(row, new Date(), uses);
+  if (status !== "ok" || !row) return { ok: false, reason: status === "ok" ? "not_found" : status };
+  return { ok: true, promo: promoFromRow(row) };
+}
+
+/** Checks a code typed into the bag; returns its percent and minimum order when usable. */
+export const checkPromoCode = createServerFn({ method: "POST" })
+  .validator((d: unknown) => z.object({ code: z.string().max(40) }).parse(d))
+  .handler(async ({ data }) => lookupPromo(data.code));
+
 export const placeOrder = createServerFn({ method: "POST" })
   .validator((d: unknown) => orderSchema.parse(d))
   .handler(async ({ data }) => {
-    const priced = priceOrder(data.items, await loadOrderCatalog(), data.promoCode);
+    let promo: Promo | null = null;
+    if (data.promoCode) {
+      const checked = await lookupPromo(data.promoCode);
+      if (!checked.ok) return { ok: false as const, reason: "promo_unavailable" as const };
+      promo = checked.promo;
+    }
+
+    const priced = priceOrder(data.items, await loadOrderCatalog(), promo);
     if (!priced.ok) {
-      return {
-        ok: false as const,
-        reason: priced.reason === "invalid_promo" ? ("price_changed" as const) : priced.reason,
-      };
+      return { ok: false as const, reason: priced.reason };
     }
     // The browser's figures are only a consistency check; the server's are saved.
     if (
@@ -125,6 +183,9 @@ export const placeOrder = createServerFn({ method: "POST" })
         total: priced.total,
         paymentMethod: data.paymentMethod,
         notes: [promoNote, data.notes].filter(Boolean).join("\n").slice(0, 1000),
+        // Re-validated (and its usage limit enforced) by the database while saving.
+        promoCode: priced.promoCode,
+        promoPercent: priced.promoPercent,
         paymentAccessTokenHash: await hashPaymentToken(data.paymentAccessToken),
         // Ignored until 202611060001_order_ownership.sql is deployed.
         customerUserId: account?.ok ? account.userId : null,
