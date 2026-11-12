@@ -10,7 +10,9 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 const ORDER_NUMBER_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
 
 /** Random, non-sequential order number (32^8 ≈ 1.1e12 combinations). */
-export function generateOrderNumber(random: (bytes: Uint8Array) => Uint8Array) {
+export function generateOrderNumber(
+  random: (bytes: Uint8Array<ArrayBuffer>) => Uint8Array<ArrayBuffer>,
+) {
   const bytes = random(new Uint8Array(8));
   return `AHAB-${Array.from(bytes, (byte) => ORDER_NUMBER_ALPHABET[byte % 32]).join("")}`;
 }
