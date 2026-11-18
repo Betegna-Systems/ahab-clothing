@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState, type MouseEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight, Heart, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -7,6 +7,8 @@ import { useShop } from "@/lib/shop-store";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
 import { useProductText } from "@/lib/i18n/product";
+import { isPlainClick, tagProductPhoto } from "@/lib/view-transition";
+import { useReveal } from "./reveal";
 
 const badgeLabel: Record<string, string> = {
   new: "New",
@@ -18,11 +20,19 @@ export function ProductCard({
   product,
   priority,
   showPurchaseOptions = false,
+  revealDelay = 0,
 }: {
   product: Product;
   priority?: boolean;
   showPurchaseOptions?: boolean;
+  /** Stagger (ms) for the scroll-in animation, e.g. by column position in a grid. */
+  revealDelay?: number;
 }) {
+  const revealRef = useReveal<HTMLElement>(revealDelay);
+  const photoRef = useRef<HTMLImageElement>(null);
+  const morphPhoto = (e: MouseEvent) => {
+    if (isPlainClick(e)) tagProductPhoto(photoRef.current);
+  };
   const {
     toggleWishlist,
     isWished,
@@ -61,12 +71,18 @@ export function ProductCard({
   };
 
   return (
-    <article className="group relative">
+    <article ref={revealRef} className="group relative">
       <div className="relative overflow-hidden bg-secondary">
-        <Link to="/product/$slug" params={{ slug: product.slug }} className="block">
+        <Link
+          to="/product/$slug"
+          params={{ slug: product.slug }}
+          onClick={morphPhoto}
+          className="block"
+        >
           <div className="relative aspect-3/4">
             <img
               key={photo}
+              ref={photoRef}
               src={photo}
               alt={t("{name} in {color}", {
                 name: text.name,
@@ -139,7 +155,7 @@ export function ProductCard({
       <div className="mt-5 flex items-baseline justify-between gap-4">
         <div>
           <h3 className="font-serif text-xl leading-tight">
-            <Link to="/product/$slug" params={{ slug: product.slug }}>
+            <Link to="/product/$slug" params={{ slug: product.slug }} onClick={morphPhoto}>
               {text.name}
             </Link>
           </h3>

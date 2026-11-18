@@ -240,7 +240,7 @@ function Shop() {
         <aside className="hidden lg:block">{Filters}</aside>
         <div className="grid grid-cols-2 gap-x-4 gap-y-12 md:grid-cols-3">
           {list.map((p, i) => (
-            <ProductCard key={p.slug} product={p} priority={i < 3} />
+            <ProductCard key={p.slug} product={p} priority={i < 3} revealDelay={(i % 3) * 90} />
           ))}
           {list.length === 0 ? (
             <p className="col-span-full py-20 text-center font-serif text-2xl text-muted-foreground">

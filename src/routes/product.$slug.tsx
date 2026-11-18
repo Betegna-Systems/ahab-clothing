@@ -124,16 +124,25 @@ function ProductPage() {
   const variantAvailable = size !== null && isVariantAvailable(product.slug, color, size);
   const [zoom, setZoom] = useState<{ x: number; y: number } | null>(null);
   const [spinning, setSpinning] = useState(false);
+  // The first photo arrives through the page transition (it grows out of the product card),
+  // so only photos the shopper switches to get their own fade-in.
+  const [photoSwitched, setPhotoSwitched] = useState(false);
+  const showPhoto = (i: number) => {
+    setActive(i);
+    setPhotoSwitched(true);
+  };
 
   useEffect(() => {
     markViewed(product.slug);
     setActive(0);
+    setPhotoSwitched(false);
     setSize(product.sizes.length === 1 ? product.sizes[0]! : null);
     setColorIndex(0);
   }, [product.slug]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!spinning) return;
+    setPhotoSwitched(true);
     const timer = setInterval(() => setActive((a) => (a + 1) % product.images.length), 700);
     return () => clearInterval(timer);
   }, [spinning, product.images.length]);
@@ -234,7 +243,10 @@ function ProductPage() {
               key={active}
               src={product.images[active]}
               alt={t("{name} in {color}", { name: text.name, color: text.color(color) })}
-              className="fade-in-slow aspect-3/4 w-full object-cover transition-transform duration-300"
+              className={cn(
+                "vt-product-photo aspect-3/4 w-full object-cover transition-transform duration-300",
+                photoSwitched && "fade-in-slow",
+              )}
               style={
                 zoom
                   ? { transform: "scale(1.8)", transformOrigin: `${zoom.x}% ${zoom.y}%` }
@@ -315,7 +327,7 @@ function ProductPage() {
                   onClick={() => {
                     setColorIndex(i);
                     setSpinning(false);
-                    setActive(i);
+                    showPhoto(i);
                   }}
                   aria-label={text.color(c.name)}
                   className={cn(

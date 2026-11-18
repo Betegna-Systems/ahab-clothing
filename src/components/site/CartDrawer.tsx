@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { formatPrice } from "@/lib/products";
 import { MAX_CART_QUANTITY } from "@/lib/order-limits";
 import { FREE_SHIPPING_THRESHOLD, orderTotals } from "@/lib/order-pricing";
-import { useShop } from "@/lib/shop-store";
+import { cartLineKey, useShop } from "@/lib/shop-store";
 import { cn } from "@/lib/utils";
 import { AhabLink } from "./ui";
 import { useT } from "@/lib/i18n";
@@ -30,6 +30,7 @@ export function CartDrawer() {
     isVariantAvailable,
     hasUnavailableCartLines,
     refreshInventory,
+    lastAdded,
   } = useShop();
   const [promoInput, setPromoInput] = useState("");
   const [checkingPromo, setCheckingPromo] = useState(false);
@@ -134,13 +135,19 @@ export function CartDrawer() {
               ) : null}
               <ul className="divide-y divide-border">
                 {lineItems.map(({ line, product }, i) => {
+                  const key = cartLineKey(line);
+                  // Re-keying the just-added line replays its arrival animation on every add.
+                  const justAdded = lastAdded?.key === key;
                   const colorIdx = product.colors.findIndex(
                     (c) => c.name.toLowerCase() === line.color.toLowerCase(),
                   );
                   const itemImage =
                     product.images[colorIdx >= 0 ? colorIdx : 0] ?? product.images[0];
                   return (
-                    <li key={`${line.slug}-${line.size}-${line.color}`} className="flex gap-4 py-5">
+                    <li
+                      key={justAdded ? `${key}-${lastAdded.at}` : key}
+                      className={cn("flex gap-4 py-5", justAdded && "cart-line-added")}
+                    >
                       <img
                         src={itemImage}
                         alt={text(product).name}
@@ -187,7 +194,12 @@ export function CartDrawer() {
                           >
                             <Minus className="h-3 w-3" strokeWidth={1.5} />
                           </button>
-                          <span className="w-8 text-center text-sm font-medium">{line.qty}</span>
+                          <span
+                            key={line.qty}
+                            className="qty-pop w-8 text-center text-sm font-medium"
+                          >
+                            {line.qty}
+                          </span>
                           <button
                             type="button"
                             onClick={() => setQty(i, line.qty + 1)}

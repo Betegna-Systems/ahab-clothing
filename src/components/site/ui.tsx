@@ -2,6 +2,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { Link } from "@tanstack/react-router";
 import type { ComponentProps, ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { useReveal } from "./reveal";
 
 export const ahabButton = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap transition-all duration-500 disabled:pointer-events-none disabled:opacity-50 label-xs",
@@ -69,8 +70,12 @@ export function SectionHeading({
   align?: "left" | "center";
   className?: string;
 }) {
+  const ref = useReveal<HTMLDivElement>();
   return (
-    <div className={cn("max-w-2xl", align === "center" && "mx-auto text-center", className)}>
+    <div
+      ref={ref}
+      className={cn("max-w-2xl", align === "center" && "mx-auto text-center", className)}
+    >
       {eyebrow ? <Eyebrow>{eyebrow}</Eyebrow> : null}
       <h2 className="mt-5 text-4xl leading-[1.05] tracking-tight sm:text-5xl md:text-6xl">
         {title}

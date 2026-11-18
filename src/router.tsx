@@ -14,6 +14,9 @@ export const getRouter = () => {
     context: { queryClient, i18n },
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
+    // Pages cross-fade, and a clicked product photo grows into the product page
+    // (see lib/view-transition.ts). Ignored by browsers without the View Transitions API.
+    defaultViewTransition: true,
     // /am/… URLs are the same routes in Amharic: strip the prefix on the way in and add it
     // back to every link and navigation on the way out.
     rewrite: {

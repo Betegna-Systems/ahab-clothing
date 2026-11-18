@@ -4,6 +4,7 @@ import { collections, images } from "@/lib/products";
 import { useAllProducts } from "@/lib/firestore-products";
 import { ProductCard } from "@/components/site/ProductCard";
 import { AhabLink, ahabButton, Eyebrow, SectionHeading } from "@/components/site/ui";
+import { Reveal } from "@/components/site/reveal";
 import { INSTAGRAM_HANDLE, INSTAGRAM_URL } from "@/lib/social";
 const craftStudio = images.craftStudio;
 import { DEFAULT_DESCRIPTION, DEFAULT_TITLE, seo } from "@/lib/seo";
@@ -47,18 +48,18 @@ function Home() {
           alt={t("Model wearing the chocolate Taitu double-breasted AHAB suit")}
           width={1024}
           height={1440}
-          className="fade-in-slow absolute inset-0 h-full w-full object-cover object-[center_25%]"
+          className="hero-settle absolute inset-0 h-full w-full object-cover object-[center_25%]"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-foreground/65 via-foreground/10 to-transparent" />
         <div className="relative mx-auto flex h-full max-w-[1500px] flex-col justify-end px-5 pb-16 md:px-10 md:pb-24">
           <p className="label-xs reveal-up text-cream/85">{t("AHAB Suits")} &middot; 2026</p>
-          <h1 className="reveal-up mt-5 max-w-3xl text-6xl leading-[0.95] text-cream sm:text-7xl md:text-[7.5rem]">
+          <h1 className="reveal-up delay-step-1 mt-5 max-w-3xl text-6xl leading-[0.95] text-cream sm:text-7xl md:text-[7.5rem]">
             {t("Tailored for")} <em className="italic text-gold">{t("Her.")}</em>
           </h1>
-          <p className="reveal-up mt-6 max-w-md text-base text-cream/85 md:text-lg">
+          <p className="reveal-up delay-step-2 mt-6 max-w-md text-base text-cream/85 md:text-lg">
             {t("AHAB Suits and bodycon tops, designed and tailored in Addis Ababa.")}
           </p>
-          <div className="reveal-up mt-10 flex flex-col gap-3 sm:flex-row">
+          <div className="reveal-up delay-step-3 mt-10 flex flex-col gap-3 sm:flex-row">
             <Link
               to="/shop"
               search={{ category: "suits" }}
@@ -82,28 +83,34 @@ function Home() {
         <SectionHeading eyebrow={t("The Collections")} title={t("Two lines. One signature.")} />
         <div className="mt-14 grid gap-4 md:grid-cols-6">
           {collections.map((c, i) => (
-            <Link
+            <Reveal
               key={c.title}
-              to="/shop"
-              search={{ category: c.filter }}
-              className={`group relative overflow-hidden bg-secondary ${i < 2 ? "md:col-span-3 aspect-4/5 md:aspect-5/6" : "md:col-span-2 aspect-3/4"}`}
+              variant="curtain"
+              delay={(i < 2 ? i : i - 2) * 120}
+              className={`relative ${i < 2 ? "md:col-span-3 aspect-4/5 md:aspect-5/6" : "md:col-span-2 aspect-3/4"}`}
             >
-              <img
-                src={c.image}
-                alt={t(c.title)}
-                loading="lazy"
-                className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1400ms] ease-out group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 p-6 text-cream md:p-8">
-                <h3 className="text-3xl md:text-4xl">{t(c.title)}</h3>
-                <p className="mt-2 max-w-xs text-sm text-cream/80">{t(c.copy)}</p>
-                <span className="label-xs mt-5 inline-flex items-center gap-2 text-gold">
-                  {t("Discover")}{" "}
-                  <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
-                </span>
-              </div>
-            </Link>
+              <Link
+                to="/shop"
+                search={{ category: c.filter }}
+                className="group absolute inset-0 overflow-hidden bg-secondary"
+              >
+                <img
+                  src={c.image}
+                  alt={t(c.title)}
+                  loading="lazy"
+                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1400ms] ease-out group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-6 text-cream md:p-8">
+                  <h3 className="text-3xl md:text-4xl">{t(c.title)}</h3>
+                  <p className="mt-2 max-w-xs text-sm text-cream/80">{t(c.copy)}</p>
+                  <span className="label-xs mt-5 inline-flex items-center gap-2 text-gold">
+                    {t("Discover")}{" "}
+                    <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
+                  </span>
+                </div>
+              </Link>
+            </Reveal>
           ))}
         </div>
       </section>
@@ -119,9 +126,9 @@ function Home() {
           </div>
         </div>
         <div className="mt-14 flex snap-x snap-mandatory gap-5 overflow-x-auto px-5 pb-4 md:px-10 [scrollbar-width:none]">
-          {newArrivals.map((p) => (
+          {newArrivals.map((p, i) => (
             <div key={p.slug} className="w-[72vw] shrink-0 snap-start sm:w-[42vw] lg:w-[23vw]">
-              <ProductCard product={p} />
+              <ProductCard product={p} revealDelay={Math.min(i, 3) * 90} />
             </div>
           ))}
         </div>
@@ -135,8 +142,8 @@ function Home() {
           align="center"
         />
         <div className="mt-14 grid grid-cols-2 gap-x-4 gap-y-12 lg:grid-cols-4">
-          {bestSellers.map((p) => (
-            <ProductCard key={p.slug} product={p} />
+          {bestSellers.map((p, i) => (
+            <ProductCard key={p.slug} product={p} revealDelay={(i % 4) * 90} />
           ))}
         </div>
       </section>
@@ -144,13 +151,15 @@ function Home() {
       {/* Craft */}
       <section className="bg-primary text-primary-foreground">
         <div className="mx-auto grid max-w-[1500px] items-center gap-12 px-5 py-24 md:px-10 lg:grid-cols-2 lg:py-32">
-          <img
-            src={craftStudio}
-            alt={t("Seamstress pinning a top pattern in the AHAB atelier")}
-            loading="lazy"
-            className="aspect-4/3 w-full object-cover"
-          />
-          <div className="lg:pl-12">
+          <Reveal variant="curtain" className="overflow-hidden">
+            <img
+              src={craftStudio}
+              alt={t("Seamstress pinning a top pattern in the AHAB atelier")}
+              loading="lazy"
+              className="aspect-4/3 w-full object-cover"
+            />
+          </Reveal>
+          <Reveal delay={150} className="lg:pl-12">
             <Eyebrow>{t("The Craft Behind AHAB")}</Eyebrow>
             <h2 className="mt-5 text-4xl leading-[1.05] sm:text-5xl md:text-6xl">
               {t("Every stitch.")} <em className="italic text-gold">{t("One body")}</em>{" "}
@@ -177,7 +186,7 @@ function Home() {
             <AhabLink to="/about" variant="ghostLight" className="mt-12">
               {t("Read our story")}
             </AhabLink>
-          </div>
+          </Reveal>
         </div>
       </section>
 
@@ -187,41 +196,42 @@ function Home() {
           title={t("Reviews after delivery.")}
           align="center"
         />
-        <p className="mx-auto mt-6 max-w-xl text-center text-muted-foreground">
+        <Reveal className="mx-auto mt-6 max-w-xl text-center text-muted-foreground">
           {t(
             "We’re preparing verified customer reviews. Feedback will be published after an order has been delivered and reviewed.",
           )}
-        </p>
+        </Reveal>
       </section>
 
       {/* Instagram */}
       <section className="pb-24 md:pb-32">
-        <div className="mx-auto max-w-[1500px] px-5 text-center md:px-10">
+        <Reveal className="mx-auto max-w-[1500px] px-5 text-center md:px-10">
           <Eyebrow>{INSTAGRAM_HANDLE}</Eyebrow>
           <h2 className="mt-5 text-4xl md:text-5xl">{t("Follow Our Journey")}</h2>
-        </div>
+        </Reveal>
         <div className="mt-12 grid grid-cols-3 gap-1 md:grid-cols-6">
           {gallery.map((src, i) => (
-            <a
-              key={i}
-              href={INSTAGRAM_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="group relative aspect-square overflow-hidden"
-            >
-              <img
-                src={src}
-                alt=""
-                loading="lazy"
-                className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110"
-              />
-              <span className="absolute inset-0 grid place-items-center bg-foreground/0 transition-colors group-hover:bg-foreground/35">
-                <Instagram
-                  className="h-5 w-5 text-cream opacity-0 transition-opacity group-hover:opacity-100"
-                  strokeWidth={1.25}
+            <Reveal key={i} variant="curtain" delay={i * 90}>
+              <a
+                href={INSTAGRAM_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="group relative block aspect-square overflow-hidden"
+              >
+                <img
+                  src={src}
+                  alt=""
+                  loading="lazy"
+                  className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110"
                 />
-              </span>
-            </a>
+                <span className="absolute inset-0 grid place-items-center bg-foreground/0 transition-colors group-hover:bg-foreground/35">
+                  <Instagram
+                    className="h-5 w-5 text-cream opacity-0 transition-opacity group-hover:opacity-100"
+                    strokeWidth={1.25}
+                  />
+                </span>
+              </a>
+            </Reveal>
           ))}
         </div>
       </section>
@@ -235,7 +245,7 @@ function Home() {
           className="absolute inset-0 h-full w-full object-cover object-[center_20%]"
         />
         <div className="absolute inset-0 bg-foreground/55" />
-        <div className="relative mx-auto max-w-3xl px-5 py-32 text-center text-cream md:py-44">
+        <Reveal className="relative mx-auto max-w-3xl px-5 py-32 text-center text-cream md:py-44">
           <p className="label-xs text-gold">AHAB &middot; {t("Addis Ababa")}</p>
           <h2 className="mt-6 text-6xl leading-none md:text-8xl">
             {t("Worn Close.")} <em className="italic">{t("Worn Often.")}</em>
@@ -243,7 +253,7 @@ function Home() {
           <AhabLink to="/shop" variant="gold" size="lg" className="mt-12">
             {t("Start Shopping")}
           </AhabLink>
-        </div>
+        </Reveal>
       </section>
     </>
   );

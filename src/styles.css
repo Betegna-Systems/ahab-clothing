@@ -198,6 +198,135 @@
   animation: fade-in-slow 1.4s ease both;
 }
 
+/* Hero photo settles in with a slow zoom-out as it fades up */
+@utility hero-settle {
+  animation:
+    fade-in-slow 1.4s ease both,
+    hero-settle 2.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Stagger steps for the hero entrance */
+@utility delay-step-1 {
+  animation-delay: 0.15s;
+}
+@utility delay-step-2 {
+  animation-delay: 0.3s;
+}
+@utility delay-step-3 {
+  animation-delay: 0.45s;
+}
+@utility delay-step-4 {
+  animation-delay: 0.6s;
+}
+
+/* Scroll reveal, driven by useReveal() in components/site/reveal.tsx */
+[data-reveal] {
+  transition:
+    opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+[data-reveal="hidden"] {
+  opacity: 0;
+  transform: translateY(28px);
+}
+
+/* Curtain variant: the photo is uncovered from its bottom edge while it settles from a zoom */
+.reveal-curtain[data-reveal] {
+  transition: clip-path 1.3s cubic-bezier(0.77, 0, 0.18, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal-curtain[data-reveal="hidden"] {
+  opacity: 1;
+  transform: none;
+  clip-path: inset(100% 0 0 0);
+}
+.reveal-curtain[data-reveal="shown"] {
+  clip-path: inset(0 0 0 0);
+}
+/* `scale` stays in the list so the existing hover zooms keep easing */
+.reveal-curtain[data-reveal] img {
+  transition-property: transform, scale;
+  transition-duration: 1.8s, 1.4s;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1), ease-out;
+  transition-delay: var(--reveal-delay, 0ms), 0s;
+}
+.reveal-curtain[data-reveal="hidden"] img {
+  transform: scale(1.12);
+}
+
+/* Bag: the line just added slides in and glows gold for a moment */
+.cart-line-added {
+  animation: cart-line-in 1.6s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both;
+}
+.qty-pop {
+  animation: qty-pop 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Page transitions (router defaultViewTransition) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.35s;
+}
+.vt-product-photo {
+  view-transition-name: product-photo;
+}
+::view-transition-group(product-photo) {
+  animation-duration: 0.7s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes cart-line-in {
+  0% {
+    opacity: 0;
+    transform: translateX(24px);
+    background-color: color-mix(in oklab, var(--gold) 18%, transparent);
+  }
+  35% {
+    opacity: 1;
+    transform: translateX(0);
+    background-color: color-mix(in oklab, var(--gold) 18%, transparent);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+@keyframes qty-pop {
+  50% {
+    transform: scale(1.35);
+    color: var(--gold);
+  }
+}
+
+@keyframes hero-settle {
+  from {
+    transform: scale(1.08);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-up,
+  .fade-in-slow,
+  .hero-settle,
+  .cart-line-added,
+  .qty-pop {
+    animation: none;
+  }
+  [data-reveal],
+  .reveal-curtain[data-reveal] img {
+    transition: none;
+  }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
 @keyframes reveal-up {
   from {
     opacity: 0;
