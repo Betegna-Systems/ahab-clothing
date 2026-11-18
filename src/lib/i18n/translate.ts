@@ -1,12 +1,9 @@
-// Text lookup. English text is the key; am.ts maps it to Amharic. Missing entries fall back
-// to English, and `npm test` fails if any translated text in the app has no Amharic entry.
-// Keep runtime imports limited to sibling modules so Node's test runner can load it.
-import { am } from "./am.ts";
+// English text is the key. This remains as a no-translation pass-through.
 import type { Locale } from "./locale.ts";
 
 export type Vars = Record<string, string | number>;
 
-const dictionaries: Record<Locale, Record<string, string>> = { en: {}, am };
+const dictionaries: Record<Locale, Record<string, string>> = { en: {} };
 
 /** Replaces {name} placeholders with values. */
 function fill(text: string, vars?: Vars) {

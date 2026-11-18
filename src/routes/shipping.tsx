@@ -34,12 +34,6 @@ function ShippingPage() {
           "Delivery in 7–14 working days. Rates are calculated at checkout. Duties and taxes are paid by the recipient.",
         )}
       </p>
-      <h2>{t("Custom commissions")}</h2>
-      <p>
-        {t(
-          "Made-to-measure pieces ship once your final fitting is approved. We'll confirm the timeline with you directly.",
-        )}
-      </p>
     </InfoPage>
   );
 }

@@ -12,7 +12,7 @@ const columns = [
     links: [
       { label: "All tops", to: "/shop" },
       { label: "Lookbook", to: "/lookbook" },
-      { label: "Custom commissions", to: "/custom" },
+      // Custom commissions are currently paused.
       { label: "Wishlist", to: "/wishlist" },
     ],
   },

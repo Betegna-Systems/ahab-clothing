@@ -9,7 +9,7 @@ import { getAccountOrders } from "@/lib/orders.functions";
 import { paymentStatusLabel } from "@/lib/order-access";
 import { formatPrice } from "@/lib/products";
 import { seo } from "@/lib/seo";
-import { formatDate, headT, localizePath, useLocale, useT } from "@/lib/i18n";
+import { formatDate, headT, useLocale, useT } from "@/lib/i18n";
 
 type SavedAddress = Database["public"]["Tables"]["account_saved_addresses"]["Row"];
 type AccountOrder = {
@@ -41,8 +41,7 @@ function AccountPage() {
   // Notices are kept as English text and translated when shown.
   const t = useT();
   const locale = useLocale();
-  // Auth emails link back to the account page in the visitor's language.
-  const accountUrl = () => `${window.location.origin}${localizePath("/account", locale)}`;
+  const accountUrl = () => `${window.location.origin}/account`;
   const [session, setSession] = useState<Session | null>(null);
   const [authInitialized, setAuthInitialized] = useState(false);
   const [mode, setMode] = useState<"sign_in" | "sign_up" | "forgot_password">("sign_in");

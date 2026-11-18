@@ -2,7 +2,6 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { am, amSections } from "./am.ts";
 import { localizePath, splitLocale } from "./locale.ts";
 import { translate } from "./translate.ts";
 
@@ -47,40 +46,11 @@ function usedKeys() {
   return { keys, dynamic };
 }
 
-const placeholders = (s: string) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
-
-describe("Amharic translations", () => {
+describe("English translations", () => {
   const { keys, dynamic } = usedKeys();
-
   it("finds the site's text", () => {
     assert.ok(keys.size > 50, `only ${keys.size} t() keys found — is the scan working?`);
   });
-
-  it("has an Amharic entry for every t() text in the app", () => {
-    const missing = [...keys].filter(([key]) => !(key in am)).map(([k, w]) => `${w}  ${k}`);
-    assert.deepEqual(missing, [], `Missing Amharic for:\n${missing.join("\n")}`);
-  });
-
-  it("keeps every {placeholder} in the Amharic text", () => {
-    const broken = Object.entries(am)
-      .filter(([en, amText]) => placeholders(en).join() !== placeholders(amText).join())
-      .map(([en]) => en);
-    assert.deepEqual(broken, []);
-  });
-
-  it("never translates the same text differently in two files", () => {
-    const seen = new Map<string, string>();
-    const conflicts: string[] = [];
-    for (const [section, entries] of Object.entries(amSections)) {
-      for (const [key, value] of Object.entries(entries)) {
-        const earlier = seen.get(key);
-        if (earlier !== undefined && earlier !== value) conflicts.push(`${section}: ${key}`);
-        seen.set(key, value);
-      }
-    }
-    assert.deepEqual(conflicts, []);
-  });
-
   it("uses plain strings as keys (template literals can't be translated)", () => {
     assert.deepEqual(
       dynamic,
@@ -91,22 +61,15 @@ describe("Amharic translations", () => {
 });
 
 describe("language URLs and lookup", () => {
-  it("reads and writes the /am prefix", () => {
-    assert.deepEqual(splitLocale("/am/shop"), { locale: "am", pathname: "/shop" });
-    assert.deepEqual(splitLocale("/am"), { locale: "am", pathname: "/" });
-    assert.deepEqual(splitLocale("/amazing"), { locale: "en", pathname: "/amazing" });
-    assert.equal(localizePath("/shop", "am"), "/am/shop");
-    assert.equal(localizePath("/", "am"), "/am");
-    assert.equal(localizePath("/am/shop", "en"), "/shop");
-    assert.equal(localizePath("/api/admin/firebase-token", "am"), "/api/admin/firebase-token");
+  it("uses English paths", () => {
+    assert.deepEqual(splitLocale("/shop"), { locale: "en", pathname: "/shop" });
+    assert.equal(localizePath("/shop", "en"), "/shop");
+    assert.equal(localizePath("/api/admin/firebase-token", "en"), "/api/admin/firebase-token");
   });
-
-  it("falls back to English and fills placeholders", () => {
-    assert.equal(translate("am", "Not a real key {x}", { x: 1 }), "Not a real key 1");
+  it("fills placeholders", () => {
     assert.equal(
       translate("en", "Add {amount} for free Addis Ababa delivery.", { amount: "ETB 5" }),
       "Add ETB 5 for free Addis Ababa delivery.",
     );
-    assert.equal(translate("am", "Your bag"), am["Your bag"]);
   });
 });

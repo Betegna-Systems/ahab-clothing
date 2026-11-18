@@ -2,19 +2,15 @@ import { useMemo } from "react";
 import type { Product } from "@/lib/products";
 import { useLocale, type Locale } from "./index";
 
-/**
- * Product text in the page language. Amharic comes from the admin app's optional Amharic
- * fields; anything left empty shows the English text. Color names are display-only — always
- * pass the English color name to the bag, stock and orders.
- */
+/** Product text for the English-only storefront. */
 export function productText(product: Product, locale: Locale) {
-  const am = locale === "am" ? product.am : undefined;
+  void locale;
   return {
-    name: am?.name || product.name,
-    description: am?.description || product.description,
-    fabric: am?.fabric || product.fabric,
-    care: am?.care || product.care,
-    color: (englishName: string) => am?.colors?.[englishName] || englishName,
+    name: product.name,
+    description: product.description,
+    fabric: product.fabric,
+    care: product.care,
+    color: (englishName: string) => englishName,
   };
 }
 

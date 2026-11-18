@@ -31,8 +31,6 @@ function TermsPage() {
           "Our pieces are woven and finished by hand, so small variations in colour and pattern are part of their character, not a fault.",
         )}
       </p>
-      <h2>{t("Custom commissions")}</h2>
-      <p>{t("Commissions require a deposit and are non-refundable once cutting begins.")}</p>
       <h2>{t("Contact")}</h2>
       <p>{t("Questions about these terms? Reach us through the contact page.")}</p>
     </InfoPage>

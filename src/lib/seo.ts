@@ -1,5 +1,5 @@
 import { products as staticCatalog, type Product } from "@/lib/products";
-import { LOCALE_TAGS, LOCALES, OG_LOCALES, localizePath, type Locale } from "@/lib/i18n/locale";
+import { OG_LOCALES, localizePath, type Locale } from "@/lib/i18n/locale";
 import { INSTAGRAM_URL, TIKTOK_URL } from "@/lib/social";
 
 export const SITE_NAME = "AHAB Clothing";
@@ -29,7 +29,7 @@ export function absoluteUrl(path = "/", origin = SITE_URL) {
 
 export type SeoOptions = {
   path?: string;
-  /** Page language; sets the canonical /am/ address, og:locale and hreflang alternates. */
+  /** Reserved for the English-only storefront. */
   locale?: Locale;
   image?: string | undefined;
   type?: "website" | "product" | "article";
@@ -81,10 +81,6 @@ export function seo(title: string, description: string, options: SeoOptions = {}
       { property: "og:image:alt", content: full },
       { property: "og:site_name", content: SITE_NAME },
       { property: "og:locale", content: OG_LOCALES[locale] },
-      {
-        property: "og:locale:alternate",
-        content: OG_LOCALES[locale === "en" ? "am" : "en"],
-      },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: full },
       { name: "twitter:description", content: description },
@@ -92,14 +88,9 @@ export function seo(title: string, description: string, options: SeoOptions = {}
     ],
     links: [
       { rel: "canonical", href: url },
-      // Tell search engines each page exists in both languages.
+      // Canonical and x-default point to the English-only page.
       ...(index
         ? [
-            ...LOCALES.map((l) => ({
-              rel: "alternate",
-              hrefLang: LOCALE_TAGS[l],
-              href: absoluteUrl(localizePath(path, l)),
-            })),
             {
               rel: "alternate",
               hrefLang: "x-default",
@@ -258,7 +249,6 @@ export const PUBLIC_SITEMAP_PAGES = [
   { path: "/", changefreq: "weekly", priority: "1.0" },
   { path: "/shop", changefreq: "weekly", priority: "0.9" },
   { path: "/lookbook", changefreq: "monthly", priority: "0.8" },
-  { path: "/custom", changefreq: "monthly", priority: "0.8" },
   { path: "/about", changefreq: "monthly", priority: "0.7" },
   { path: "/contact", changefreq: "monthly", priority: "0.6" },
   { path: "/size-guide", changefreq: "monthly", priority: "0.5" },
@@ -277,21 +267,12 @@ function xmlEscape(value: string) {
     .replaceAll("'", "&apos;");
 }
 
-/** One <url> per page per language, each listing its translations (hreflang). */
+/** One English URL per indexed page. */
 function sitemapEntry(path: string, origin: string, extra: string) {
-  const alternates = [...LOCALES, "x-default" as const]
-    .map((l) => {
-      const href = absoluteUrl(localizePath(path, l === "x-default" ? "en" : l), origin);
-      return `    <xhtml:link rel="alternate" hreflang="${l === "x-default" ? l : LOCALE_TAGS[l]}" href="${xmlEscape(href)}"/>`;
-    })
-    .join("\n");
-  return LOCALES.map(
-    (locale) => `  <url>
-    <loc>${xmlEscape(absoluteUrl(localizePath(path, locale), origin))}</loc>
-${alternates}
+  return [`  <url>
+    <loc>${xmlEscape(absoluteUrl(path, origin))}</loc>
 ${extra}
-  </url>`,
-  );
+  </url>`];
 }
 
 export function buildSitemapXml(
@@ -327,11 +308,7 @@ ${[...staticUrls, ...productUrls].join("\n")}
 const PRIVATE_PATHS = ["/checkout", "/account", "/wishlist", "/payment/", "/tracking/"];
 
 export function buildRobotsTxt(origin = SITE_URL) {
-  // Private pages are hidden in both languages; /admin/ has no Amharic version.
-  const disallow = [
-    ...PRIVATE_PATHS.flatMap((path) => LOCALES.map((locale) => localizePath(path, locale))),
-    "/admin/",
-  ];
+  const disallow = [...PRIVATE_PATHS, "/admin/"];
   return `User-agent: *
 Allow: /
 ${disallow.map((path) => `Disallow: ${path}`).join("\n")}

@@ -62,8 +62,7 @@ const orderSchema = z.object({
   accountAccessToken: z.string().min(1).max(4096).optional(),
   paymentMethod: z.enum(["Cash on delivery", "Telebirr", "CBE bank transfer"]),
   notes: z.string().max(1000),
-  /** Checkout language; the confirmation email is written in it. */
-  locale: z.enum(["en", "am"]).optional(),
+  locale: z.literal("en").optional(),
 });
 
 const orderResultSchema = z.discriminatedUnion("ok", [
@@ -226,32 +225,19 @@ async function sendOrderConfirmationEmail(
       { buildOrderConfirmationEmail },
       { sendEmail },
       { PAYMENT_METHODS },
-      { localizePath },
-      { getAllProductsCached },
     ] = await Promise.all([
       import("@tanstack/react-start/server"),
       import("@/lib/order-email"),
       import("@/lib/email.server"),
       import("@/lib/payment-methods"),
-      import("@/lib/i18n/locale"),
-      import("@/lib/firestore-products"),
     ]);
-    const locale = data.locale ?? "en";
+    const locale = "en";
     // The site the customer ordered from, so links work before and after a domain change.
     const origin = new URL(getRequest().url).origin;
     const query = `?token=${encodeURIComponent(data.paymentAccessToken)}`;
     const number = encodeURIComponent(data.orderNumber);
     const payByTransfer = RECEIPT_PAYMENT_METHODS.includes(data.paymentMethod);
-    // Item names and colours as the shopper saw them (the admin app's optional Amharic text).
-    const catalog = locale === "am" ? getAllProductsCached() : [];
-    const items = priced.items.map((item) => {
-      const am = catalog.find((product) => product.slug === item.slug)?.am;
-      return {
-        ...item,
-        name: am?.name || item.name,
-        color: am?.colors?.[item.color] || item.color,
-      };
-    });
+    const items = priced.items;
 
     const email = buildOrderConfirmationEmail({
       orderNumber: data.orderNumber,
@@ -264,9 +250,9 @@ async function sendOrderConfirmationEmail(
       paymentMethod: data.paymentMethod,
       paymentAccount:
         PAYMENT_METHODS.find((method) => method.label === data.paymentMethod)?.account ?? "",
-      trackingUrl: `${origin}${localizePath(`/tracking/${number}`, locale)}${query}`,
+      trackingUrl: `${origin}/tracking/${number}${query}`,
       paymentUrl: payByTransfer
-        ? `${origin}${localizePath(`/payment/${number}`, locale)}${query}`
+        ? `${origin}/payment/${number}${query}`
         : null,
       locale,
     });

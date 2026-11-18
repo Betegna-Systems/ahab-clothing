@@ -1,7 +1,6 @@
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
-import { localizePath, splitLocale } from "./lib/i18n/locale";
 import type { I18nContext } from "./lib/i18n";
 
 export const getRouter = () => {
@@ -17,22 +16,6 @@ export const getRouter = () => {
     // Pages cross-fade, and a clicked product photo grows into the product page
     // (see lib/view-transition.ts). Ignored by browsers without the View Transitions API.
     defaultViewTransition: true,
-    // /am/… URLs are the same routes in Amharic: strip the prefix on the way in and add it
-    // back to every link and navigation on the way out.
-    rewrite: {
-      input: ({ url }) => {
-        const { locale, pathname } = splitLocale(url.pathname);
-        i18n.locale = locale;
-        if (locale === "en") return undefined;
-        url.pathname = pathname;
-        return url;
-      },
-      output: ({ url }) => {
-        if (i18n.locale === "en") return undefined;
-        url.pathname = localizePath(url.pathname, i18n.locale);
-        return url;
-      },
-    },
   });
 
   return router;

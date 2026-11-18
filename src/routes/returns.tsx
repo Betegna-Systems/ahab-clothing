@@ -33,7 +33,7 @@ function ReturnsPage() {
         )}
       </p>
       <h2>{t("Final sale")}</h2>
-      <p>{t("Custom commissions, altered pieces and sale items cannot be returned.")}</p>
+      <p>{t("Altered pieces and sale items cannot be returned.")}</p>
       <h2>{t("How to start")}</h2>
       <p>
         {t(

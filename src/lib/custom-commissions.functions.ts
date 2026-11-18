@@ -119,7 +119,9 @@ function imageExtension(mimeType: z.infer<typeof imageSchema>["mimeType"]) {
 
 export const submitCustomCommission = createServerFn({ method: "POST" })
   .validator((data: unknown) => commissionSchema.parse(data))
-  .handler(async ({ data }) => {
+  .handler(async () => {
+    // Custom commissions are temporarily paused. Keep the API guarded server-side.
+    throw new Error("Custom commissions are temporarily paused.");
     const supabaseAdmin = await getFeatureAdmin();
     const email = data.email.toLowerCase();
     const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();

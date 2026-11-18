@@ -3,7 +3,6 @@ import { useRouterState } from "@tanstack/react-router";
 import {
   type Product,
   type Category,
-  type ProductTranslation,
   products as staticProducts,
 } from "@/lib/products";
 
@@ -47,7 +46,7 @@ export function firestoreRawToProduct(id: string, rawFields: Record<string, unkn
   }
 
   const rawColors =
-    (data.colors as Array<{ name?: string; hex?: string; name_am?: string }> | undefined) ?? [];
+    (data.colors as Array<{ name?: string; hex?: string }> | undefined) ?? [];
   const colors =
     rawColors.length > 0
       ? rawColors.map((c) => ({
@@ -87,33 +86,7 @@ export function firestoreRawToProduct(id: string, rawFields: Record<string, unkn
     inStock: data.inStock !== false,
     createdAt,
     popularity: typeof data.popularity === "number" ? data.popularity : 85,
-    am: amharicFields(data, rawColors),
   };
-}
-
-const text = (value: unknown) =>
-  typeof value === "string" && value.trim() ? value.trim() : undefined;
-
-/** Optional Amharic fields written by the admin app (name_am, description_am, …). */
-function amharicFields(
-  data: Record<string, unknown>,
-  rawColors: Array<{ name?: string; name_am?: string }>,
-): ProductTranslation | undefined {
-  const colors: Record<string, string> = {};
-  for (const c of rawColors) {
-    const amName = text(c.name_am);
-    if (c.name && amName) colors[c.name] = amName;
-  }
-  const am: ProductTranslation = {
-    name: text(data.name_am),
-    description: text(data.description_am),
-    fabric: text(data.fabric_am),
-    care: text(data.care_am),
-    colors,
-  };
-  return am.name || am.description || am.fabric || am.care || Object.keys(colors).length
-    ? am
-    : undefined;
 }
 
 // Firestore is the catalog: the admin app adds, edits and deletes products there. The

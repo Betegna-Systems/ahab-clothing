@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { localizePath, splitLocale, useLocale, useT, type Locale } from "@/lib/i18n";
+import { useT } from "@/lib/i18n";
 import { useEffect, useState } from "react";
 import { Heart, Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import { useShop } from "@/lib/shop-store";
@@ -12,7 +12,8 @@ const nav = [
   { label: "Tops", to: "/shop", search: { category: "tops" } },
   { label: "Shop", to: "/shop" },
   { label: "Lookbook", to: "/lookbook" },
-  { label: "Custom", to: "/custom" },
+  // Custom commissions are currently paused.
+  // { label: "Custom", to: "/custom" },
   { label: "About", to: "/about" },
   { label: "Contact", to: "/contact" },
 ] as const;
@@ -36,60 +37,6 @@ function NavLinks({ items }: { items: readonly (typeof nav)[number][] }) {
         </Link>
       ))}
     </nav>
-  );
-}
-
-/** EN | አማ — the same page in the other language (a full page load re-renders server-side). */
-function LanguageSwitcher({ className, compact }: { className?: string; compact?: boolean }) {
-  const t = useT();
-  const locale = useLocale();
-  const publicHref = useRouterState({ select: (state) => state.location.publicHref });
-  const [path = "/", rest = ""] = publicHref.split(/(?=[?#])/);
-  const bare = splitLocale(path).pathname;
-  const option = (target: Locale, short: string, label: string) =>
-    target === locale ? (
-      <span aria-current="true" className="text-foreground">
-        {short}
-      </span>
-    ) : (
-      <a
-        href={localizePath(bare, target) + rest}
-        hrefLang={target}
-        lang={target}
-        aria-label={label}
-        className="text-foreground/50 transition-colors hover:text-foreground"
-      >
-        {short}
-      </a>
-    );
-  if (compact) {
-    // Phones: one tap target showing the other language (አማ on English pages, EN on Amharic).
-    const target: Locale = locale === "en" ? "am" : "en";
-    return (
-      <a
-        href={localizePath(bare, target) + rest}
-        hrefLang={target}
-        lang={target}
-        aria-label={
-          target === "am" ? t("View this page in Amharic") : t("View this page in English")
-        }
-        className={cn(
-          "label-xs grid h-8 min-w-9 place-items-center border border-foreground/25 px-2 text-foreground",
-          className,
-        )}
-      >
-        {target === "am" ? "አማ" : "EN"}
-      </a>
-    );
-  }
-  return (
-    <span className={cn("label-xs flex items-center gap-1.5", className)}>
-      {option("en", "EN", t("View this page in English"))}
-      <span aria-hidden className="text-foreground/30">
-        |
-      </span>
-      {option("am", "አማ", t("View this page in Amharic"))}
-    </span>
   );
 }
 
@@ -135,7 +82,6 @@ export function Header() {
             >
               <Menu className="h-5 w-5" strokeWidth={1.25} />
             </button>
-            <LanguageSwitcher compact className="ml-3 sm:hidden" />
             <NavLinks items={leftNav} />
           </div>
 
@@ -157,7 +103,6 @@ export function Header() {
 
           <div className="flex items-center justify-end gap-2 sm:gap-5 xl:gap-7 2xl:gap-9">
             <NavLinks items={rightNav} />
-            <LanguageSwitcher className="hidden sm:flex" />
             <button type="button" onClick={() => setSearchOpen(true)} aria-label={t("Search")}>
               <Search className="h-5 w-5" strokeWidth={1.25} />
             </button>
@@ -220,7 +165,6 @@ export function Header() {
             <Link to="/account" className="label-xs">
               {t("Account")}
             </Link>
-            <LanguageSwitcher className="ml-auto" />
           </div>
         </nav>
       </div>

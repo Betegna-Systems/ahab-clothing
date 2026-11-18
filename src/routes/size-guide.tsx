@@ -1,4 +1,4 @@
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { seo } from "@/lib/seo";
 import { InfoPage } from "@/components/site/InfoPage";
 import { SizeChart } from "@/components/site/SizeChart";
@@ -33,12 +33,8 @@ function SizeGuide() {
       <h2>{t("Suit fit")}</h2>
       <p>
         {t(
-          "Blazers and trousers are sized together. If your bust and hip fall in different sizes, choose the larger and we can advise on alterations, or",
-        )}{" "}
-        <Link to="/custom" className="text-foreground underline">
-          {t("request a made-to-measure suit")}
-        </Link>
-        {t(".")}
+          "Blazers and trousers are sized together. If your bust and hip fall in different sizes, choose the larger and contact us for alteration advice.",
+        )}
       </p>
     </InfoPage>
   );

@@ -9,7 +9,7 @@ export { translate, translator, type Translator } from "./translate";
 /** Router context shared by every route (set per request in router.tsx). */
 export type I18nContext = { locale: Locale };
 
-/** The page language, from the public URL (/am/… is Amharic). */
+/** The English page language. */
 export function useLocale(): Locale {
   return useRouterState({
     select: (state) => splitLocale(state.location.publicHref.split(/[?#]/)[0] ?? "/").locale,

@@ -367,7 +367,6 @@ function OrderTrackingPage() {
           </p>
           <div className="mt-6 space-y-8">
             {order.items.map((item, index) => {
-              // Show the catalog's Amharic name when there is one; the order keeps English.
               const catalogProduct = getProductCached(item.slug);
               const name = catalogProduct ? productText(catalogProduct, locale).name : item.name;
               return (

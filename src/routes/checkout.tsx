@@ -14,7 +14,7 @@ import { initializeSupabaseBrowser } from "@/integrations/supabase/client";
 import { featureClient as supabase } from "@/lib/feature-client";
 import type { FeatureDatabase as Database } from "@/lib/feature-database";
 import { toast } from "sonner";
-import { headT, localizePath, useLocale, useT } from "@/lib/i18n";
+import { headT, useT } from "@/lib/i18n";
 import { useProductText } from "@/lib/i18n/product";
 
 type SavedAddress = Database["public"]["Tables"]["account_saved_addresses"]["Row"];
@@ -59,7 +59,6 @@ const field =
 function CheckoutPage() {
   const formRef = useRef<HTMLFormElement>(null);
   const t = useT();
-  const locale = useLocale();
   const text = useProductText();
   const {
     lineItems,
@@ -200,8 +199,7 @@ function CheckoutPage() {
         paymentAccessToken,
         notes: g("notes"),
       };
-      // The English payment label is the stored value; `locale` picks the email language.
-      result = await placeOrder({ data: { ...order, locale } });
+      result = await placeOrder({ data: { ...order, locale: "en" } });
     } catch (error) {
       console.error("Checkout order submission failed:", error);
       toast.error(t("We couldn't send your order. Please try again."));
@@ -242,9 +240,8 @@ function CheckoutPage() {
     );
     clearCart();
     if (payment !== "cod") {
-      // Localized path so Amharic shoppers stay in Amharic on the payment page.
       window.location.assign(
-        `${localizePath(`/payment/${encodeURIComponent(number)}`, locale)}?token=${encodeURIComponent(paymentAccessToken)}`,
+        `/payment/${encodeURIComponent(number)}?token=${encodeURIComponent(paymentAccessToken)}`,
       );
       return;
     }
