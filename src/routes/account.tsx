@@ -53,6 +53,7 @@ function AccountPage() {
   const [emailInput, setEmailInput] = useState("");
   const [orders, setOrders] = useState<AccountOrder[]>([]);
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
+  const [editingAddress, setEditingAddress] = useState<SavedAddress | null>(null);
   const [loadingData, setLoadingData] = useState(false);
   const [browserAuthConfigured, setBrowserAuthConfigured] = useState(false);
   const [mfaRequired, setMfaRequired] = useState(false);
@@ -538,7 +539,7 @@ function AccountPage() {
     }
   };
 
-  const addAddress = async (event: FormEvent<HTMLFormElement>) => {
+  const saveAddress = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!session) return;
     setBusy(true);
@@ -546,7 +547,6 @@ function AccountPage() {
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
     const address = {
-      user_id: session.user.id,
       label: String(form.get("label") ?? "").trim(),
       recipient_name: String(form.get("recipient_name") ?? "").trim(),
       phone: String(form.get("phone") ?? "").trim(),
@@ -556,17 +556,33 @@ function AccountPage() {
     };
 
     try {
-      const { data, error } = await supabase
-        .from("account_saved_addresses")
-        .insert(address)
-        .select("*")
-        .single();
+      const { data, error } = editingAddress
+        ? await supabase
+            .from("account_saved_addresses")
+            .update(address)
+            .eq("id", editingAddress.id)
+            .eq("user_id", session.user.id)
+            .select("*")
+            .single()
+        : await supabase
+            .from("account_saved_addresses")
+            .insert({ ...address, user_id: session.user.id })
+            .select("*")
+            .single();
       if (error) throw error;
-      setAddresses((current) => [data, ...current]);
+      if (editingAddress) {
+        setAddresses((current) =>
+          current.map((savedAddress) => (savedAddress.id === data.id ? data : savedAddress)),
+        );
+        setEditingAddress(null);
+        setNotice("Delivery address updated.");
+      } else {
+        setAddresses((current) => [data, ...current]);
+        setNotice("Delivery address saved.");
+      }
       formElement.reset();
-      setNotice("Delivery address saved.");
     } catch (error) {
-      console.error("Saved address creation failed:", error);
+      console.error("Saved address save failed:", error);
       setNotice("We couldn't save that address. Please try again.");
     } finally {
       setBusy(false);
@@ -584,6 +600,7 @@ function AccountPage() {
         .eq("user_id", session.user.id);
       if (error) throw error;
       setAddresses((current) => current.filter((address) => address.id !== id));
+      setEditingAddress((current) => (current?.id === id ? null : current));
       setNotice("Delivery address removed.");
     } catch (error) {
       console.error("Saved address removal failed:", error);
@@ -1022,14 +1039,24 @@ function AccountPage() {
                             {address.address}, {address.sub_city}, {address.city}
                           </p>
                         </div>
-                        <button
-                          type="button"
-                          disabled={busy}
-                          onClick={() => void removeAddress(address.id)}
-                          className="label-xs text-muted-foreground underline underline-offset-4"
-                        >
-                          {t("Remove")}
-                        </button>
+                        <div className="flex shrink-0 gap-4">
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => setEditingAddress(address)}
+                            className="label-xs underline underline-offset-4"
+                          >
+                            {t("Edit")}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => void removeAddress(address.id)}
+                            className="label-xs text-muted-foreground underline underline-offset-4"
+                          >
+                            {t("Remove")}
+                          </button>
+                        </div>
                       </div>
                     </li>
                   ))}
@@ -1040,13 +1067,20 @@ function AccountPage() {
                 </p>
               )}
 
-              <form onSubmit={addAddress} className="mt-6 space-y-3">
-                <h3 className="label-xs text-gold">{t("Add an address")}</h3>
+              <form
+                key={editingAddress?.id ?? "new-address"}
+                onSubmit={saveAddress}
+                className="mt-6 space-y-3"
+              >
+                <h3 className="label-xs text-gold">
+                  {editingAddress ? t("Edit address") : t("Add an address")}
+                </h3>
                 <input
                   required
                   maxLength={60}
                   name="label"
                   placeholder={t("Label (e.g. Home)")}
+                  defaultValue={editingAddress?.label}
                   className={field}
                 />
                 <input
@@ -1055,6 +1089,7 @@ function AccountPage() {
                   name="recipient_name"
                   placeholder={t("Recipient name")}
                   autoComplete="name"
+                  defaultValue={editingAddress?.recipient_name}
                   className={field}
                 />
                 <input
@@ -1064,6 +1099,7 @@ function AccountPage() {
                   type="tel"
                   placeholder={t("Phone")}
                   autoComplete="tel"
+                  defaultValue={editingAddress?.phone}
                   className={field}
                 />
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -1072,6 +1108,7 @@ function AccountPage() {
                     maxLength={100}
                     name="sub_city"
                     placeholder={t("Sub-city")}
+                    defaultValue={editingAddress?.sub_city}
                     className={field}
                   />
                   <input
@@ -1079,7 +1116,7 @@ function AccountPage() {
                     maxLength={100}
                     name="city"
                     placeholder={t("City")}
-                    defaultValue="Addis Ababa"
+                    defaultValue={editingAddress?.city ?? "Addis Ababa"}
                     className={field}
                   />
                 </div>
@@ -1089,11 +1126,22 @@ function AccountPage() {
                   name="address"
                   placeholder={t("Street, building or landmark")}
                   autoComplete="street-address"
+                  defaultValue={editingAddress?.address}
                   className={field}
                 />
                 <AhabButton type="submit" variant="outline" disabled={busy}>
-                  {t("Save address")}
+                  {editingAddress ? t("Update address") : t("Save address")}
                 </AhabButton>
+                {editingAddress ? (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => setEditingAddress(null)}
+                    className="label-xs ml-4 underline underline-offset-4"
+                  >
+                    {t("Cancel")}
+                  </button>
+                ) : null}
               </form>
             </section>
           </div>
