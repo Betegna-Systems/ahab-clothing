@@ -3,6 +3,7 @@ import { images } from "@/lib/products";
 import { seo } from "@/lib/seo";
 import { AhabLink } from "@/components/site/ui";
 import { headT, useT } from "@/lib/i18n";
+import { Reveal } from "@/components/site/reveal";
 const craftStudio = images.craftStudio;
 
 export const Route = createFileRoute("/lookbook")({
@@ -48,41 +49,62 @@ function Lookbook() {
               {t("“A fitted top should hold you, never hold you back.”")}
             </p>
           </div>
-          <img
-            src={images.topSquareNeck}
-            alt=""
-            loading="lazy"
-            className="aspect-4/5 w-full object-cover"
-          />
+          <Reveal variant="curtain" className="overflow-hidden">
+            <img
+              src={images.topSquareNeck}
+              alt=""
+              loading="lazy"
+              className="aspect-4/5 w-full object-cover"
+            />
+          </Reveal>
         </div>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6">
-          <img
-            src={images.topCutout}
-            alt=""
-            loading="lazy"
-            className="aspect-3/4 w-full object-cover"
-          />
-          <img
-            src={images.topCorset}
-            alt=""
-            loading="lazy"
-            className="aspect-3/4 w-full object-cover md:mt-24"
-          />
-          <img
-            src={images.topOffShoulder}
-            alt=""
-            loading="lazy"
-            className="col-span-2 aspect-3/4 w-full object-cover md:col-span-1"
-          />
+          <Reveal variant="curtain" className="overflow-hidden">
+            <img
+              src={images.topCutout}
+              alt=""
+              loading="lazy"
+              className="aspect-3/4 w-full object-cover"
+            />
+          </Reveal>
+          <Reveal variant="curtain" delay={120} className="overflow-hidden md:mt-24">
+            <img
+              src={images.topCorset}
+              alt=""
+              loading="lazy"
+              className="aspect-3/4 w-full object-cover"
+            />
+          </Reveal>
+          <Reveal
+            variant="curtain"
+            delay={240}
+            className="col-span-2 overflow-hidden md:col-span-1"
+          >
+            <img
+              src={images.topOffShoulder}
+              alt=""
+              loading="lazy"
+              className="aspect-3/4 w-full object-cover"
+            />
+          </Reveal>
         </div>
-        <img
-          src={images.topWrap}
-          alt={t("Burgundy wrap-front top in warm studio light")}
-          loading="lazy"
-          className="w-full object-cover md:aspect-16/9"
-        />
+        <Reveal variant="curtain" className="overflow-hidden">
+          <img
+            src={images.topWrap}
+            alt={t("Burgundy wrap-front top in warm studio light")}
+            loading="lazy"
+            className="w-full object-cover md:aspect-16/9"
+          />
+        </Reveal>
         <div className="grid gap-4 md:grid-cols-[3fr_2fr] md:gap-6">
-          <img src={craftStudio} alt="" loading="lazy" className="aspect-4/3 w-full object-cover" />
+          <Reveal variant="curtain" className="overflow-hidden">
+            <img
+              src={craftStudio}
+              alt=""
+              loading="lazy"
+              className="aspect-4/3 w-full object-cover"
+            />
+          </Reveal>
           <div className="flex flex-col justify-center py-10 md:pl-10">
             <p className="label-xs text-gold">02 — {t("The Studio")}</p>
             <p className="mt-4 font-serif text-3xl leading-snug md:text-4xl">

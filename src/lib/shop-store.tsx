@@ -39,6 +39,8 @@ type ShopState = {
   applyPromoCode: (code: string) => Promise<PromoCheck>;
   clearPromo: () => void;
   addToCart: (line: CartLine) => void;
+  /** The bag line most recently added (by `cartLineKey`), so the bag can highlight it. */
+  lastAdded: { key: string; at: number } | null;
   removeLine: (index: number) => void;
   setQty: (index: number, qty: number) => void;
   toggleWishlist: (slug: string) => void;
@@ -62,6 +64,9 @@ type ShopState = {
 export type PromoCheck = Awaited<ReturnType<typeof checkPromoCode>>;
 
 const ShopContext = createContext<ShopState | null>(null);
+
+export const cartLineKey = (line: Pick<CartLine, "slug" | "size" | "color">) =>
+  `${line.slug}-${line.size}-${line.color}`;
 
 const CART_KEY = "ahab.cart";
 const WISH_KEY = "ahab.wishlist";
@@ -88,6 +93,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   const [accountWishlistReady, setAccountWishlistReady] = useState(false);
   const [recentlyViewed, setRecentlyViewed] = useState<string[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
+  const [lastAdded, setLastAdded] = useState<ShopState["lastAdded"]>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [promo, setPromo] = useState<Promo | null>(null);
   const [inventoryStatus, setInventoryStatus] = useState<"loading" | "ready" | "error">("loading");
@@ -314,6 +320,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         next[i] = { ...cur, qty: Math.min(MAX_CART_QUANTITY, cur.qty + line.qty) };
         return next;
       });
+      setLastAdded({ key: cartLineKey(line), at: Date.now() });
       setCartOpen(true);
     },
     [inventoryStatus, isVariantAvailable],
@@ -407,6 +414,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     setSearchOpen,
     applyPromoCode,
     clearPromo,
+    lastAdded,
     addToCart,
     removeLine,
     setQty,
