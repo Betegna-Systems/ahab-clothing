@@ -8,6 +8,7 @@ import type { FeatureDatabase as Database } from "@/lib/feature-database";
 import { getAccountOrders } from "@/lib/orders.functions";
 import { paymentStatusLabel } from "@/lib/order-access";
 import { formatPrice } from "@/lib/products";
+import { useShop } from "@/lib/shop-store";
 import { seo } from "@/lib/seo";
 import { formatDate, headT, useLocale, useT } from "@/lib/i18n";
 
@@ -55,6 +56,7 @@ function AccountPage() {
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [editingAddress, setEditingAddress] = useState<SavedAddress | null>(null);
   const [loadingData, setLoadingData] = useState(false);
+  const { wishlistCount } = useShop();
   const [browserAuthConfigured, setBrowserAuthConfigured] = useState(false);
   const [mfaRequired, setMfaRequired] = useState(false);
   const [mfaReady, setMfaReady] = useState(false);
@@ -625,11 +627,19 @@ function AccountPage() {
     }
   };
 
+  // The name given at sign-up; greet by first name only.
+  const fullName = session?.user.user_metadata?.["full_name"];
+  const firstName = typeof fullName === "string" ? (fullName.trim().split(/s+/)[0] ?? "") : "";
+
   return (
     <div className="mx-auto max-w-5xl px-5 py-20 md:px-10">
       <p className="label-xs text-gold">{t("Your account")}</p>
       <h1 className="mt-4 font-serif text-5xl md:text-6xl">
-        {session ? t("Welcome back.") : t("A little more personal.")}
+        {!session
+          ? t("A little more personal.")
+          : firstName
+            ? t("Welcome back, {name}.", { name: firstName })
+            : t("Welcome back.")}
       </h1>
       {notice ? (
         <p role="status" className="mt-6 border border-border p-4 text-sm text-muted-foreground">
@@ -879,6 +889,34 @@ function AccountPage() {
         </section>
       ) : (
         <section className="mt-10">
+          {/* At-a-glance summary under the welcome. */}
+          <nav
+            aria-label={t("Account summary")}
+            className="mb-8 grid grid-cols-3 border border-border"
+          >
+            {[
+              {
+                label: orders.length === 1 ? t("Order") : t("Orders"),
+                value: loadingData ? "–" : String(orders.length),
+                href: "#account-orders",
+              },
+              {
+                label: addresses.length === 1 ? t("Saved address") : t("Saved addresses"),
+                value: loadingData ? "–" : String(addresses.length),
+                href: "#account-addresses",
+              },
+              { label: t("Wishlist"), value: String(wishlistCount), href: "/wishlist" },
+            ].map((stat, i) => (
+              <a
+                key={stat.href}
+                href={stat.href}
+                className={`block p-4 text-center transition-colors hover:bg-secondary md:p-6 ${i ? "border-l border-border" : ""}`}
+              >
+                <span className="block font-serif text-3xl md:text-4xl">{stat.value}</span>
+                <span className="label-xs mt-2 block text-muted-foreground">{stat.label}</span>
+              </a>
+            ))}
+          </nav>
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-6">
             <div>
               <p className="text-sm text-muted-foreground">{session.user.email}</p>
@@ -887,11 +925,6 @@ function AccountPage() {
                   ? t("Email verified")
                   : t("Email verification pending")}
               </p>
-              {session.user.app_metadata?.role === "admin" ? (
-                <AhabLink to="/admin/custom-orders" className="mt-3">
-                  {t("Manage custom requests")}
-                </AhabLink>
-              ) : null}
             </div>
             <button
               type="button"
@@ -903,86 +936,13 @@ function AccountPage() {
             </button>
           </div>
 
-          <section className="mt-8 max-w-2xl border border-border p-6">
-            <h2 className="font-serif text-2xl">{t("Account security")}</h2>
-            {mfaEnrollment ? (
-              <form onSubmit={verifyMfaEnrollment} className="mt-4 space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  {t("Scan this QR code with an authenticator app, then enter its six-digit code.")}
-                </p>
-                <img
-                  src={mfaEnrollment.qrCode}
-                  alt={t("Authenticator setup QR code")}
-                  className="h-48 w-48 border border-border bg-white p-2"
-                />
-                <p className="break-all text-xs text-muted-foreground">
-                  {t("Setup key: {secret}", { secret: mfaEnrollment.secret })}
-                </p>
-                <input
-                  required
-                  name="enrollment-code"
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  pattern="[0-9]{6}"
-                  maxLength={6}
-                  value={mfaCode}
-                  onChange={(event) => setMfaCode(event.currentTarget.value.replace(/\D/g, ""))}
-                  placeholder="6-digit code"
-                  className={field}
-                />
-                <AhabButton type="submit" disabled={busy}>
-                  {busy ? t("Verifying…") : t("Enable authenticator")}
-                </AhabButton>
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void cancelMfaEnrollment()}
-                  className="label-xs ml-4 underline underline-offset-4"
-                >
-                  {t("Cancel setup")}
-                </button>
-              </form>
-            ) : mfaRequired ? (
-              <div className="mt-3 space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  {t("Authenticator verification is required when you sign in.")}
-                </p>
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void disableMfa()}
-                  className="label-xs underline underline-offset-4"
-                >
-                  {busy ? t("Please wait…") : t("Disable authenticator sign-in")}
-                </button>
-              </div>
-            ) : (
-              <div className="mt-3 space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  {t(
-                    "Add an authenticator app for an extra sign-in step. It is optional and can be disabled later.",
-                  )}
-                </p>
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void startMfa()}
-                  className="label-xs underline underline-offset-4"
-                >
-                  {busy
-                    ? t("Please wait…")
-                    : mfaFactorId
-                      ? t("Activate authenticator sign-in")
-                      : t("Set up an authenticator")}
-                </button>
-              </div>
-            )}
-          </section>
-
+          {/* Authenticator setup is hidden for now. Accounts that already use it are still
+              asked for their code at sign-in (see the mfaChallenge step above). */}
           <div className="grid gap-14 py-10 lg:grid-cols-[1.2fr_0.8fr]">
             <section>
-              <h2 className="font-serif text-3xl">{t("Your orders")}</h2>
+              <h2 id="account-orders" className="scroll-mt-28 font-serif text-3xl">
+                {t("Your orders")}
+              </h2>
               {loadingData ? (
                 <p className="mt-5 text-sm text-muted-foreground">{t("Loading your orders…")}</p>
               ) : orders.length === 0 ? (
@@ -1025,7 +985,9 @@ function AccountPage() {
             </section>
 
             <section>
-              <h2 className="font-serif text-3xl">{t("Saved addresses")}</h2>
+              <h2 id="account-addresses" className="scroll-mt-28 font-serif text-3xl">
+                {t("Saved addresses")}
+              </h2>
               {addresses.length > 0 ? (
                 <ul className="mt-5 space-y-3">
                   {addresses.map((address) => (
