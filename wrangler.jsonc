@@ -1,11 +1,20 @@
-// Cloudflare Workers settings. `npm run build` (nitro, cloudflare-module preset) merges this
-// into .output/server/wrangler.json, which `wrangler deploy` uses.
+// Cloudflare Workers deploy config: the single source of truth for `npx wrangler deploy`.
+// `npm run build` (nitro, cloudflare-module preset) writes the Worker to .output/server and the
+// static files to .output/public; this file points wrangler straight at them.
 // Secrets (Supabase service key, Firebase key, Telegram, Cloudinary, Resend) are set in the
 // Cloudflare dashboard, never here.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "ahab-clothing",
+  "main": ".output/server/index.mjs",
   "compatibility_date": "2026-11-01",
   "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "binding": "ASSETS",
+    "directory": ".output/public",
+  },
+  // nitro has already bundled the server into ES modules; upload them as-is.
+  "no_bundle": true,
+  "rules": [{ "type": "ESModule", "globs": ["**/*.mjs", "**/*.js"] }],
   "observability": { "enabled": true },
 }

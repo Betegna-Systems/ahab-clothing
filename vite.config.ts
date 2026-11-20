@@ -20,4 +20,15 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // No explicit preset: nitro detects the host (cloudflare-module on Cloudflare and locally,
+  // vercel on Vercel), so both deploy targets keep working from the same branch.
+  nitro: {
+    cloudflare: {
+      nodeCompat: true,
+      // wrangler.jsonc at the repo root is the single, complete deploy config. A generated
+      // .output/server/wrangler.json plus .wrangler/deploy redirect confused `wrangler deploy`
+      // on Cloudflare Workers Builds ("Missing entry-point").
+      deployConfig: false,
+    },
+  },
 });

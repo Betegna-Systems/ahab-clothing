@@ -61,7 +61,7 @@ source code. Configure leaked-password protection when available on your Supabas
 The site runs on Cloudflare Workers as the `ahab-clothing` Worker (settings in `wrangler.jsonc`) and is
 served at https://www.ahabtailored.com; the bare `ahabtailored.com` redirects there (`src/server.ts`).
 Cloudflare's GitHub integration builds every push to `main` with `npm run build` and deploys with
-`npx wrangler deploy --config .output/server/wrangler.json`.
+`npx wrangler deploy` (both read `wrangler.jsonc`).
 
 - **Build variables** (Settings → Build → Variables): every `VITE_*` value, e.g. `VITE_SITE_URL`,
   `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_CLOUDINARY_CLOUD_NAME`. They are baked into the
@@ -73,4 +73,4 @@ Cloudflare's GitHub integration builds every push to `main` with `npm run build`
   `SUPABASE_SERVICE_ROLE_KEY` stays server-only.
 
 To try the Workers build locally: `npm run build`, then
-`npx wrangler dev --config .output/server/wrangler.json --env-file <absolute path to .env>`.
+`npx wrangler dev --env-file <absolute path to .env>`.
