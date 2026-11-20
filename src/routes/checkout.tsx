@@ -63,6 +63,7 @@ function CheckoutPage() {
   const {
     lineItems,
     subtotal,
+    setSavings,
     promo,
     clearPromo,
     clearCart,
@@ -81,7 +82,12 @@ function CheckoutPage() {
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState("");
   // promoCode is set only when the bag's code applies (it may be below its minimum order).
-  const { discount: discountAmount, shipping, total, promoCode } = orderTotals(subtotal, promo);
+  const {
+    discount: discountAmount,
+    shipping,
+    total,
+    promoCode,
+  } = orderTotals(subtotal, promo, setSavings);
 
   const setInputValue = useCallback((name: string, value: string) => {
     const input = formRef.current?.elements.namedItem(name);
@@ -236,7 +242,9 @@ function CheckoutPage() {
     // The chat message is read by AHAB staff, so it stays in English.
     const message = buildOrderMessage(
       items,
-      `Order ${number}\nName: ${name}\nPhone: ${g("phone")}\nArea: ${g("subCity")}\nPayment: ${paymentLabel}${promoCode ? `\nPromo code: ${promoCode} (-${formatPrice(discountAmount)})` : ""}\nAmount due: ${formatPrice(total)}`,
+      `Order ${number}\nName: ${name}\nPhone: ${g("phone")}\nArea: ${g("subCity")}\nPayment: ${paymentLabel}${
+        setSavings ? `\n3-colour set: -${formatPrice(setSavings)}` : ""
+      }${promoCode ? `\nPromo code: ${promoCode} (-${formatPrice(discountAmount)})` : ""}\nAmount due: ${formatPrice(total)}`,
     );
     clearCart();
     if (payment !== "cod") {
@@ -443,6 +451,12 @@ function CheckoutPage() {
             <dt>{t("Subtotal")}</dt>
             <dd>{formatPrice(subtotal)}</dd>
           </div>
+          {setSavings > 0 ? (
+            <div className="flex justify-between text-gold">
+              <dt>{t("3-colour set saving")}</dt>
+              <dd>-{formatPrice(setSavings)}</dd>
+            </div>
+          ) : null}
           {discountAmount > 0 ? (
             <div className="flex justify-between text-gold">
               <dt>{t("Promo discount {code}", { code: promoCode ?? "" })}</dt>

@@ -59,9 +59,9 @@ export function Header() {
   return (
     <>
       <div className="label-xs bg-primary px-4 py-2.5 text-center text-primary-foreground">
-        <span className="sm:hidden">{t("Free Addis delivery over ETB 5,000")}</span>
+        <span className="sm:hidden">{t("Any top in 3 colours: ETB 2,550")}</span>
         <span className="hidden sm:inline">
-          {t("Free delivery in Addis Ababa on orders over ETB 5,000")}
+          {t("Any top in 3 colours for ETB 2,550 · Free Addis delivery over ETB 5,000")}
         </span>
       </div>
 

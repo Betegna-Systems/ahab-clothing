@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import {
   normalizePromoCode,
+  colorSetCount,
   orderTotals,
   priceOrder,
   promoStatus,
@@ -25,6 +26,7 @@ const catalog = [
     slug: "taitu-double-breasted-suit",
     name: "Taitu Double-Breasted Suit",
     price: 4200,
+    categories: ["suits" as const],
     colors: [{ name: "Chocolate", hex: "#000" }],
     sizes: ["XS", "S", "M"],
     images: ["taitu.jpg"],
@@ -34,18 +36,21 @@ const catalog = [
     slug: "bete-seamless-crew",
     name: "Bete Seamless Crew",
     price: 1200,
+    categories: ["basics" as const],
     colors: [
       { name: "Ivory", hex: "#fff" },
       { name: "Black", hex: "#000" },
+      { name: "Rose", hex: "#d8a79a" },
     ],
     sizes: ["S", "M"],
-    images: ["bete-ivory.jpg", "bete-black.jpg"],
+    images: ["bete-ivory.jpg", "bete-black.jpg", "bete-rose.jpg"],
     inStock: true,
   },
   {
     slug: "sold-out-top",
     name: "Sold Out Top",
     price: 900,
+    categories: ["sleeveless" as const],
     colors: [{ name: "Black", hex: "#000" }],
     sizes: ["M"],
     images: ["x.jpg"],
@@ -59,9 +64,10 @@ describe("order pricing", () => {
   it("charges delivery below the free-shipping threshold", () => {
     assert.deepEqual(orderTotals(4200, null), {
       subtotal: 4200,
+      setSavings: 0,
       discount: 0,
-      shipping: 250,
-      total: 4450,
+      shipping: 400,
+      total: 4600,
       promoCode: null,
     });
   });
@@ -69,6 +75,7 @@ describe("order pricing", () => {
   it("gives free delivery from 5000 ETB, based on the pre-discount subtotal", () => {
     assert.deepEqual(orderTotals(5400, AHAB10), {
       subtotal: 5400,
+      setSavings: 0,
       discount: 540,
       shipping: 0,
       total: 4860,
@@ -87,7 +94,58 @@ describe("order pricing", () => {
     assert.equal(priced.items[0]!.price, 1200);
     assert.equal(priced.items[0]!.image, "bete-black.jpg");
     assert.equal(priced.subtotal, 2400);
-    assert.equal(priced.total, 2650);
+    assert.equal(priced.total, 2800);
+  });
+
+  it("prices the same top in 3 different colours at the colour-set price", () => {
+    const line = { slug: "bete-seamless-crew", size: "M", qty: 1 };
+    const priced = priceOrder(
+      [
+        { ...line, color: "Ivory" },
+        { ...line, color: "Black", size: "S" },
+        { ...line, color: "Rose" },
+      ],
+      catalog,
+      null,
+    );
+    assert.equal(priced.ok && priced.subtotal, 3600);
+    assert.equal(priced.ok && priced.setSavings, 3600 - 2550);
+    assert.equal(priced.ok && priced.total, 2550 + 400);
+  });
+
+  it("needs different colours of one top, and never applies to suits", () => {
+    const sameColour = priceOrder(
+      [{ slug: "bete-seamless-crew", color: "Black", size: "M", qty: 3 }],
+      catalog,
+      null,
+    );
+    assert.equal(sameColour.ok && sameColour.setSavings, 0);
+    const suits = priceOrder(
+      [{ slug: "taitu-double-breasted-suit", color: "Chocolate", size: "M", qty: 3 }],
+      catalog,
+      null,
+    );
+    assert.equal(suits.ok && suits.setSavings, 0);
+  });
+
+  it("counts how many full sets of 3 different colours a bag holds", () => {
+    assert.equal(colorSetCount([1, 1]), 0);
+    assert.equal(colorSetCount([1, 1, 1]), 1);
+    assert.equal(colorSetCount([3, 2, 1]), 1);
+    assert.equal(colorSetCount([2, 2, 2]), 2);
+    assert.equal(colorSetCount([5, 1, 1, 1]), 1);
+    assert.equal(colorSetCount([2, 2, 1, 1]), 2);
+  });
+
+  it("applies a promo to the price after the colour-set saving", () => {
+    const line = { slug: "bete-seamless-crew", size: "M", qty: 1 };
+    const priced = priceOrder(
+      ["Ivory", "Black", "Rose"].map((color) => ({ ...line, color })),
+      catalog,
+      AHAB10,
+    );
+    assert.equal(priced.ok && priced.discount, 255);
+    assert.equal(priced.ok && priced.total, 2550 - 255 + 400);
   });
 
   it("applies a validated promo and reports its percent for the database check", () => {

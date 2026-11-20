@@ -25,7 +25,7 @@ function ShippingPage() {
         )}
       </p>
       <h2>{t("Addis Ababa")}</h2>
-      <p>{t("Delivery in 1–2 working days. Free on orders over ETB 5,000; otherwise ETB 250.")}</p>
+      <p>{t("Delivery in 1–2 working days. Free on orders over ETB 5,000; otherwise ETB 400.")}</p>
       <h2>{t("Elsewhere in Ethiopia")}</h2>
       <p>{t("Delivery in 3–5 working days via trusted courier. ETB 600 flat rate.")}</p>
       <h2>{t("International")}</h2>

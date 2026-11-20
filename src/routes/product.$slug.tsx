@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Heart, RotateCw, Star } from "lucide-react";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/products";
+import { COLOR_SET_PRICE, COLOR_SET_SIZE, colorSetSavingPerSet } from "@/lib/order-pricing";
 import { fetchProductBySlug } from "@/lib/firestore-products";
 import { breadcrumbJsonLd, productJsonLd, seo } from "@/lib/seo";
 import { useShop } from "@/lib/shop-store";
@@ -287,6 +288,17 @@ function ProductPage() {
               <p className="text-muted-foreground line-through">{formatPrice(product.compareAt)}</p>
             ) : null}
           </div>
+          {!product.categories.includes("suits") &&
+          product.colors.length >= COLOR_SET_SIZE &&
+          colorSetSavingPerSet(product.price) > 0 ? (
+            <p className="mt-3 inline-block border border-gold/50 px-3 py-2 text-sm">
+              <span className="label-xs mr-2 text-gold">{t("Colour set")}</span>
+              {t("Any 3 colours for {price} — save {saving}.", {
+                price: formatPrice(COLOR_SET_PRICE),
+                saving: formatPrice(colorSetSavingPerSet(product.price)),
+              })}
+            </p>
+          ) : null}
           <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
             {reviews.length ? (
               <>

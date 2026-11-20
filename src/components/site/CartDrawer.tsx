@@ -6,7 +6,14 @@ import { Minus, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/products";
 import { MAX_CART_QUANTITY } from "@/lib/order-limits";
-import { FREE_SHIPPING_THRESHOLD, orderTotals } from "@/lib/order-pricing";
+import {
+  COLOR_SET_PRICE,
+  COLOR_SET_SIZE,
+  FREE_SHIPPING_THRESHOLD,
+  colorSetSavingPerSet,
+  orderTotals,
+} from "@/lib/order-pricing";
+import type { Product } from "@/lib/products";
 import { cartLineKey, useShop } from "@/lib/shop-store";
 import { cn } from "@/lib/utils";
 import { AhabLink } from "./ui";
@@ -14,6 +21,22 @@ import { useT } from "@/lib/i18n";
 import { useProductText } from "@/lib/i18n/product";
 
 const FREE_SHIPPING = FREE_SHIPPING_THRESHOLD;
+
+/** The first top in the bag that is one or two colours short of a colour set. */
+function colorSetNudge(lineItems: { line: { slug: string; color: string }; product: Product }[]) {
+  const colorsBySlug = new Map<string, { product: Product; colors: Set<string> }>();
+  for (const { line, product } of lineItems) {
+    if (product.categories.includes("suits") || !colorSetSavingPerSet(product.price)) continue;
+    if (product.colors.length < COLOR_SET_SIZE) continue;
+    const entry = colorsBySlug.get(line.slug) ?? { product, colors: new Set<string>() };
+    entry.colors.add(line.color);
+    colorsBySlug.set(line.slug, entry);
+  }
+  for (const { product, colors } of colorsBySlug.values()) {
+    if (colors.size < COLOR_SET_SIZE) return { product, missing: COLOR_SET_SIZE - colors.size };
+  }
+  return null;
+}
 
 export function CartDrawer() {
   const {
@@ -23,6 +46,7 @@ export function CartDrawer() {
     removeLine,
     setQty,
     subtotal,
+    setSavings,
     promo,
     applyPromoCode,
     clearPromo,
@@ -37,7 +61,13 @@ export function CartDrawer() {
   const t = useT();
   const text = useProductText();
 
-  const { discount: discountAmount, shipping, total, promoCode } = orderTotals(subtotal, promo);
+  const {
+    discount: discountAmount,
+    shipping,
+    total,
+    promoCode,
+  } = orderTotals(subtotal, promo, setSavings);
+  const setNudge = colorSetNudge(lineItems);
   const promoShortfall = promo && !promoCode ? promo.minSubtotal - subtotal : 0;
 
   const applyPromo = async () => {
@@ -81,6 +111,7 @@ export function CartDrawer() {
   const chatMessage = buildOrderMessage(
     orderLines,
     [
+      setSavings ? `3-colour set: -${formatPrice(setSavings)}` : "",
       promoCode ? `Promo code ${promoCode}: -${formatPrice(discountAmount)}` : "",
       `Shipping: ${shipping ? formatPrice(shipping) : "Free"}`,
       `Amount due: ${formatPrice(total)}`,
@@ -131,6 +162,19 @@ export function CartDrawer() {
                   {t("Add {amount} for free Addis Ababa delivery.", {
                     amount: formatPrice(FREE_SHIPPING - subtotal),
                   })}
+                </p>
+              ) : null}
+              {setNudge ? (
+                <p className="border-b border-border py-4 text-xs text-gold">
+                  {setNudge.missing === 1
+                    ? t("Add 1 more colour of {name} to get 3 for {price}.", {
+                        name: text(setNudge.product).name,
+                        price: formatPrice(COLOR_SET_PRICE),
+                      })
+                    : t("Add 2 more colours of {name} to get 3 for {price}.", {
+                        name: text(setNudge.product).name,
+                        price: formatPrice(COLOR_SET_PRICE),
+                      })}
                 </p>
               ) : null}
               <ul className="divide-y divide-border">
@@ -274,6 +318,12 @@ export function CartDrawer() {
                   <span>{t("Subtotal")}</span>
                   <span className="text-foreground">{formatPrice(subtotal)}</span>
                 </div>
+                {setSavings > 0 ? (
+                  <div className="flex justify-between text-gold">
+                    <span>{t("3-colour set saving")}</span>
+                    <span>-{formatPrice(setSavings)}</span>
+                  </div>
+                ) : null}
                 {discountAmount > 0 ? (
                   <div className="flex justify-between text-gold">
                     <span>{t("Promo discount {code}", { code: promoCode ?? "" })}</span>

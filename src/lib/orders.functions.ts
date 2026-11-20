@@ -168,9 +168,12 @@ export const placeOrder = createServerFn({ method: "POST" })
     const account = data.accountAccessToken
       ? await verifyAccountUser(data.accountAccessToken)
       : null;
-    const promoNote = priced.promoCode
-      ? `Promo code ${priced.promoCode}: -${priced.discount} ETB`
-      : "";
+    const promoNote = [
+      priced.setSavings ? `3-colour set: -${priced.setSavings} ETB` : "",
+      priced.promoCode ? `Promo code ${priced.promoCode}: -${priced.discount} ETB` : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
     const { data: result, error } = await supabaseAdmin.rpc("place_order_with_inventory", {
       p_order: {
         orderNumber: data.orderNumber,
@@ -220,17 +223,13 @@ async function sendOrderConfirmationEmail(
   priced: Extract<ReturnType<typeof priceOrder>, { ok: true }>,
 ) {
   try {
-    const [
-      { getRequest },
-      { buildOrderConfirmationEmail },
-      { sendEmail },
-      { PAYMENT_METHODS },
-    ] = await Promise.all([
-      import("@tanstack/react-start/server"),
-      import("@/lib/order-email"),
-      import("@/lib/email.server"),
-      import("@/lib/payment-methods"),
-    ]);
+    const [{ getRequest }, { buildOrderConfirmationEmail }, { sendEmail }, { PAYMENT_METHODS }] =
+      await Promise.all([
+        import("@tanstack/react-start/server"),
+        import("@/lib/order-email"),
+        import("@/lib/email.server"),
+        import("@/lib/payment-methods"),
+      ]);
     const locale = "en";
     // The site the customer ordered from, so links work before and after a domain change.
     const origin = new URL(getRequest().url).origin;
@@ -244,7 +243,7 @@ async function sendOrderConfirmationEmail(
       customerName: data.customer.name,
       items,
       subtotal: priced.subtotal,
-      discount: priced.discount,
+      discount: priced.setSavings + priced.discount,
       shipping: priced.shipping,
       total: priced.total,
       paymentMethod: data.paymentMethod,
@@ -254,9 +253,7 @@ async function sendOrderConfirmationEmail(
         return method.accountName ? `${method.account} (${method.accountName})` : method.account;
       })(),
       trackingUrl: `${origin}/tracking/${number}${query}`,
-      paymentUrl: payByTransfer
-        ? `${origin}/payment/${number}${query}`
-        : null,
+      paymentUrl: payByTransfer ? `${origin}/payment/${number}${query}` : null,
       locale,
     });
     await sendEmail({ to: data.customer.email, ...email });

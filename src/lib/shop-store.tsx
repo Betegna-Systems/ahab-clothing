@@ -10,7 +10,7 @@ import {
 import { type Product } from "@/lib/products";
 import { useAllProducts, getProductCached } from "@/lib/firestore-products";
 import { MAX_CART_QUANTITY } from "@/lib/order-limits";
-import type { Promo } from "@/lib/order-pricing";
+import { colorSetSavings, type Promo } from "@/lib/order-pricing";
 import { checkPromoCode } from "@/lib/orders.functions";
 import { getVariantAvailability } from "@/lib/inventory.functions";
 import { initializeSupabaseBrowser } from "@/integrations/supabase/client";
@@ -51,6 +51,8 @@ type ShopState = {
   /** Saved pieces that still exist in the catalog (what the wishlist page shows). */
   wishlistCount: number;
   subtotal: number;
+  /** Saving from tops bought in sets of three colours (see order-pricing). */
+  setSavings: number;
   lineItems: { line: CartLine; product: Product }[];
   inventoryStatus: "loading" | "ready" | "error";
   isVariantAvailable: (slug: string, color: string, size: string) => boolean;
@@ -426,6 +428,13 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     cartCount: lineItems.reduce((n, { line }) => n + line.qty, 0),
     wishlistCount: wishlist.filter((slug) => allProducts.some((p) => p.slug === slug)).length,
     subtotal: lineItems.reduce((n, { line, product }) => n + product.price * line.qty, 0),
+    setSavings: colorSetSavings(
+      lineItems.map(({ line, product }) => ({
+        ...line,
+        price: product.price,
+        categories: product.categories,
+      })),
+    ),
     lineItems,
     inventoryStatus,
     isVariantAvailable,
