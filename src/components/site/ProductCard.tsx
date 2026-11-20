@@ -1,6 +1,6 @@
 import { useRef, useState, type MouseEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, Heart, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Heart, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { formatPrice, type Product } from "@/lib/products";
 import { useShop } from "@/lib/shop-store";
@@ -48,6 +48,7 @@ export function ProductCard({
   const wished = isWished(product.slug);
   const [colorIndex, setColorIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
   const photo = product.images[colorIndex] ?? product.images[0];
   const color = product.colors[colorIndex] ?? product.colors[0];
   const count = product.images.length;
@@ -56,7 +57,6 @@ export function ProductCard({
     color && inventoryStatus === "ready"
       ? product.sizes.filter((size) => isVariantAvailable(product.slug, color.name, size))
       : [];
-  const quickAddSize = availableSizes[0];
   const purchaseSize =
     selectedSize && availableSizes.includes(selectedSize) ? selectedSize : availableSizes[0];
 
@@ -135,21 +135,68 @@ export function ProductCard({
           </>
         ) : null}
 
-        <button
-          type="button"
-          onClick={() =>
-            addToCart({
-              slug: product.slug,
-              size: quickAddSize ?? "",
-              color: color?.name ?? "",
-              qty: 1,
-            })
-          }
-          disabled={inventoryStatus !== "ready" || !quickAddSize}
-          className="label-xs absolute inset-x-0 bottom-0 flex h-12 translate-y-full items-center justify-center gap-2 bg-primary text-primary-foreground opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <Plus className="h-3.5 w-3.5" strokeWidth={1.5} /> {t("Quick add")}
-        </button>
+        {/* Quick add: always visible (phones have no hover) and always asks for a size. */}
+        {quickAddOpen ? (
+          <div
+            className="absolute inset-x-0 bottom-0 bg-cream/95 p-3 backdrop-blur-sm"
+            role="group"
+            aria-label={t("Choose a size")}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <p className="label-xs text-muted-foreground">{t("Choose a size")}</p>
+              <button
+                type="button"
+                onClick={() => setQuickAddOpen(false)}
+                aria-label={t("Close")}
+                className="grid h-7 w-7 place-items-center text-foreground/70 hover:text-foreground"
+              >
+                <X className="h-4 w-4" strokeWidth={1.5} />
+              </button>
+            </div>
+            {inventoryStatus === "ready" && availableSizes.length ? (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {product.sizes.map((size) => {
+                  const inStock = availableSizes.includes(size);
+                  return (
+                    <button
+                      key={size}
+                      type="button"
+                      disabled={!inStock}
+                      onClick={() => {
+                        if (!color) return;
+                        addToCart({ slug: product.slug, size, color: color.name, qty: 1 });
+                        setQuickAddOpen(false);
+                      }}
+                      aria-label={t("Add size {size} to bag", { size })}
+                      className="label-xs min-h-9 min-w-9 border border-border bg-cream px-2 hover:border-primary hover:bg-primary hover:text-primary-foreground disabled:cursor-not-allowed disabled:line-through disabled:opacity-40 disabled:hover:border-border disabled:hover:bg-cream disabled:hover:text-foreground"
+                    >
+                      {size}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="mt-2 text-xs text-muted-foreground">
+                {inventoryStatus === "loading"
+                  ? t("Checking stock availability…")
+                  : inventoryStatus === "error"
+                    ? t("Stock couldn't be checked. Try again later.")
+                    : t("Currently unavailable in this color.")}
+              </p>
+            )}
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setQuickAddOpen(true)}
+            aria-label={t("Quick add {name}", { name: text.name })}
+            aria-expanded={false}
+            className="label-xs absolute bottom-3 right-3 flex h-10 min-w-10 items-center justify-center gap-2 bg-cream/90 px-3 text-foreground backdrop-blur-sm transition-colors hover:bg-primary hover:text-primary-foreground"
+          >
+            <Plus className="h-4 w-4" strokeWidth={1.5} />
+            <span className="hidden sm:inline">{t("Quick add")}</span>
+          </button>
+        )}
       </div>
 
       <div className="mt-5 flex items-baseline justify-between gap-4">

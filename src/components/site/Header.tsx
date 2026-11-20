@@ -40,6 +40,21 @@ function NavLinks({ items }: { items: readonly (typeof nav)[number][] }) {
   );
 }
 
+// Header icons get a small name underneath once there is room for it (lg and up).
+const iconItem =
+  "flex flex-col items-center gap-1 text-foreground/80 transition-colors hover:text-foreground";
+
+function IconLabel({ children }: { children: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="hidden whitespace-nowrap text-[0.6rem] uppercase leading-none tracking-[0.14em] lg:block"
+    >
+      {children}
+    </span>
+  );
+}
+
 export function Header() {
   const { cartCount, wishlistCount, setCartOpen, setSearchOpen } = useShop();
   const t = useT();
@@ -103,32 +118,45 @@ export function Header() {
 
           <div className="flex items-center justify-end gap-2 sm:gap-5 xl:gap-7 2xl:gap-9">
             <NavLinks items={rightNav} />
-            <button type="button" onClick={() => setSearchOpen(true)} aria-label={t("Search")}>
+            <button
+              type="button"
+              onClick={() => setSearchOpen(true)}
+              aria-label={t("Search")}
+              className={iconItem}
+            >
               <Search className="h-5 w-5" strokeWidth={1.25} />
+              <IconLabel>{t("Search")}</IconLabel>
             </button>
-            <Link to="/wishlist" aria-label={t("Wishlist")} className="relative">
-              <Heart className="h-5 w-5" strokeWidth={1.25} />
-              {wishlistCount > 0 ? (
-                <span className="absolute -right-2 -top-2 grid h-4 w-4 place-items-center rounded-full bg-gold text-[0.6rem] text-gold-foreground">
-                  {wishlistCount}
-                </span>
-              ) : null}
+            <Link to="/wishlist" aria-label={t("Wishlist")} className={iconItem}>
+              <span className="relative">
+                <Heart className="h-5 w-5" strokeWidth={1.25} />
+                {wishlistCount > 0 ? (
+                  <span className="absolute -right-2 -top-2 grid h-4 w-4 place-items-center rounded-full bg-gold text-[0.6rem] text-gold-foreground">
+                    {wishlistCount}
+                  </span>
+                ) : null}
+              </span>
+              <IconLabel>{t("Wishlist")}</IconLabel>
             </Link>
-            <Link to="/account" aria-label={t("Account")}>
+            <Link to="/account" aria-label={t("Account")} className={iconItem}>
               <User className="h-5 w-5" strokeWidth={1.25} />
+              <IconLabel>{t("Account")}</IconLabel>
             </Link>
             <button
               type="button"
               onClick={() => setCartOpen(true)}
               aria-label={t("Open cart")}
-              className="relative"
+              className={iconItem}
             >
-              <ShoppingBag className="h-5 w-5" strokeWidth={1.25} />
-              {cartCount > 0 ? (
-                <span className="absolute -right-2 -top-2 grid h-4 w-4 place-items-center rounded-full bg-gold text-[0.6rem] text-gold-foreground">
-                  {cartCount}
-                </span>
-              ) : null}
+              <span className="relative">
+                <ShoppingBag className="h-5 w-5" strokeWidth={1.25} />
+                {cartCount > 0 ? (
+                  <span className="absolute -right-2 -top-2 grid h-4 w-4 place-items-center rounded-full bg-gold text-[0.6rem] text-gold-foreground">
+                    {cartCount}
+                  </span>
+                ) : null}
+              </span>
+              <IconLabel>{t("Bag")}</IconLabel>
             </button>
           </div>
         </div>
