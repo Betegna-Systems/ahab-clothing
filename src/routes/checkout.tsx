@@ -230,7 +230,7 @@ function CheckoutPage() {
                 ? t("Prices or delivery charges have changed. Review your bag and try again.")
                 : result.reason === "rate_limited"
                   ? t(
-                      "Several orders were just placed with this phone number. Please contact AHAB on chat to place another.",
+                      "Several orders were just placed from this phone or connection. Please contact AHAB on chat to place another.",
                     )
                   : t("We couldn't send your order. Please try again."),
       );

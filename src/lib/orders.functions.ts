@@ -122,10 +122,52 @@ async function lookupPromo(rawCode: string): Promise<PromoLookup> {
   return { ok: true, promo: promoFromRow(row) };
 }
 
-/** Checks a code typed into the bag; returns its percent and minimum order when usable. */
+/** The caller's IP as seen by Vercel (which overwrites x-forwarded-for, so it can't be spoofed). */
+async function requestIp() {
+  const { getRequestHeader } = await import("@tanstack/react-start/server");
+  const forwarded = getRequestHeader("x-real-ip") ?? getRequestHeader("x-forwarded-for") ?? "";
+  return forwarded.split(",")[0]!.trim() || "unknown";
+}
+
+/**
+ * Counts one request against `limit` per `windowSeconds` for this IP and bucket.
+ * Fails open (allows) if the take_rate_limit function isn't deployed or errors, so a
+ * database hiccup never blocks real customers; it is logged instead.
+ */
+async function withinRateLimit(bucket: string, limit: number, windowSeconds: number) {
+  const supabaseAdmin = await getFeatureAdmin();
+  const { data: allowed, error } = await supabaseAdmin.rpc("take_rate_limit", {
+    p_bucket: bucket,
+    p_key_hash: await hashPaymentToken(`${bucket}:${await requestIp()}`),
+    p_limit: limit,
+    p_window_seconds: windowSeconds,
+  });
+  if (error) {
+    console.error(`Rate limit check (${bucket}) failed:`, error.message);
+    return true;
+  }
+  return allowed !== false;
+}
+
+/** Promo guesses allowed per IP per 10 minutes (saved codes are re-checked on each visit). */
+const MAX_PROMO_CHECKS_PER_IP = 20;
+/** Orders one IP may place per hour, on top of the per-phone limit. */
+const MAX_ORDERS_PER_IP_PER_HOUR = 8;
+
+/**
+ * Checks a code typed into the bag; returns its percent and minimum order when usable.
+ * Every unusable code gets the same answer, so guesses can't tell real codes apart.
+ */
 export const checkPromoCode = createServerFn({ method: "POST" })
   .validator((d: unknown) => z.object({ code: z.string().max(40) }).parse(d))
-  .handler(async ({ data }) => lookupPromo(data.code));
+  .handler(async ({ data }): Promise<PromoLookup | { ok: false; reason: "rate_limited" }> => {
+    if (!(await withinRateLimit("promo_check", MAX_PROMO_CHECKS_PER_IP, 600))) {
+      return { ok: false, reason: "rate_limited" };
+    }
+    const result = await lookupPromo(data.code);
+    if (result.ok || result.reason === "failed") return result;
+    return { ok: false, reason: "invalid" };
+  });
 
 export const placeOrder = createServerFn({ method: "POST" })
   .validator((d: unknown) => orderSchema.parse(d))
@@ -149,6 +191,10 @@ export const placeOrder = createServerFn({ method: "POST" })
       priced.items.some((item, index) => item.price !== data.items[index]!.price)
     ) {
       return { ok: false as const, reason: "price_changed" as const };
+    }
+
+    if (!(await withinRateLimit("place_order", MAX_ORDERS_PER_IP_PER_HOUR, 3600))) {
+      return { ok: false as const, reason: "rate_limited" as const };
     }
 
     const supabaseAdmin = await getFeatureAdmin();
@@ -290,7 +336,10 @@ export const getTrackedOrder = createServerFn({ method: "GET" })
       .from("customer_reviews")
       .select("product_slug")
       .eq("order_number", order.order_number);
-    if (reviewedProducts.error) throw reviewedProducts.error;
+    if (reviewedProducts.error) {
+      console.error("Tracked order review lookup failed:", reviewedProducts.error.message);
+      throw new Error("We couldn't load this order. Please try again.");
+    }
 
     return {
       orderNumber: order.order_number,
@@ -337,7 +386,8 @@ async function verifyAccountUser(accessToken: string) {
   return { ok: true as const, userId };
 }
 
-export const getAccountOrders = createServerFn({ method: "GET" })
+// POST so the account's access token never appears in a URL (and so in request logs).
+export const getAccountOrders = createServerFn({ method: "POST" })
   .validator((d: unknown) => accountOrdersSchema.parse(d))
   .handler(async ({ data }) => {
     const account = await verifyAccountUser(data.accessToken);
@@ -460,7 +510,10 @@ export const submitVerifiedReview = createServerFn({ method: "POST" })
       .eq("order_number", data.orderNumber)
       .maybeSingle();
 
-    if (orderError) throw orderError;
+    if (orderError) {
+      console.error("Review order lookup failed:", orderError.message);
+      throw new Error("We couldn't check this order. Please try again.");
+    }
     const eligibility = reviewEligibility(order, tokenHash, data.productSlug);
     if (eligibility !== "allow" || !order) {
       return {
@@ -559,7 +612,10 @@ export const getApprovedProductReviews = createServerFn({ method: "GET" })
       .eq("status", "approved")
       .order("created_at", { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.error("Approved reviews lookup failed:", error.message);
+      return [];
+    }
 
     return Promise.all(
       (reviews ?? []).map(async (review) => {
@@ -577,7 +633,17 @@ export const getApprovedProductReviews = createServerFn({ method: "GET" })
         const { data: photo, error: photoError } = await supabaseAdmin.storage
           .from("customer-review-photos")
           .createSignedUrl(review.photo_path, 60 * 60);
-        if (photoError) throw photoError;
+        if (photoError) {
+          console.error("Review photo link failed:", photoError.message);
+          return {
+            reviewerName: review.reviewer_name,
+            rating: review.rating,
+            fitFeedback: review.fit_feedback,
+            reviewText: review.review_text,
+            photoUrl: null,
+            createdAt: review.created_at,
+          };
+        }
 
         return {
           reviewerName: review.reviewer_name,
@@ -672,7 +738,7 @@ export const submitPaymentProof = createServerFn({ method: "POST" })
     }
 
     const submittedAt = new Date().toISOString();
-    const { error: updateError } = await supabaseAdmin
+    const { data: updated, error: updateError } = await supabaseAdmin
       .from("orders")
       .update({
         payment_status: "receipt_submitted",
@@ -680,12 +746,18 @@ export const submitPaymentProof = createServerFn({ method: "POST" })
         payment_submitted_at: submittedAt,
       })
       .eq("order_number", data.orderNumber)
-      .eq("payment_access_token_hash", tokenHash);
+      .eq("payment_access_token_hash", tokenHash)
+      // Only a still-pending order takes a receipt, so two uploads at once can't both win.
+      .eq("payment_status", "pending")
+      .select("order_number");
 
-    if (updateError) {
+    if (updateError || !updated?.length) {
       await supabaseAdmin.storage.from("payment-proofs").remove([path]);
-      console.error("Payment receipt status update failed:", updateError.message);
-      return { ok: false as const, reason: "save_failed" as const };
+      if (updateError) {
+        console.error("Payment receipt status update failed:", updateError.message);
+        return { ok: false as const, reason: "save_failed" as const };
+      }
+      return { ok: false as const, reason: "already_submitted" as const };
     }
 
     const { notifyAdminsOfPaymentReceiptSubmission } =

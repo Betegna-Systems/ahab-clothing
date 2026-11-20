@@ -91,7 +91,9 @@ export function CartDrawer() {
               ? t("This promo code isn't active yet.")
               : result.reason === "failed"
                 ? t("We couldn't check this code. Please try again.")
-                : t("Invalid promo code"),
+                : result.reason === "rate_limited"
+                  ? t("Too many tries. Please wait a few minutes and try again.")
+                  : t("Invalid promo code"),
       );
     } catch {
       toast.error(t("We couldn't check this code. Please try again."));

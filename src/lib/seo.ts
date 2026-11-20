@@ -47,7 +47,8 @@ type HeadResult = {
 export function jsonLdScript(data: unknown) {
   return {
     type: "application/ld+json",
-    children: JSON.stringify(data),
+    // Escape "<" so text such as a customer review containing "</script>" can't end the tag.
+    children: JSON.stringify(data).replace(/</g, "\\u003c"),
   };
 }
 
@@ -269,10 +270,12 @@ function xmlEscape(value: string) {
 
 /** One English URL per indexed page. */
 function sitemapEntry(path: string, origin: string, extra: string) {
-  return [`  <url>
+  return [
+    `  <url>
     <loc>${xmlEscape(absoluteUrl(path, origin))}</loc>
 ${extra}
-  </url>`];
+  </url>`,
+  ];
 }
 
 export function buildSitemapXml(

@@ -269,7 +269,8 @@ export const submitCustomCommission = createServerFn({ method: "POST" })
     return { ok: true as const, id: commission.id, createdAt: commission.created_at };
   });
 
-export const getAdminCustomCommissions = createServerFn({ method: "GET" })
+// POST so the admin's access token never appears in a URL (and so in request logs).
+export const getAdminCustomCommissions = createServerFn({ method: "POST" })
   .validator((data: unknown) => adminTokenSchema.parse(data))
   .handler(async ({ data }) => {
     await requireAdmin(data.accessToken);
