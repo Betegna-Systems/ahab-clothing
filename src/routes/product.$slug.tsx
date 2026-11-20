@@ -166,6 +166,41 @@ function ProductPage() {
     return true;
   };
 
+  // Colour set: one size, three different colours, one tap (priced by order-pricing).
+  const setOffer =
+    !product.categories.includes("suits") &&
+    product.colors.length >= COLOR_SET_SIZE &&
+    colorSetSavingPerSet(product.price) > 0;
+  const setColors =
+    size && inventoryStatus === "ready"
+      ? [color, ...product.colors.map((c) => c.name).filter((name) => name !== color)]
+          .filter((name) => isVariantAvailable(product.slug, name, size))
+          .slice(0, COLOR_SET_SIZE)
+      : [];
+  const setSoldOut =
+    size && inventoryStatus === "ready"
+      ? product.colors
+          .map((c) => c.name)
+          .filter((name) => !isVariantAvailable(product.slug, name, size))
+      : [];
+  const addColorSet = () => {
+    if (!size) {
+      toast.error(t("Please choose a size"));
+      return;
+    }
+    if (inventoryStatus !== "ready") {
+      toast.error(t("Stock availability couldn't be checked. Please try again later."));
+      return;
+    }
+    if (setColors.length < COLOR_SET_SIZE) {
+      toast.error(t("This size isn't available in 3 colours right now."));
+      return;
+    }
+    for (const setColor of setColors) {
+      addToCart({ slug: product.slug, size, color: setColor, qty: 1 });
+    }
+  };
+
   const related = allProducts
     .filter(
       (p) => p.slug !== product.slug && p.categories.some((c) => product.categories.includes(c)),
@@ -288,9 +323,7 @@ function ProductPage() {
               <p className="text-muted-foreground line-through">{formatPrice(product.compareAt)}</p>
             ) : null}
           </div>
-          {!product.categories.includes("suits") &&
-          product.colors.length >= COLOR_SET_SIZE &&
-          colorSetSavingPerSet(product.price) > 0 ? (
+          {setOffer ? (
             <p className="mt-3 inline-block border border-gold/50 px-3 py-2 text-sm">
               <span className="label-xs mr-2 text-gold">{t("Colour set")}</span>
               {t("Any 3 colours for {price} — save {saving}.", {
@@ -410,6 +443,36 @@ function ProductPage() {
                 />
               </button>
             </div>
+            {setOffer ? (
+              <div className="border border-gold/50 p-4">
+                <AhabButton
+                  size="lg"
+                  variant="outline"
+                  className="w-full"
+                  onClick={addColorSet}
+                  disabled={
+                    inventoryStatus !== "ready" ||
+                    (size !== null && setColors.length < COLOR_SET_SIZE)
+                  }
+                >
+                  {t("Get all 3 colours — {price}", { price: formatPrice(COLOR_SET_PRICE) })}
+                </AhabButton>
+                <p className="mt-2 text-center text-xs text-muted-foreground">
+                  {!size
+                    ? t("Choose a size above. All 3 colours come in that size.")
+                    : setColors.length < COLOR_SET_SIZE
+                      ? t("{colors} sold out in size {size}.", {
+                          colors: setSoldOut.map((name) => text.color(name)).join(", "),
+                          size,
+                        })
+                      : t("{colors} in size {size}. You save {saving}.", {
+                          colors: setColors.map((name) => text.color(name)).join(", "),
+                          size,
+                          saving: formatPrice(colorSetSavingPerSet(product.price)),
+                        })}
+                </p>
+              </div>
+            ) : null}
             <AhabButton
               size="lg"
               variant="gold"

@@ -9,7 +9,9 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 export default defineConfig({
   vite: {
     server: {
-      port: 5173,
+      // Not 5173: Windows (Hyper-V/WSL) often reserves 5147–5246, which makes the dev server fail
+      // with "listen EACCES: permission denied".
+      port: 3000,
       strictPort: false,
     },
   },
