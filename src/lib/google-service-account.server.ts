@@ -3,10 +3,21 @@
 
 type ServiceAccount = { projectId: string; clientEmail: string; privateKey: string };
 
+/**
+ * A secret as pasted into a hosting dashboard: trims whitespace and one pair of wrapping quotes
+ * (values copied straight from a .env line keep them), and turns literal "\n" into newlines.
+ */
+function readSecret(name: string) {
+  const value = process.env[name]?.trim();
+  if (!value) return undefined;
+  const unquoted = /^(["']).*\1$/s.test(value) ? value.slice(1, -1) : value;
+  return unquoted.replace(/\\n/g, "\n").trim() || undefined;
+}
+
 export function getServiceAccount(): ServiceAccount {
-  const projectId = process.env["FIREBASE_PROJECT_ID"];
-  const clientEmail = process.env["FIREBASE_CLIENT_EMAIL"];
-  const privateKey = process.env["FIREBASE_PRIVATE_KEY"]?.replace(/\\n/g, "\n");
+  const projectId = readSecret("FIREBASE_PROJECT_ID");
+  const clientEmail = readSecret("FIREBASE_CLIENT_EMAIL");
+  const privateKey = readSecret("FIREBASE_PRIVATE_KEY");
   if (!projectId || !clientEmail || !privateKey) {
     throw new Error("Firebase service-account credentials are not configured.");
   }
@@ -26,10 +37,11 @@ let cachedKey: { pem: string; key: Promise<CryptoKey> } | undefined;
 
 function importPrivateKey(pem: string) {
   if (cachedKey?.pem === pem) return cachedKey.key;
+  // Keep only the base64 body: drops the BEGIN/END lines and any stray quotes, spaces or
+  // line breaks left over from pasting the key.
   const body = pem
-    .replace(/-----BEGIN PRIVATE KEY-----/, "")
-    .replace(/-----END PRIVATE KEY-----/, "")
-    .replace(/\s+/g, "");
+    .replace(/-----(BEGIN|END) PRIVATE KEY-----/g, "")
+    .replace(/[^A-Za-z0-9+/=]/g, "");
   const der = Uint8Array.from(atob(body), (character) => character.charCodeAt(0));
   const key = crypto.subtle.importKey(
     "pkcs8",
