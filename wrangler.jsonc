@@ -1,0 +1,11 @@
+// Cloudflare Workers settings. `npm run build` (nitro, cloudflare-module preset) merges this
+// into .output/server/wrangler.json, which `wrangler deploy` uses.
+// Secrets (Supabase service key, Firebase key, Telegram, Cloudinary, Resend) are set in the
+// Cloudflare dashboard, never here.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ahab-tailored",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+}

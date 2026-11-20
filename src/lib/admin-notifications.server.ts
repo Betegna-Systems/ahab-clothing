@@ -1,5 +1,4 @@
-import { getMessaging } from "firebase-admin/messaging";
-import { getFirebaseAdminApp } from "@/lib/firebase-admin.server";
+import { sendFcmMessage } from "@/lib/google-service-account.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 type OrderAlert = {
@@ -175,38 +174,28 @@ async function sendAdminPushNotification(
     if (error) throw error;
     if (!devices?.length) return;
 
-    const messaging = getMessaging(getFirebaseAdminApp());
+    // A handful of admin devices: send to each in parallel over plain HTTPS (FCM v1).
     const tokens = devices.map(({ token }) => token);
-    for (let offset = 0; offset < tokens.length; offset += 500) {
-      const batch = tokens.slice(offset, offset + 500);
-      const response = await messaging.sendEachForMulticast({
-        tokens: batch,
-        notification: { title, body },
-        data,
-        android: { priority: "high" },
-      });
+    const results = await Promise.all(
+      tokens.map((token) =>
+        sendFcmMessage(token, { title, body }, data).catch((error: unknown) => {
+          console.error(`${context} push to one device failed:`, error);
+          return "failed" as const;
+        }),
+      ),
+    );
+    const invalidTokens = tokens.filter((_, index) => results[index] === "unregistered");
+    if (!invalidTokens.length) return;
 
-      const invalidTokens = response.responses.flatMap((result, index) => {
-        const code = result.error?.code;
-        const token = batch[index];
-        return token &&
-          (code === "messaging/registration-token-not-registered" ||
-            code === "messaging/invalid-registration-token")
-          ? [token]
-          : [];
-      });
-      if (!invalidTokens.length) continue;
-
-      const { error: deleteError } = await supabaseAdmin
-        .from("admin_push_tokens")
-        .delete()
-        .in("token", invalidTokens);
-      if (deleteError) {
-        console.error(
-          `Could not remove expired admin push tokens (${context}):`,
-          deleteError.message,
-        );
-      }
+    const { error: deleteError } = await supabaseAdmin
+      .from("admin_push_tokens")
+      .delete()
+      .in("token", invalidTokens);
+    if (deleteError) {
+      console.error(
+        `Could not remove expired admin push tokens (${context}):`,
+        deleteError.message,
+      );
     }
   } catch (error) {
     console.error(`${context} push notification failed:`, error);

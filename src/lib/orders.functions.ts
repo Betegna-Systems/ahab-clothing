@@ -123,10 +123,17 @@ async function lookupPromo(rawCode: string): Promise<PromoLookup> {
   return { ok: true, promo: promoFromRow(row) };
 }
 
-/** The caller's IP as seen by Vercel (which overwrites x-forwarded-for, so it can't be spoofed). */
+/**
+ * The caller's IP. Cloudflare sets cf-connecting-ip itself (a client can't forge it); on Vercel,
+ * x-real-ip / x-forwarded-for are overwritten by the platform. Used only to key rate limits.
+ */
 async function requestIp() {
   const { getRequestHeader } = await import("@tanstack/react-start/server");
-  const forwarded = getRequestHeader("x-real-ip") ?? getRequestHeader("x-forwarded-for") ?? "";
+  const forwarded =
+    getRequestHeader("cf-connecting-ip") ??
+    getRequestHeader("x-real-ip") ??
+    getRequestHeader("x-forwarded-for") ??
+    "";
   return forwarded.split(",")[0]!.trim() || "unknown";
 }
 

@@ -12,12 +12,10 @@ export const Route = createFileRoute("/api/admin/firebase-token")({
         if ("response" in admin) return admin.response;
 
         try {
-          const { getAuth } = await import("firebase-admin/auth");
-          const { getFirebaseAdminApp } = await import("@/lib/firebase-admin.server");
-          const token = await getAuth(getFirebaseAdminApp()).createCustomToken(
-            `supabase:${admin.userId}`,
-            { admin: true },
-          );
+          const { createFirebaseCustomToken } = await import("@/lib/google-service-account.server");
+          const token = await createFirebaseCustomToken(`supabase:${admin.userId}`, {
+            admin: true,
+          });
           return jsonResponse({ token });
         } catch (error) {
           console.error("Firebase admin token creation failed:", error);

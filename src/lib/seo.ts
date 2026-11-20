@@ -8,7 +8,7 @@ export const DEFAULT_DESCRIPTION =
   "Discover tailored women's suits and sculpted tops, designed and sewn by hand in Addis Ababa.";
 export const DEFAULT_OG_IMAGE = "/og-image.jpg";
 
-const FALLBACK_ORIGIN = "https://www.ahabclothing.com";
+const FALLBACK_ORIGIN = "https://www.ahabtailored.com";
 
 export function getSiteOrigin(request?: Request) {
   const fromEnv = import.meta.env["VITE_SITE_URL"];
@@ -113,7 +113,7 @@ export function organizationJsonLd(origin = SITE_URL) {
     image: absoluteUrl(DEFAULT_OG_IMAGE, origin),
     logo: absoluteUrl("/favicon.svg", origin),
     description: DEFAULT_DESCRIPTION,
-    email: "hello@ahabclothing.com",
+    email: "hello@ahabtailored.com",
     telephone: "+251925105950",
     priceRange: "ETB",
     address: {

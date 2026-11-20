@@ -1,6 +1,6 @@
 // Transactional email through Resend's HTTP API (works on any server runtime).
 // Off until RESEND_API_KEY and ORDER_EMAIL_FROM are set; ORDER_EMAIL_FROM must use a
-// domain verified in Resend, e.g. "AHAB Clothing <orders@ahabclothing.com>".
+// domain verified in Resend, e.g. "AHAB Clothing <orders@ahabtailored.com>".
 
 export type OutgoingEmail = {
   to: string;

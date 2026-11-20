@@ -56,7 +56,21 @@ storefront alone. Configure them in the Supabase Dashboard under **Authenticatio
 CAPTCHA provider and apply its site/secret keys only in the provider and Supabase settings, never in
 source code. Configure leaked-password protection when available on your Supabase plan.
 
-For Vercel deployments, configure `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` for the Production,
-Preview, and Development environments as needed. The server returns only these public auth values to
-the browser at runtime; `SUPABASE_SERVICE_ROLE_KEY` remains server-only. The older `VITE_SUPABASE_URL`
-and `VITE_SUPABASE_ANON_KEY` names remain supported. Redeploy after changing environment variables.
+## Hosting (Cloudflare Workers)
+
+The site runs on Cloudflare Workers as the `ahab-tailored` Worker (settings in `wrangler.jsonc`) and is
+served at https://www.ahabtailored.com; the bare `ahabtailored.com` redirects there (`src/server.ts`).
+Cloudflare's GitHub integration builds every push to `main` with `npm run build` and deploys with
+`npx wrangler deploy --config .output/server/wrangler.json`.
+
+- **Build variables** (Settings → Build → Variables): every `VITE_*` value, e.g. `VITE_SITE_URL`,
+  `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_CLOUDINARY_CLOUD_NAME`. They are baked into the
+  bundle at build time, so redeploy after changing them.
+- **Runtime secrets** (Settings → Variables and Secrets, type _Secret_): `SUPABASE_URL`,
+  `SUPABASE_SERVICE_ROLE_KEY`, `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`,
+  `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `CLOUDINARY_*`, and `RESEND_API_KEY` / `ORDER_EMAIL_FROM`
+  for order emails. The server returns only the public Supabase URL and anon key to the browser;
+  `SUPABASE_SERVICE_ROLE_KEY` stays server-only.
+
+To try the Workers build locally: `npm run build`, then
+`npx wrangler dev --config .output/server/wrangler.json --env-file <absolute path to .env>`.

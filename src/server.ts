@@ -66,8 +66,22 @@ function withSecurityHeaders(response: Response): Response {
   return secured;
 }
 
+// The bare domain redirects to www so every page has one canonical address.
+const APEX_HOST = "ahabtailored.com";
+const CANONICAL_HOST = "www.ahabtailored.com";
+
+function canonicalRedirect(request: Request): Response | null {
+  const url = new URL(request.url);
+  if (url.hostname !== APEX_HOST) return null;
+  url.hostname = CANONICAL_HOST;
+  url.protocol = "https:";
+  return withSecurityHeaders(Response.redirect(url.toString(), 301));
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    const redirect = canonicalRedirect(request);
+    if (redirect) return redirect;
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
