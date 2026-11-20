@@ -34,7 +34,7 @@ const LABEL: Record<Category, string> = {
   tops: "Tops",
 };
 type Sort = "newest" | "popular" | "price-asc" | "price-desc" | "rated";
-const MAX_PRICE = 12000;
+const MAX_PRICE = 17000;
 
 export const Route = createFileRoute("/shop")({
   validateSearch: (s: Record<string, unknown>): { category?: Category | undefined } => ({
@@ -161,7 +161,7 @@ function Shop() {
         </h3>
         <input
           type="range"
-          min={1500}
+          min={900}
           max={MAX_PRICE}
           step={100}
           value={maxPrice}

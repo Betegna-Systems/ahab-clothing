@@ -5,8 +5,8 @@ import { formatPrice } from "@/lib/products";
  * AHAB order channels — replace these with your real contact details.
  * TELEGRAM_USERNAME: without "@". WHATSAPP_NUMBER: international format, digits only.
  */
-export const TELEGRAM_USERNAME = "Daniel_Obrein";
-export const WHATSAPP_NUMBER = "251941219026";
+export const TELEGRAM_USERNAME = "Fikirmolla";
+export const WHATSAPP_NUMBER = "251925105950";
 
 export type OrderLine = {
   slug?: string;

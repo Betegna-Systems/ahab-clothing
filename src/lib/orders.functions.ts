@@ -248,8 +248,11 @@ async function sendOrderConfirmationEmail(
       shipping: priced.shipping,
       total: priced.total,
       paymentMethod: data.paymentMethod,
-      paymentAccount:
-        PAYMENT_METHODS.find((method) => method.label === data.paymentMethod)?.account ?? "",
+      paymentAccount: (() => {
+        const method = PAYMENT_METHODS.find((m) => m.label === data.paymentMethod);
+        if (!method?.account) return "";
+        return method.accountName ? `${method.account} (${method.accountName})` : method.account;
+      })(),
       trackingUrl: `${origin}/tracking/${number}${query}`,
       paymentUrl: payByTransfer
         ? `${origin}/payment/${number}${query}`

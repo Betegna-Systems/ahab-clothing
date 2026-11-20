@@ -368,6 +368,11 @@ function CheckoutPage() {
                 <span className="block font-medium">{t(p.label)}</span>
                 <span className="text-muted-foreground">{t(p.note)}</span>
                 {p.account && payment === p.id && <CopyAccount value={p.account} />}
+                {p.accountName && payment === p.id && (
+                  <span className="mt-1 block text-muted-foreground">
+                    {t("Account name: {name}", { name: p.accountName })}
+                  </span>
+                )}
               </span>
             </label>
           ))}

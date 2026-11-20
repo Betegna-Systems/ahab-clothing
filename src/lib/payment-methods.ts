@@ -4,18 +4,21 @@ export const PAYMENT_METHODS = [
     label: "Cash on delivery",
     note: "Pay when your top arrives in Addis Ababa.",
     account: "",
+    accountName: "",
   },
   {
     id: "telebirr",
     label: "Telebirr",
     note: "Transfer the total to our Telebirr number.",
-    account: "+251941219026",
+    account: "+251925105950",
+    accountName: "",
   },
   {
     id: "cbe",
     label: "CBE bank transfer",
     note: "Transfer the total to our CBE account.",
-    account: "1000259462774",
+    account: "1000366832778",
+    accountName: "Fkirte Molla Ayele",
   },
 ] as const;
 

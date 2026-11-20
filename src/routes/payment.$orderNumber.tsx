@@ -239,6 +239,11 @@ function PaymentPage() {
           <div>
             <p className="label-xs text-gold">{t("Pay with {method}", { method: methodLabel })}</p>
             <p className="mt-2 font-mono text-xl md:text-2xl">{payment.account}</p>
+            {payment.accountName ? (
+              <p className="mt-1 text-sm text-muted-foreground">
+                {t("Account name: {name}", { name: payment.accountName })}
+              </p>
+            ) : null}
           </div>
           <button
             type="button"

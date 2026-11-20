@@ -113,7 +113,7 @@ export function organizationJsonLd(origin = SITE_URL) {
     logo: absoluteUrl("/favicon.svg", origin),
     description: DEFAULT_DESCRIPTION,
     email: "hello@ahabclothing.com",
-    telephone: "+251941219026",
+    telephone: "+251925105950",
     priceRange: "ETB",
     address: {
       "@type": "PostalAddress",

@@ -80,7 +80,7 @@ const catalogProducts: Product[] = [
   {
     slug: "taitu-double-breasted-suit",
     name: "Taitu Double-Breasted Suit",
-    price: 9800,
+    price: 17000,
     categories: ["suits"],
     colors: [{ name: "Chocolate", hex: "#4A2F22" }],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -99,7 +99,7 @@ const catalogProducts: Product[] = [
   {
     slug: "menen-single-breasted-suit",
     name: "Menen Single-Breasted Suit",
-    price: 8900,
+    price: 17000,
     categories: ["suits"],
     colors: [{ name: "Ivory", hex: "#F3ECDF" }],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -118,7 +118,7 @@ const catalogProducts: Product[] = [
   {
     slug: "zewditu-oversized-suit",
     name: "Zewditu Oversized Suit",
-    price: 9200,
+    price: 17000,
     categories: ["suits"],
     colors: [{ name: "Black", hex: "#1A1714" }],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -137,7 +137,7 @@ const catalogProducts: Product[] = [
   {
     slug: "selam-cropped-suit",
     name: "Selam Cropped Suit",
-    price: 8400,
+    price: 17000,
     categories: ["suits"],
     colors: [{ name: "Camel", hex: "#C4A27F" }],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -156,7 +156,7 @@ const catalogProducts: Product[] = [
   {
     slug: "almaz-pinstripe-suit",
     name: "Almaz Pinstripe Suit",
-    price: 10600,
+    price: 17000,
     categories: ["suits"],
     colors: [{ name: "Chocolate Pinstripe", hex: "#3E2317" }],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -175,7 +175,7 @@ const catalogProducts: Product[] = [
   {
     slug: "aster-belted-wrap-suit",
     name: "Aster Belted Wrap Suit",
-    price: 9600,
+    price: 17000,
     categories: ["suits"],
     colors: [{ name: "Olive", hex: "#5A5C3A" }],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -194,7 +194,7 @@ const catalogProducts: Product[] = [
   {
     slug: "makeda-tuxedo-suit",
     name: "Makeda Tuxedo Suit",
-    price: 10800,
+    price: 17000,
     categories: ["suits"],
     colors: [{ name: "Black", hex: "#1A1714" }],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -213,7 +213,7 @@ const catalogProducts: Product[] = [
   {
     slug: "genet-linen-suit",
     name: "Genet Linen Suit",
-    price: 8200,
+    price: 17000,
     categories: ["suits"],
     colors: [{ name: "Sand", hex: "#D9CBB6" }],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -232,7 +232,7 @@ const catalogProducts: Product[] = [
   {
     slug: "birtukan-velvet-collar-suit",
     name: "Birtukan Velvet-Collar Suit",
-    price: 9900,
+    price: 17000,
     categories: ["suits"],
     colors: [{ name: "Burgundy", hex: "#5A1A26" }],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -251,7 +251,7 @@ const catalogProducts: Product[] = [
   {
     slug: "senait-wide-leg-suit",
     name: "Senait Wide-Leg Suit",
-    price: 9400,
+    price: 17000,
     categories: ["suits"],
     colors: [{ name: "Soft Gold", hex: "#C8A668" }],
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -270,7 +270,7 @@ const catalogProducts: Product[] = [
   {
     slug: "bete-seamless-crew",
     name: "Bete Seamless Crew",
-    price: 1900,
+    price: 900,
     categories: ["basics", "sleeveless"],
     colors: [
       { name: "Ivory", hex: "#F8F3EB" },
@@ -302,7 +302,7 @@ const catalogProducts: Product[] = [
   {
     slug: "meri-ribbed-square-neck",
     name: "Meri Ribbed Square Neck",
-    price: 2400,
+    price: 900,
     categories: ["sleeveless", "basics"],
     colors: [
       { name: "Black", hex: "#1A1714" },
@@ -334,7 +334,7 @@ const catalogProducts: Product[] = [
   {
     slug: "saba-one-shoulder-top",
     name: "Saba One-Shoulder Top",
-    price: 3200,
+    price: 900,
     categories: ["one-shoulder"],
     colors: [
       { name: "Ivory", hex: "#F3EADB" },
@@ -366,7 +366,7 @@ const catalogProducts: Product[] = [
   {
     slug: "addis-cowl-knit",
     name: "Addis Cowl Knit Top",
-    price: 2900,
+    price: 900,
     categories: ["long-sleeve"],
     colors: [
       { name: "Chocolate", hex: "#2A0D08" },
@@ -397,7 +397,7 @@ const catalogProducts: Product[] = [
   {
     slug: "entoto-corset-top",
     name: "Entoto Corset Top",
-    price: 4200,
+    price: 900,
     categories: ["sleeveless"],
     colors: [
       { name: "Soft Gold", hex: "#B68A4C" },
@@ -429,8 +429,7 @@ const catalogProducts: Product[] = [
   {
     slug: "hana-cutout-top",
     name: "Hana Cutout Top",
-    price: 3600,
-    compareAt: 4200,
+    price: 900,
     categories: ["cutout"],
     colors: [
       { name: "Crimson", hex: "#8E2A2A" },
@@ -452,7 +451,6 @@ const catalogProducts: Product[] = [
       "A single cutout at the waist, placed to catch the light and the eye. Sculpting jersey holds everything else exactly in place.",
     fabric: "Sculpting stretch jersey",
     care: "Hand wash cold. Do not wring the cutout seams.",
-    badge: "sale",
     rating: 4,
     reviews: 19,
     inStock: true,
@@ -462,7 +460,7 @@ const catalogProducts: Product[] = [
   {
     slug: "selam-mock-neck",
     name: "Selam Mock Neck Top",
-    price: 2600,
+    price: 900,
     categories: ["long-sleeve", "basics"],
     colors: [
       { name: "Sand", hex: "#EFE5D6" },
@@ -493,7 +491,7 @@ const catalogProducts: Product[] = [
   {
     slug: "tsion-halter-top",
     name: "Tsion Halter Top",
-    price: 2800,
+    price: 900,
     categories: ["sleeveless"],
     colors: [
       { name: "Olive", hex: "#6F6B45" },
@@ -525,7 +523,7 @@ const catalogProducts: Product[] = [
   {
     slug: "meron-off-shoulder-top",
     name: "Meron Off-Shoulder Top",
-    price: 3000,
+    price: 900,
     categories: ["off-shoulder"],
     colors: [
       { name: "Dusty Rose", hex: "#D8A79A" },
@@ -556,8 +554,7 @@ const catalogProducts: Product[] = [
   {
     slug: "abyssinia-wrap-top",
     name: "Abyssinia Wrap Top",
-    price: 3400,
-    compareAt: 3900,
+    price: 900,
     categories: ["one-shoulder", "cutout"],
     colors: [
       { name: "Burgundy", hex: "#4A1420" },
@@ -579,7 +576,6 @@ const catalogProducts: Product[] = [
       "A wrap front drawn across the body like a brushstroke, in our deepest burgundy. The piece for the nights that deserve an entrance.",
     fabric: "Sculpting ponte with wrap front",
     care: "Hand wash cold. Dry flat.",
-    badge: "sale",
     rating: 4,
     reviews: 12,
     inStock: true,
