@@ -51,7 +51,7 @@ function Home() {
       <section className="relative h-[calc(100svh-7.5rem)] min-h-[560px] overflow-hidden">
         <img
           src={images.heroSuits}
-          alt={t("Model wearing the chocolate Taitu double-breasted AHAB suit")}
+          alt={t("Model wearing the chocolate double-breasted AHAB suit")}
           width={1024}
           height={1440}
           className="hero-settle absolute inset-0 h-full w-full object-cover object-[center_25%]"

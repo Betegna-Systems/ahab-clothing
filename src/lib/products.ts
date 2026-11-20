@@ -79,7 +79,7 @@ export type Product = {
 const catalogProducts: Product[] = [
   {
     slug: "taitu-double-breasted-suit",
-    name: "Taitu Double-Breasted Suit",
+    name: "Double-Breasted Suit",
     price: 17000,
     categories: ["suits"],
     colors: [{ name: "Chocolate", hex: "#4A2F22" }],
@@ -98,7 +98,7 @@ const catalogProducts: Product[] = [
   },
   {
     slug: "menen-single-breasted-suit",
-    name: "Menen Single-Breasted Suit",
+    name: "Single-Breasted Suit",
     price: 17000,
     categories: ["suits"],
     colors: [{ name: "Ivory", hex: "#F3ECDF" }],
@@ -117,7 +117,7 @@ const catalogProducts: Product[] = [
   },
   {
     slug: "zewditu-oversized-suit",
-    name: "Zewditu Oversized Suit",
+    name: "Oversized Suit",
     price: 17000,
     categories: ["suits"],
     colors: [{ name: "Black", hex: "#1A1714" }],
@@ -136,7 +136,7 @@ const catalogProducts: Product[] = [
   },
   {
     slug: "selam-cropped-suit",
-    name: "Selam Cropped Suit",
+    name: "Cropped Suit",
     price: 17000,
     categories: ["suits"],
     colors: [{ name: "Camel", hex: "#C4A27F" }],
@@ -155,7 +155,7 @@ const catalogProducts: Product[] = [
   },
   {
     slug: "almaz-pinstripe-suit",
-    name: "Almaz Pinstripe Suit",
+    name: "Pinstripe Suit",
     price: 17000,
     categories: ["suits"],
     colors: [{ name: "Chocolate Pinstripe", hex: "#3E2317" }],
@@ -174,7 +174,7 @@ const catalogProducts: Product[] = [
   },
   {
     slug: "aster-belted-wrap-suit",
-    name: "Aster Belted Wrap Suit",
+    name: "Belted Wrap Suit",
     price: 17000,
     categories: ["suits"],
     colors: [{ name: "Olive", hex: "#5A5C3A" }],
@@ -193,7 +193,7 @@ const catalogProducts: Product[] = [
   },
   {
     slug: "makeda-tuxedo-suit",
-    name: "Makeda Tuxedo Suit",
+    name: "Tuxedo Suit",
     price: 17000,
     categories: ["suits"],
     colors: [{ name: "Black", hex: "#1A1714" }],
@@ -212,7 +212,7 @@ const catalogProducts: Product[] = [
   },
   {
     slug: "genet-linen-suit",
-    name: "Genet Linen Suit",
+    name: "Linen Suit",
     price: 17000,
     categories: ["suits"],
     colors: [{ name: "Sand", hex: "#D9CBB6" }],
@@ -231,7 +231,7 @@ const catalogProducts: Product[] = [
   },
   {
     slug: "birtukan-velvet-collar-suit",
-    name: "Birtukan Velvet-Collar Suit",
+    name: "Velvet-Collar Suit",
     price: 17000,
     categories: ["suits"],
     colors: [{ name: "Burgundy", hex: "#5A1A26" }],
@@ -250,7 +250,7 @@ const catalogProducts: Product[] = [
   },
   {
     slug: "senait-wide-leg-suit",
-    name: "Senait Wide-Leg Suit",
+    name: "Wide-Leg Suit",
     price: 17000,
     categories: ["suits"],
     colors: [{ name: "Soft Gold", hex: "#C8A668" }],
@@ -269,7 +269,7 @@ const catalogProducts: Product[] = [
   },
   {
     slug: "bete-seamless-crew",
-    name: "Bete Seamless Crew",
+    name: "Seamless Crew Top",
     price: 900,
     categories: ["basics", "sleeveless"],
     colors: [
@@ -301,7 +301,7 @@ const catalogProducts: Product[] = [
   },
   {
     slug: "meri-ribbed-square-neck",
-    name: "Meri Ribbed Square Neck",
+    name: "Ribbed Square Neck Top",
     price: 900,
     categories: ["sleeveless", "basics"],
     colors: [
@@ -333,7 +333,7 @@ const catalogProducts: Product[] = [
   },
   {
     slug: "saba-one-shoulder-top",
-    name: "Saba One-Shoulder Top",
+    name: "One-Shoulder Top",
     price: 900,
     categories: ["one-shoulder"],
     colors: [
@@ -365,7 +365,7 @@ const catalogProducts: Product[] = [
   },
   {
     slug: "addis-cowl-knit",
-    name: "Addis Cowl Knit Top",
+    name: "Cowl Knit Top",
     price: 900,
     categories: ["long-sleeve"],
     colors: [
@@ -396,7 +396,7 @@ const catalogProducts: Product[] = [
   },
   {
     slug: "entoto-corset-top",
-    name: "Entoto Corset Top",
+    name: "Corset Top",
     price: 900,
     categories: ["sleeveless"],
     colors: [
@@ -428,7 +428,7 @@ const catalogProducts: Product[] = [
   },
   {
     slug: "hana-cutout-top",
-    name: "Hana Cutout Top",
+    name: "Cutout Top",
     price: 900,
     categories: ["cutout"],
     colors: [
@@ -459,7 +459,7 @@ const catalogProducts: Product[] = [
   },
   {
     slug: "selam-mock-neck",
-    name: "Selam Mock Neck Top",
+    name: "Mock Neck Top",
     price: 900,
     categories: ["long-sleeve", "basics"],
     colors: [
@@ -490,7 +490,7 @@ const catalogProducts: Product[] = [
   },
   {
     slug: "tsion-halter-top",
-    name: "Tsion Halter Top",
+    name: "Halter Top",
     price: 900,
     categories: ["sleeveless"],
     colors: [
@@ -522,7 +522,7 @@ const catalogProducts: Product[] = [
   },
   {
     slug: "meron-off-shoulder-top",
-    name: "Meron Off-Shoulder Top",
+    name: "Off-Shoulder Top",
     price: 900,
     categories: ["off-shoulder"],
     colors: [
@@ -553,7 +553,7 @@ const catalogProducts: Product[] = [
   },
   {
     slug: "abyssinia-wrap-top",
-    name: "Abyssinia Wrap Top",
+    name: "Wrap Top",
     price: 900,
     categories: ["one-shoulder", "cutout"],
     colors: [
