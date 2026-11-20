@@ -154,6 +154,23 @@ function PaymentPage() {
     );
   }
 
+  if (order.cancelled) {
+    return (
+      <div className="mx-auto max-w-xl px-5 py-28 text-center">
+        <p className="label-xs text-gold">{t("Order {number}", { number: orderNumber })}</p>
+        <h1 className="mt-4 text-4xl">{t("This order was cancelled.")}</h1>
+        <p className="mt-4 text-muted-foreground">
+          {t(
+            "Please don't send a payment for it. If you think this is a mistake, contact AHAB with your order number.",
+          )}
+        </p>
+        <AhabLink to="/shop" className="mt-8">
+          {t("Return to the shop")}
+        </AhabLink>
+      </div>
+    );
+  }
+
   const payment = PAYMENT_METHODS.find((method) => method.label === order.paymentMethod);
   if (!payment?.account) {
     return (
@@ -206,7 +223,9 @@ function PaymentPage() {
         toast.error(
           result.reason === "already_submitted"
             ? t("A screenshot has already been submitted for this order.")
-            : t("We couldn't submit your screenshot. Please try again or send it by chat."),
+            : result.reason === "order_cancelled"
+              ? t("This order was cancelled, so no payment is needed.")
+              : t("We couldn't submit your screenshot. Please try again or send it by chat."),
         );
         await router.invalidate();
         return;

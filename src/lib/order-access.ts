@@ -66,14 +66,26 @@ export function paymentStatusLabel(paymentStatus: string, paymentMethod: string)
   return "Awaiting payment";
 }
 
-export type ReceiptDecision = "accept" | "order_not_found" | "already_submitted";
+/** Matches the restock trigger: "Cancelled"/"canceled" in any case, ignoring spaces. */
+export function isCancelledStatus(status: string | null | undefined) {
+  const value = (status ?? "").trim().toLowerCase();
+  return value === "cancelled" || value === "canceled";
+}
+
+export type ReceiptDecision =
+  "accept" | "order_not_found" | "already_submitted" | "order_cancelled";
 
 export function canSubmitReceipt(
-  order: (TokenGuarded & { payment_method: string; payment_status: string }) | null | undefined,
+  order:
+    | (TokenGuarded & { payment_method: string; payment_status: string; status?: string | null })
+    | null
+    | undefined,
   tokenHash: string,
 ): ReceiptDecision {
   if (!order || !hasOrderToken(order, tokenHash)) return "order_not_found";
   if (!RECEIPT_PAYMENT_METHODS.includes(order.payment_method)) return "order_not_found";
+  // A cancelled order's stock is back on sale, so the customer must not pay for it.
+  if (isCancelledStatus(order.status)) return "order_cancelled";
   return order.payment_status === "pending" ? "accept" : "already_submitted";
 }
 

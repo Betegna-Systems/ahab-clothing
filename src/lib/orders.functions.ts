@@ -16,6 +16,7 @@ import {
 import {
   canClaimOrder,
   canSubmitReceipt,
+  isCancelledStatus,
   isOrderOwner,
   ORDER_NUMBER_PATTERN,
   RECEIPT_PAYMENT_METHODS,
@@ -665,7 +666,7 @@ export const getPaymentOrder = createServerFn({ method: "GET" })
     const { data: order, error } = await supabaseAdmin
       .from("orders")
       .select(
-        "order_number, total, payment_method, payment_status, payment_submitted_at, payment_access_token_hash",
+        "order_number, total, status, payment_method, payment_status, payment_submitted_at, payment_access_token_hash",
       )
       .eq("order_number", data.orderNumber)
       .maybeSingle();
@@ -679,6 +680,7 @@ export const getPaymentOrder = createServerFn({ method: "GET" })
       paymentMethod: order.payment_method,
       paymentStatus: order.payment_status,
       paymentSubmittedAt: order.payment_submitted_at,
+      cancelled: isCancelledStatus(order.status),
     };
   });
 
@@ -707,7 +709,7 @@ export const submitPaymentProof = createServerFn({ method: "POST" })
     const { data: order, error: lookupError } = await supabaseAdmin
       .from("orders")
       .select(
-        "order_number, total, customer_name, phone, payment_method, payment_status, payment_access_token_hash",
+        "order_number, total, status, customer_name, phone, payment_method, payment_status, payment_access_token_hash",
       )
       .eq("order_number", data.orderNumber)
       .maybeSingle();
@@ -722,7 +724,9 @@ export const submitPaymentProof = createServerFn({ method: "POST" })
 
     const extension =
       data.mimeType === "image/jpeg" ? "jpg" : data.mimeType === "image/png" ? "png" : "webp";
-    const path = `${order.order_number}/receipt.${extension}`;
+    // A fresh name per upload, so a customer can resend after AHAB rejects a receipt
+    // (the admin app sets payment back to pending) without colliding with the old file.
+    const path = `${order.order_number}/receipt-${crypto.randomUUID()}.${extension}`;
     const imageBuffer = new ArrayBuffer(bytes.byteLength);
     new Uint8Array(imageBuffer).set(bytes);
     const { error: uploadError } = await supabaseAdmin.storage

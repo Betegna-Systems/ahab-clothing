@@ -243,6 +243,12 @@ describe("payment receipt access", () => {
     );
   });
 
+  it("refuses receipts for cancelled orders", () => {
+    assert.equal(canSubmitReceipt({ ...order, status: "Cancelled" }, TOKEN), "order_cancelled");
+    assert.equal(canSubmitReceipt({ ...order, status: " canceled " }, TOKEN), "order_cancelled");
+    assert.equal(canSubmitReceipt({ ...order, status: "Confirmed" }, TOKEN), "accept");
+  });
+
   it("does not accept receipts for cash-on-delivery orders", () => {
     assert.equal(
       canSubmitReceipt({ ...order, payment_method: "Cash on delivery" }, TOKEN),

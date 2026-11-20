@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -139,11 +140,17 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     setWishlistLoaded(true);
     setRecentlyViewed(read<string[]>(VIEWED_KEY, []));
     // A code saved on an earlier visit is re-checked; paused/expired/used-up codes are dropped.
+    // Only a definite "invalid" drops it; a temporary failure or rate limit keeps it saved.
     const savedPromo = read<string | null>(PROMO_KEY, null);
     if (typeof savedPromo === "string" && savedPromo) {
       checkPromoCode({ data: { code: savedPromo } })
-        .then((result) => setPromo(result.ok ? result.promo : null))
-        .catch(() => setPromo(null));
+        .then((result) => {
+          if (result.ok) setPromo(result.promo);
+          else if (result.reason !== "failed" && result.reason !== "rate_limited") {
+            localStorage.removeItem(PROMO_KEY);
+          }
+        })
+        .catch(() => {});
     }
     setStorageLoaded(true);
   }, []);
@@ -276,10 +283,18 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (storageLoaded) localStorage.setItem(VIEWED_KEY, JSON.stringify(recentlyViewed));
   }, [recentlyViewed, storageLoaded]);
+  // Forget the saved code only when an applied code is removed, not while the saved one is
+  // still being re-checked on page load (promo is null until that check answers).
+  const promoApplied = useRef(false);
   useEffect(() => {
     if (!storageLoaded) return;
-    if (promo) localStorage.setItem(PROMO_KEY, JSON.stringify(promo.code));
-    else localStorage.removeItem(PROMO_KEY);
+    if (promo) {
+      promoApplied.current = true;
+      localStorage.setItem(PROMO_KEY, JSON.stringify(promo.code));
+    } else if (promoApplied.current) {
+      promoApplied.current = false;
+      localStorage.removeItem(PROMO_KEY);
+    }
   }, [promo, storageLoaded]);
 
   const isVariantAvailable = useCallback(

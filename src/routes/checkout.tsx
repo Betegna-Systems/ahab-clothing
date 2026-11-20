@@ -65,6 +65,7 @@ function CheckoutPage() {
     subtotal,
     setSavings,
     promo,
+    applyPromoCode,
     clearPromo,
     clearCart,
     inventoryStatus,
@@ -235,6 +236,14 @@ function CheckoutPage() {
                   : t("We couldn't send your order. Please try again."),
       );
       if (result.reason === "promo_unavailable") clearPromo();
+      // The code's percent or minimum may have changed since it was applied; re-check it so
+      // the next attempt uses the current terms instead of failing the same way again.
+      if (result.reason === "price_changed" && promo) {
+        const check = await applyPromoCode(promo.code).catch(() => null);
+        if (check && !check.ok && check.reason !== "failed" && check.reason !== "rate_limited") {
+          clearPromo();
+        }
+      }
       await refreshInventory();
       return;
     }
