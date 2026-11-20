@@ -72,6 +72,16 @@ type PromoCode = {
   created_at: string;
   updated_at: string;
 };
+type ContactMessage = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  message: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+};
 type LiveOrders = Database["public"]["Tables"]["orders"];
 // 202611060001_order_ownership.sql adds customer_user_id and 202611090001_promo_codes.sql adds
 // promo_code (not yet in the generated types).
@@ -106,6 +116,11 @@ type FeatureTables = {
     PromoCode,
     Pick<PromoCode, "code" | "percent_off"> & Partial<Omit<PromoCode, "code" | "percent_off">>
   >;
+  contact_messages: Table<
+    ContactMessage,
+    Pick<ContactMessage, "name" | "email" | "message"> &
+      Partial<Omit<ContactMessage, "name" | "email" | "message">>
+  >;
   account_security_settings: Table<
     Security,
     Pick<Security, "user_id"> & Partial<Omit<Security, "user_id">>
@@ -116,6 +131,10 @@ export type FeatureDatabase = Omit<Database, "public"> & {
     Tables: Omit<Database["public"]["Tables"], "orders"> & FeatureTables;
     Functions: Database["public"]["Functions"] & {
       place_order_with_inventory: { Args: { p_order: Json }; Returns: Json };
+      take_rate_limit: {
+        Args: { p_bucket: string; p_key_hash: string; p_limit: number; p_window_seconds: number };
+        Returns: boolean;
+      };
       account_mfa_is_required: { Args: Record<string, never>; Returns: boolean };
       set_account_mfa_required: { Args: { p_required: boolean }; Returns: undefined };
       account_session_is_verified: { Args: Record<string, never>; Returns: boolean };

@@ -124,6 +124,32 @@ export async function notifyAdminsOfNewReview(review: {
   );
 }
 
+export async function notifyAdminsOfContactMessage(contact: {
+  name: string;
+  email: string;
+  phone: string;
+  message: string;
+}) {
+  await safelySendTelegramAlert(
+    [
+      "New AHAB website message",
+      `From: ${contact.name}`,
+      `Email: ${contact.email}`,
+      `Phone: ${contact.phone || "Not provided"}`,
+      "",
+      contact.message,
+    ].join("\n"),
+    "Contact message",
+  );
+
+  await sendAdminPushNotification(
+    "New website message",
+    `${contact.name}: ${contact.message.replace(/\s+/g, " ").slice(0, 120)}`,
+    { type: "new_contact_message", name: contact.name },
+    "Contact message",
+  );
+}
+
 export async function notifyAdminsOfPaymentReceiptSubmission(order: OrderAlert) {
   await safelySendTelegramAlert(
     [

@@ -176,6 +176,9 @@ function AdminCustomOrders() {
         </div>
         {session && authorized ? (
           <div className="flex items-center gap-4">
+            <AhabLink to="/admin/messages" variant="outline">
+              Messages
+            </AhabLink>
             <AhabButton
               type="button"
               variant="outline"

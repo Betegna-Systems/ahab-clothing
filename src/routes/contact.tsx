@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import type { FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { SITE_URL, seo } from "@/lib/seo";
 import { AhabButton } from "@/components/site/ui";
-import { SUPPORT_EMAIL, supportEmailLink } from "@/lib/contact";
+import { SUPPORT_EMAIL } from "@/lib/contact";
+import { submitContactMessage } from "@/lib/contact-messages.functions";
 import { INSTAGRAM_HANDLE, INSTAGRAM_URL, TIKTOK_HANDLE, TIKTOK_URL } from "@/lib/social";
 import { headT, useT } from "@/lib/i18n";
 
@@ -32,21 +33,38 @@ const field = "h-12 w-full border-b border-border bg-transparent outline-hidden 
 
 function Contact() {
   const t = useT();
-  const submit = (e: FormEvent<HTMLFormElement>) => {
+  const [sending, setSending] = useState(false);
+  const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = new FormData(e.currentTarget);
-    // The email goes to AHAB staff, so its labels stay in English.
-    const body = [
-      `Name: ${String(form.get("name") ?? "").trim()}`,
-      `Email: ${String(form.get("email") ?? "").trim()}`,
-      `Phone: ${String(form.get("phone") ?? "").trim() || "Not provided"}`,
-      "",
-      String(form.get("message") ?? "").trim(),
-    ].join("\n");
-    window.location.href = supportEmailLink("AHAB website enquiry", body);
-    toast.info(
-      t("Your email draft is ready. Send it from your mail app to complete your message."),
-    );
+    const formElement = e.currentTarget;
+    const form = new FormData(formElement);
+    const value = (key: string) => String(form.get(key) ?? "").trim();
+    setSending(true);
+    try {
+      const result = await submitContactMessage({
+        data: {
+          name: value("name"),
+          email: value("email"),
+          phone: value("phone"),
+          message: value("message"),
+          website: value("website"),
+        },
+      });
+      if (result.ok) {
+        formElement.reset();
+        toast.success(t("Thank you — your message has been sent. We'll get back to you soon."));
+      } else if (result.reason === "rate_limited") {
+        toast.error(
+          t("You've sent several messages recently. Please wait a while or reach us on WhatsApp."),
+        );
+      } else {
+        toast.error(t("We couldn't send your message. Please try again or reach us on WhatsApp."));
+      }
+    } catch {
+      toast.error(t("We couldn't send your message. Please try again or reach us on WhatsApp."));
+    } finally {
+      setSending(false);
+    }
   };
   return (
     <div className="mx-auto max-w-[1500px] px-5 py-20 md:px-10">
@@ -64,8 +82,15 @@ function Contact() {
             placeholder={t("Your message")}
             className="border-b border-border bg-transparent py-2 outline-hidden focus:border-gold"
           />
-          <AhabButton type="submit" size="lg">
-            {t("Send message")}
+          <input
+            name="website"
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+            className="absolute -left-[9999px] h-px w-px opacity-0"
+          />
+          <AhabButton type="submit" size="lg" disabled={sending}>
+            {sending ? t("Sending…") : t("Send message")}
           </AhabButton>
         </form>
         <div className="space-y-8">
