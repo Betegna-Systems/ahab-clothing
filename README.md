@@ -58,7 +58,7 @@ source code. Configure leaked-password protection when available on your Supabas
 
 ## Hosting (Cloudflare Workers)
 
-The site runs on Cloudflare Workers as the `ahab-tailored` Worker (settings in `wrangler.jsonc`) and is
+The site runs on Cloudflare Workers as the `ahab-clothing` Worker (settings in `wrangler.jsonc`) and is
 served at https://www.ahabtailored.com; the bare `ahabtailored.com` redirects there (`src/server.ts`).
 Cloudflare's GitHub integration builds every push to `main` with `npm run build` and deploys with
 `npx wrangler deploy --config .output/server/wrangler.json`.
