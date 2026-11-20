@@ -8,7 +8,9 @@ export const Route = createFileRoute("/shipping")({
     const { t, locale } = headT(match.context);
     return seo(
       t("Shipping & Delivery"),
-      t("AHAB delivery times and costs across Addis Ababa, Ethiopia and worldwide."),
+      t(
+        "AHAB delivery times and costs across Addis Ababa and Ethiopia. International delivery coming soon.",
+      ),
       { path: "/shipping", locale },
     );
   },
@@ -31,7 +33,7 @@ function ShippingPage() {
       <h2>{t("International")}</h2>
       <p>
         {t(
-          "Delivery in 7–14 working days. Rates are calculated at checkout. Duties and taxes are paid by the recipient.",
+          "Coming soon. We don't deliver outside Ethiopia yet. Message us if you'd like to be told when international delivery opens.",
         )}
       </p>
     </InfoPage>
