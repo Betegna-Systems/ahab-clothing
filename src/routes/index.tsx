@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Instagram } from "lucide-react";
-import { collections, images } from "@/lib/products";
+import { collections, images, inCategory } from "@/lib/products";
 import { useAllProducts } from "@/lib/firestore-products";
 import { ProductCard } from "@/components/site/ProductCard";
 import { AhabLink, ahabButton, Eyebrow, SectionHeading } from "@/components/site/ui";
@@ -37,7 +37,13 @@ function Home() {
   const newArrivals = [...products]
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice(0, 6);
-  const bestSellers = [...products].sort((a, b) => b.popularity - a.popularity).slice(0, 4);
+  // Two suits and two tops, alternating, so both lines are represented.
+  const byPopularity = [...products].sort((a, b) => b.popularity - a.popularity);
+  const topSuits = byPopularity.filter((p) => inCategory(p, "suits")).slice(0, 2);
+  const topTops = byPopularity.filter((p) => inCategory(p, "tops")).slice(0, 2);
+  const bestSellers = [topSuits[0], topTops[0], topSuits[1], topTops[1]].filter(
+    (p): p is (typeof products)[number] => Boolean(p),
+  );
 
   return (
     <>
@@ -138,7 +144,7 @@ function Home() {
       <section className="mx-auto max-w-[1500px] px-5 py-24 md:px-10 md:py-32">
         <SectionHeading
           eyebrow={t("Most Loved")}
-          title={t("The tops they return for.")}
+          title={t("The tops and suits they return for.")}
           align="center"
         />
         <div className="mt-14 grid grid-cols-2 gap-x-4 gap-y-12 lg:grid-cols-4">
