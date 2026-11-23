@@ -6,7 +6,7 @@ import { Heart, RotateCw, Star } from "lucide-react";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/products";
 import { COLOR_SET_PRICE, COLOR_SET_SIZE, colorSetSavingPerSet } from "@/lib/order-pricing";
-import { fetchProductBySlug } from "@/lib/firestore-products";
+import { loadProduct } from "@/lib/firestore-products";
 import { breadcrumbJsonLd, productJsonLd, seo } from "@/lib/seo";
 import { useShop } from "@/lib/shop-store";
 import { ProductCard } from "@/components/site/ProductCard";
@@ -26,16 +26,15 @@ import { productText, useProductText } from "@/lib/i18n/product";
 
 export const Route = createFileRoute("/product/$slug")({
   loader: async ({ params }) => {
-    // Always ask Firestore so edits made in the admin app show immediately; it falls back
-    // to the last known catalog when Firestore is unreachable. Reviews and stock are keyed by
-    // the same slug, so all three are fetched at once rather than one after another.
+    // Uses the recent catalog (admin edits show within a minute; checkout re-prices fresh).
+    // Reviews and stock are keyed by the same slug, so all three load at once.
     const loadExtras = (productSlug: string) =>
       Promise.all([
         getApprovedProductReviews({ data: { productSlug } }),
         getProductVariantAvailability({ data: { productSlug } }),
       ]);
     const extras = loadExtras(params.slug);
-    const product = await fetchProductBySlug(params.slug);
+    const product = await loadProduct(params.slug);
     if (!product) {
       extras.catch(() => {});
       throw notFound();

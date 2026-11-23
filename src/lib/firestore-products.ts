@@ -183,6 +183,17 @@ export async function loadCatalog(maxAgeMs = CATALOG_MAX_AGE_MS): Promise<Produc
   return fresh ?? (_firestoreLoaded ? _cachedFirestoreProducts : null);
 }
 
+/**
+ * One product for display, from the recent catalog (see loadCatalog). Asks Firestore only
+ * when the slug isn't in it, e.g. a product added in the admin app since the last fetch.
+ * Not for pricing orders.
+ */
+export async function loadProduct(slug: string): Promise<Product | undefined> {
+  if (!SLUG_PATTERN.test(slug)) return undefined;
+  const catalog = await loadCatalog();
+  return catalog?.find((p) => p.slug === slug) ?? (await fetchProductBySlug(slug));
+}
+
 /** Adopt a catalog the server already fetched, so the browser doesn't fetch it again. */
 function seedCatalog(products: Product[]) {
   if (_firestoreLoaded) return;

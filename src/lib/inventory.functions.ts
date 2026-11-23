@@ -48,14 +48,15 @@ export const getProductVariantAvailability = createServerFn({ method: "GET" })
   )
   .handler(async ({ data }) => {
     const supabaseAdmin = await getFeatureAdmin();
-    const { fetchProductBySlug } = await import("@/lib/firestore-products");
+    // Display only (placeOrder re-checks against a fresh catalog), so a recent copy will do.
+    const { loadProduct } = await import("@/lib/firestore-products");
     const [{ data: variants, error }, product] = await Promise.all([
       supabaseAdmin
         .from("product_variant_inventory")
         .select("color, size")
         .eq("product_slug", data.productSlug)
         .gt("quantity", 0),
-      fetchProductBySlug(data.productSlug),
+      loadProduct(data.productSlug),
     ]);
 
     if (error) throw error;
