@@ -12,6 +12,9 @@ export const getRouter = () => {
     routeTree,
     context: { queryClient, i18n },
     scrollRestoration: true,
+    // Start loading a page's data when a link is hovered or touched, so it is usually ready
+    // by the time it is clicked.
+    defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
     // Pages cross-fade, and a clicked product photo grows into the product page
     // (see lib/view-transition.ts). Ignored by browsers without the View Transitions API.

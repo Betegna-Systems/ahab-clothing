@@ -87,8 +87,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient; i18n
   // translations are in the initial HTML instead of swapping in after load. Polling in
   // useAllProducts keeps it fresh afterwards; client navigations don't refetch it here.
   loader: async () => {
-    const { fetchAllFirestoreProducts } = await import("@/lib/firestore-products");
-    return { catalog: await fetchAllFirestoreProducts() };
+    const { loadCatalog } = await import("@/lib/firestore-products");
+    return { catalog: await loadCatalog() };
   },
   staleTime: Infinity,
   shouldReload: false,

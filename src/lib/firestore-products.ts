@@ -124,10 +124,13 @@ export async function fetchProductBySlug(slug: string): Promise<Product | undefi
   return getProductCached(slug);
 }
 
-/**
- * Fetch all Firestore products via REST API. Returns null when Firestore could not be read.
- */
-export async function fetchAllFirestoreProducts(): Promise<Product[] | null> {
+/** How long page rendering may reuse a catalog it already has, instead of asking Firestore. */
+export const CATALOG_MAX_AGE_MS = 60_000;
+
+let _catalogLoadedAt = 0;
+let _catalogRequest: Promise<Product[] | null> | null = null;
+
+async function requestAllFirestoreProducts(): Promise<Product[] | null> {
   try {
     const products: Product[] = [];
     let pageToken = "";
@@ -147,11 +150,45 @@ export async function fetchAllFirestoreProducts(): Promise<Product[] | null> {
 
     _cachedFirestoreProducts = products;
     _firestoreLoaded = true;
+    _catalogLoadedAt = Date.now();
     return products;
   } catch (err) {
     console.warn("fetchAllFirestoreProducts error:", err);
     return null;
   }
+}
+
+/**
+ * Fetch all Firestore products via REST API. Returns null when Firestore could not be read.
+ * Always asks Firestore (order pricing relies on this); callers that overlap share the one
+ * request that is already in flight.
+ */
+export function fetchAllFirestoreProducts(): Promise<Product[] | null> {
+  _catalogRequest ??= requestAllFirestoreProducts().finally(() => {
+    _catalogRequest = null;
+  });
+  return _catalogRequest;
+}
+
+/**
+ * The live catalog for display: reuses one fetched within `maxAgeMs`, otherwise asks
+ * Firestore. Returns null when Firestore has never answered. Not for pricing orders.
+ */
+export async function loadCatalog(maxAgeMs = CATALOG_MAX_AGE_MS): Promise<Product[] | null> {
+  if (_firestoreLoaded && Date.now() - _catalogLoadedAt < maxAgeMs) {
+    return _cachedFirestoreProducts;
+  }
+  const fresh = await fetchAllFirestoreProducts();
+  // A failed refresh keeps showing the last good catalog.
+  return fresh ?? (_firestoreLoaded ? _cachedFirestoreProducts : null);
+}
+
+/** Adopt a catalog the server already fetched, so the browser doesn't fetch it again. */
+function seedCatalog(products: Product[]) {
+  if (_firestoreLoaded) return;
+  _cachedFirestoreProducts = products;
+  _firestoreLoaded = true;
+  _catalogLoadedAt = Date.now();
 }
 
 export function getAllProductsCached(): Product[] {
@@ -178,9 +215,12 @@ export function useAllProducts() {
 
   useEffect(() => {
     let mounted = true;
+    if (initialCatalog) seedCatalog(initialCatalog);
 
+    // Every component using this hook shares one cached catalog and one request in flight,
+    // so moving between pages doesn't download the whole catalog again.
     async function load() {
-      const remote = await fetchAllFirestoreProducts();
+      const remote = await loadCatalog(POLL_INTERVAL_MS);
       if (mounted) {
         if (remote) setRemoteProducts(remote);
         setLoading(false);
@@ -195,6 +235,7 @@ export function useAllProducts() {
       mounted = false;
       clearInterval(interval);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- seeded once on mount
   }, []);
 
   // live: the catalog came from Firestore, so a missing product really was deleted.

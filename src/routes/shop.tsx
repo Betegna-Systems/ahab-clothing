@@ -2,11 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
 import { type Category, inCategory } from "@/lib/products";
-import {
-  fetchAllFirestoreProducts,
-  getAllProductsCached,
-  useAllProducts,
-} from "@/lib/firestore-products";
+import { getAllProductsCached, loadCatalog, useAllProducts } from "@/lib/firestore-products";
 import { ProductCard } from "@/components/site/ProductCard";
 import { collectionJsonLd, seo } from "@/lib/seo";
 import { cn } from "@/lib/utils";
@@ -43,7 +39,7 @@ export const Route = createFileRoute("/shop")({
   // Structured data lists the live catalog; fetched only when rendering on the server so
   // client-side navigation to the shop stays instant.
   loader: async () => {
-    if (typeof window === "undefined") await fetchAllFirestoreProducts();
+    if (typeof window === "undefined") await loadCatalog();
     return {
       catalog: getAllProductsCached().map(({ slug, name }) => ({ slug, name })),
     };

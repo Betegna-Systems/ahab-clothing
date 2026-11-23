@@ -26,14 +26,14 @@ export const getVariantAvailability = createServerFn({ method: "GET" })
   .validator((data: unknown) => z.object({}).strict().parse(data))
   .handler(async () => {
     const supabaseAdmin = await getFeatureAdmin();
-    const { fetchAllFirestoreProducts, getAllProductsCached } =
-      await import("@/lib/firestore-products");
+    // Display only (placeOrder re-checks against a fresh catalog), so a recent copy will do.
+    const { loadCatalog, getAllProductsCached } = await import("@/lib/firestore-products");
     const [{ data, error }] = await Promise.all([
       supabaseAdmin
         .from("product_variant_inventory")
         .select("product_slug, color, size")
         .gt("quantity", 0),
-      fetchAllFirestoreProducts(),
+      loadCatalog(),
     ]);
 
     if (error) throw error;

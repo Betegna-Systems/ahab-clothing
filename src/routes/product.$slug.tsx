@@ -27,13 +27,21 @@ import { productText, useProductText } from "@/lib/i18n/product";
 export const Route = createFileRoute("/product/$slug")({
   loader: async ({ params }) => {
     // Always ask Firestore so edits made in the admin app show immediately; it falls back
-    // to the last known catalog when Firestore is unreachable.
+    // to the last known catalog when Firestore is unreachable. Reviews and stock are keyed by
+    // the same slug, so all three are fetched at once rather than one after another.
+    const loadExtras = (productSlug: string) =>
+      Promise.all([
+        getApprovedProductReviews({ data: { productSlug } }),
+        getProductVariantAvailability({ data: { productSlug } }),
+      ]);
+    const extras = loadExtras(params.slug);
     const product = await fetchProductBySlug(params.slug);
-    if (!product) throw notFound();
-    const [reviews, availableVariants] = await Promise.all([
-      getApprovedProductReviews({ data: { productSlug: product.slug } }),
-      getProductVariantAvailability({ data: { productSlug: product.slug } }),
-    ]);
+    if (!product) {
+      extras.catch(() => {});
+      throw notFound();
+    }
+    const [reviews, availableVariants] =
+      product.slug === params.slug ? await extras : await loadExtras(product.slug);
     const rating =
       reviews.length > 0
         ? reviews.reduce((total, review) => total + review.rating, 0) / reviews.length
